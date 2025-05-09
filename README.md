@@ -1,2 +1,2 @@
-# frameworks.ai.trainingframework.dev
-intel training framework development repository
+# Intel Training Framework
+Intel Training Framework repository
