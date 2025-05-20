@@ -1,4 +1,4 @@
-from llama_factory.src.llamafactory.extras.constants import AUDIO_PLACEHOLDER
+from llamafactory.extras.constants import AUDIO_PLACEHOLDER
 print(AUDIO_PLACEHOLDER, 'AUDIO_PLACEHOLDER')
 
 def main():

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # from llamafactory.train.tuner import run_exp
-from llama_factory.src.llamafactory.train.tuner import run_exp
-# from llama_factory.src.llamafactory.extras.constants import AUDIO_PLACEHOLDER
+from llamafactory.train.tuner import run_exp
+# from llamafactory.extras.constants import AUDIO_PLACEHOLDER
 
 def main():
     run_exp()

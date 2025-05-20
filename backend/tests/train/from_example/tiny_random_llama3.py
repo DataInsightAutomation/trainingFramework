@@ -9,11 +9,11 @@ from typing import Any
 import pytest
 from transformers import DataCollatorWithPadding
 
-from llama_factory.src.llamafactory.data import get_dataset, get_template_and_fix_tokenizer
-from llama_factory.src.llamafactory.hparams import get_train_args
-from llama_factory.src.llamafactory.model import load_model, load_tokenizer
-from llama_factory.src.llamafactory.train.sft.trainer import CustomSeq2SeqTrainer
-# from llama_factory.src.llamafactory.extras.constants import AUDIO_PLACEHOLDER
+from llamafactory.data import get_dataset, get_template_and_fix_tokenizer
+from llamafactory.hparams import get_train_args
+from llamafactory.model import load_model, load_tokenizer
+from llamafactory.train.sft.trainer import CustomSeq2SeqTrainer
+# from llamafactory.extras.constants import AUDIO_PLACEHOLDER
 
 
 DEMO_DATA = os.getenv("DEMO_DATA", "llamafactory/demo_data")
@@ -51,7 +51,7 @@ print(TRAIN_ARGS,'TRAIN_ARGS')
 #     "report_to": "none",
 # }
 
-from llama_factory.src.llamafactory.train.tuner import run_exp, export_model
+from llamafactory.train.tuner import run_exp, export_model
 # run_exp is llmafactory
 
 # then if i run a new train, i will run my own api, call specific llamafactory 's fine tune, then call the torch tune fine tune
