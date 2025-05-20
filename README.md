@@ -1,1 +1,1 @@
-# frameworks.ai.trainingframework.src
+# Intel Training Framework
