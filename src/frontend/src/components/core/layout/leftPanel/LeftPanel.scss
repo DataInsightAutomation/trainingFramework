@@ -1,0 +1,117 @@
+.left-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  transition: width 0.1s ease;
+  border-right-width: 1px;
+  border-right-style: solid;
+  
+  &.resizing {
+    transition: none;
+  }
+  
+  &.light-theme {
+    background-color: #f8f9fa;
+    color: #212529;
+    border-right-color: #dee2e6;
+  }
+  
+  &.dark-theme {
+    background-color: #343a40;
+    color: #e9ecef;
+    border-right-color: #495057;
+  }
+  
+  .left-panel-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .nav-vertical {
+    flex-shrink: 0;
+    padding: 0.5rem;
+    
+    .nav-item {
+      margin-bottom: 0.25rem;
+    }
+    
+    .tab-link {
+      display: flex;
+      align-items: center;
+      border-radius: 0.25rem;
+      padding: 0.5rem 1rem;
+      
+      i {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+  
+  .tab-content-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+    
+    /* WebKit scrollbar styling */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      border-radius: 3px;
+    }
+  }
+  
+  .light-theme .tab-content-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .dark-theme .tab-content-container::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .resize-handle {
+    position: absolute;
+    right: -3px;
+    top: 0;
+    height: 100%;
+    width: 6px;
+    cursor: ew-resize;
+    background-color: transparent;
+    z-index: 10;
+    
+    .resize-handle-bar {
+      position: absolute;
+      right: 3px;
+      top: 0;
+      height: 100%;
+      width: 1px;
+      transition: opacity 0.2s ease;
+      opacity: 0;
+    }
+    
+    &:hover .resize-handle-bar {
+      opacity: 1;
+    }
+  }
+  
+  .light-theme .resize-handle-bar {
+    background-color: #dee2e6;
+  }
+  
+  .dark-theme .resize-handle-bar {
+    background-color: #495057;
+  }
+  
+  .resizing .resize-handle-bar {
+    opacity: 1 !important;
+  }
+}

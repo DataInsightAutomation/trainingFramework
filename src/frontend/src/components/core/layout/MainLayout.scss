@@ -1,0 +1,159 @@
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100vh;
+  position: relative;
+
+  &.light-theme {
+    background-color: #f8f9fa;
+  }
+
+  &.dark-theme {
+    background-color: #212529;
+  }
+
+  // Content container - fills available space
+  .content-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  // Content row
+  .content-row {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    position: relative;
+  }
+
+  // Left panel container
+  .left-panel-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  // Content area with scrolling
+  .content-area {
+    flex: 1;
+    overflow: auto;
+    height: 100%;
+    position: relative;
+    transition: margin 0.3s ease;
+  }
+
+  // Toggle buttons
+  .toggle-button {
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-width: 1px;
+    border-style: solid;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    &.light-theme {
+      background-color: #ffffff;
+      color: #0d6efd;
+      border-color: #dee2e6;
+
+      &:hover {
+        background-color: #f8f9fa;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    &.dark-theme {
+      background-color: #4a5568;
+      color: #ffffff;
+      border-color: #718096;
+
+      &:hover {
+        background-color: #2d3748;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+
+  // Panel toggle buttons
+  .panel-toggle {
+    &.panel-hide-toggle {
+      position: absolute;
+      right: 5px;
+      // top: 50%;
+      top: 20px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      z-index: 15;
+
+      &:hover {
+        transform: translateY(-50%) scale(1.1);
+      }
+    }
+
+    &.panel-show-toggle {
+      position: absolute;
+      left: 12px;
+      top: 20px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      z-index: 15;
+
+      &:hover {
+        transform: translateY(-50%) scale(1.1);
+      }
+    }
+  }
+
+  // Header and footer toggle buttons
+  .header-toggle,
+  .footer-toggle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
+
+  .header-toggle {
+    &.header-visible {
+      top: 15px;
+      border-radius: 0 0 16px 16px;
+    }
+
+    &.header-hidden {
+      top: 0;
+      border-radius: 16px;
+    }
+  }
+
+  .footer-toggle {
+    position: fixed;
+
+    &.footer-visible {
+      bottom: 15px;
+      border-radius: 16px 16px 0 0;
+    }
+
+    &.footer-hidden {
+      bottom: 0;
+      border-radius: 16px;
+    }
+  }
+}

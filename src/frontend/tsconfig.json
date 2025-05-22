@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    // not sure why needed anymore
+    // "moduleResolution": "bundler",
+    // "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "jsxImportSource": "react",  // for TypeScript users in tsconfig.json
+    "baseUrl": "./src",
+    // not very sure this need or not and the vote-env.d.ts 
+    // "types": ["vite/client", "vite-plugin-svgr/client"],
+    "paths": {
+      "extensions": ["extensions"],
+      "nodes": ["data/nodes"],
+      "nodesNnode": ["data/nodes/node"],
+      "#*": ["./*"],
+      "/*": ["./*", "./public/*"],
+      "#node/*": ["data/nodes/*"],
+      "#shared/*": ["components/shared/*"],
+      "#pages/*": ["components/Pages/*"],
+    },
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "**/*.test.tsx",
+    "**/*.test.ts",
+  ]
+}

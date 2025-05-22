@@ -1,0 +1,149 @@
+/*
+ * INTEL CONFIDENTIAL
+ * 
+ * Copyright (C) 2024 Intel Corporation
+ *  
+ * This software and the related documents are Intel copyrighted materials,
+ * and your use of them is governed by the express license under which they
+ * were provided to you ("License"). Unless the License provides otherwise,
+ * you may not use, modify, copy, publish, distribute, disclose or transmit
+ * this software or the related documents without Intel's prior written
+ * permission.
+ * 
+ * This software and the related documents are provided as is, with no 
+ * express or implied warranties, other than those that are expressly stated
+ * in the License.
+ */
+ 
+$color: var(--bs-primary);
+$colorRight: var(--bs-primary-lighten-15);
+$colorLeft: var(--bs-primary-lighten-5);
+$shadow: var(--bs-primary-lighten-47);
+.ed-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 1000000;
+  background: var(--bs-primary-lighten-47);
+}
+.ed-nodes {
+  --size: 24px;
+  --duration: 800ms;
+  height: calc(var(--size) * 2);
+  width: calc(var(--size) * 3);
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  margin-top: calc(var(--size) * 1.5 * -1);
+  transform: rotateX(60deg) rotateZ(45deg) rotateY(0deg) translateZ(0px);
+  .ed-node {
+    width: var(--size);
+    height: var(--size);
+    top: 0;
+    left: 0;
+    position: absolute;
+    transform-style: preserve-3d;
+    &:nth-child(1) {
+      transform: translate(100%, 0);
+      animation: node1 var(--duration) linear infinite;
+    }
+    &:nth-child(2) {
+      transform: translate(0, 100%);
+      animation: node2 var(--duration) linear infinite;
+    }
+    &:nth-child(3) {
+      transform: translate(100%, 100%);
+      animation: node3 var(--duration) linear infinite;
+    }
+    &:nth-child(4) {
+      transform: translate(200%, 0);
+      animation: node4 var(--duration) linear infinite;
+    }
+    & > div {
+      --background: #{$color};
+      --top: auto;
+      --right: auto;
+      --bottom: auto;
+      --left: auto;
+      --translateZ: calc(var(--size) / 2);
+      --rotateY: 0deg;
+      --rotateX: 0deg;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: var(--background);
+      top: var(--top);
+      right: var(--right);
+      bottom: var(--bottom);
+      left: var(--left);
+      transform: rotateY(var(--rotateY)) rotateX(var(--rotateX))
+        translateZ(var(--translateZ));
+      &:nth-child(1) {
+        --top: 0;
+        --left: 0;
+      }
+      &:nth-child(2) {
+        --background: #{$colorRight};
+        --right: 0;
+        --rotateY: 90deg;
+      }
+      &:nth-child(3) {
+        --background: #{$colorLeft};
+        --rotateX: -90deg;
+      }
+      &:nth-child(4) {
+        --background: #{$shadow};
+        --top: 0;
+        --left: 0;
+        --translateZ: calc(var(--size) * 3 * -1);
+      }
+    }
+  }
+}
+@keyframes node1 {
+  0%,
+  50% {
+    transform: translate(100%, 0);
+  }
+  100% {
+    transform: translate(200%, 0);
+  }
+}
+@keyframes node2 {
+  0% {
+    transform: translate(0, 100%);
+  }
+  50% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(100%, 0);
+  }
+}
+@keyframes node3 {
+  0%,
+  50% {
+    transform: translate(100%, 100%);
+  }
+  100% {
+    transform: translate(0, 100%);
+  }
+}
+@keyframes node4 {
+  0% {
+    transform: translate(200%, 0);
+  }
+  50% {
+    transform: translate(200%, 100%);
+  }
+  100% {
+    transform: translate(100%, 100%);
+  }
+}

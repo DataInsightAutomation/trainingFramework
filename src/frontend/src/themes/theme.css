@@ -1,0 +1,62 @@
+/* Theme CSS Variables for easy use in components */
+:root {
+  /* Light Theme */
+  --light-primary: #0d6efd;
+  --light-secondary: #6c757d;
+  --light-background: #f5f6fa;
+  --light-text: #212529;
+  --light-card-bg: #ffffff;
+  --light-border: #dee2e6;
+  
+  /* Dark Theme */
+  --dark-primary: #0a58ca;
+  --dark-secondary: #495057;
+  --dark-background: #212529;
+  --dark-text: #f8f9fa;
+  --dark-card-bg: #343a40;
+  --dark-border: #495057;
+}
+
+/* Theme-specific Bootstrap overrides */
+body.dark-theme .form-control {
+  background-color: #2c3034;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+body.dark-theme .form-control:focus {
+  background-color: #2c3034;
+  color: #e9ecef;
+}
+
+body.dark-theme .form-select {
+  background-color: #2c3034;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+/* Dark theme tab styles */
+body.dark-theme .nav-tabs {
+  border-color: #495057;
+}
+
+body.dark-theme .nav-tabs .nav-link {
+  color: #e9ecef;
+}
+
+body.dark-theme .nav-tabs .nav-link.active {
+  background-color: #343a40;
+  border-color: #495057 #495057 #343a40;
+  color: #fff;
+}
+
+body.dark-theme .nav-tabs .nav-link:hover:not(.active) {
+  border-color: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+/* Improve button contrast in dark mode */
+body.dark-theme .btn-outline-secondary {
+  color: #e9ecef;
+  border-color: #6c757d;
+}

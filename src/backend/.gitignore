@@ -1,3 +1,4 @@
-tests/output
 saves
-/**/*.pyc
+data/mini_alpaca_*.json
+settings.json
+*.pyc
