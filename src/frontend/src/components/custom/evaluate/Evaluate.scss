@@ -1,0 +1,41 @@
+.evaluate-container {
+  // Intel color palette - match the Train.scss variables
+  --intel-blue: #0071c5;
+  --intel-blue-light: #00a3e0;
+  --intel-blue-dark: #1b365d;
+  --intel-blue-hover: #00578f;
+  --intel-highlight: #80c3e6;
+  --intel-accent: #00aeef;
+  
+  // Button hover colors
+  --btn-outline-primary-hover-bg: var(--intel-blue);
+  --btn-outline-primary-hover-color: white;
+  --btn-outline-secondary-hover-bg: #6c757d;
+  --btn-outline-secondary-hover-color: white;
+  --btn-outline-success-hover-bg: #198754;
+  --btn-outline-success-hover-color: white;
+  --btn-outline-info-hover-bg: #0dcaf0;
+  --btn-outline-info-hover-color: white;
+  
+  // Copy other relevant styles from Train.scss
+  
+  // Search highlight style
+  .search-highlight {
+    background-color: var(--intel-highlight);
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+    position: relative;
+    display: inline-block;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--intel-blue);
+    }
+  }
+}

@@ -1,204 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TrainFormData } from '../../../utils/context';
 import { useAppStore } from '../../../store/appStore';
-import ModelForm, { FormField, FormButton } from '../../shared/ModelForm';
+import ModelForm, { FormField, FormButton } from '../../shared/ModelForm/ModelForm';
 import { resourceService } from '../../../services/resourceService';
 import { EndPoints } from '#constants/endpoint';
 import { trainingService } from '#services/trainingService';
-import { Form, Button, Accordion, Card } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
+import OptionsToggle from '../../shared/OptionsToggle';
 import './Train.scss';
-
-// Translations for the Train component
-const translations = {
-  en: {
-    trainNewModel: 'Train New Model',
-    modelNameLabel: 'Model Name',
-    modelNamePlaceholder: 'Enter model name',
-    modelNameError: 'Please provide a model name.',
-    modelPathLabel: 'Model Path',
-    modelPathPlaceholder: 'Enter model path (e.g., /models/base)',
-    modelPathError: 'Please provide a model path.',
-    datasetLabel: 'Dataset',
-    datasetPlaceholder: 'Enter dataset name or path',
-    datasetError: 'Please provide a dataset.',
-    trainMethodLabel: 'Training Method',
-    selectTrainMethod: 'Select a training method',
-    trainMethodError: 'Please select a training method.',
-    selectModelName: 'Select a model',
-    baseModel: 'Base Model',
-    advancedModel: 'Advanced Model',
-    supervisedLearning: 'Supervised Learning',
-    rlhf: 'Reinforcement Learning from Human Feedback',
-    finetuning: 'Fine-tuning',
-    distillation: 'Knowledge Distillation',
-    startTraining: 'Start Training',
-    submitting: 'Submitting...',
-    trainingStarted: 'Training job started for model',
-    previewCurlCommand: 'Preview Curl Command',
-    loadConfig: 'Load Config',
-    saveConfig: 'Save Config',
-    configSaved: 'Configuration saved successfully',
-    configLoaded: 'Configuration loaded successfully',
-    curlCommandCopied: 'Curl command copied to clipboard',
-    checkStatus: 'Check Status',
-    advancedOptions: 'Advanced Options',
-    basicOptions: 'Basic Options',
-    modelConfiguration: 'Model Configuration',
-    finetuningConfiguration: 'Fine-tuning Configuration',
-    datasetConfiguration: 'Dataset Configuration',
-    trainingConfiguration: 'Training Configuration',
-    outputConfiguration: 'Output Configuration',
-    
-    // Custom section titles
-    modelConfigSection: 'Model Settings',
-    finetuningConfigSection: 'Fine-tuning Settings',
-    datasetConfigSection: 'Dataset Processing',
-    trainingConfigSection: 'Training Parameters',
-    outputConfigSection: 'Output Configuration',
-    
-    // Field labels
-    trust_remote_codeLabel: 'Trust Remote Code',
-    stageLabel: 'Training Stage',
-    finetuning_typeLabel: 'Fine-tuning Type',
-    lora_rankLabel: 'LoRA Rank',
-    lora_targetLabel: 'LoRA Target',
-    templateLabel: 'Template',
-    cutoff_lenLabel: 'Cutoff Length',
-    max_samplesLabel: 'Max Samples',
-    overwrite_cacheLabel: 'Overwrite Cache',
-    preprocessing_num_workersLabel: 'Preprocessing Workers',
-    per_device_train_batch_sizeLabel: 'Batch Size',
-    gradient_accumulation_stepsLabel: 'Gradient Accumulation Steps',
-    learning_rateLabel: 'Learning Rate',
-    num_train_epochsLabel: 'Number of Epochs',
-    lr_scheduler_typeLabel: 'LR Scheduler Type',
-    warmup_ratioLabel: 'Warmup Ratio',
-    bf16Label: 'BF16',
-    output_dirLabel: 'Output Directory',
-    logging_stepsLabel: 'Logging Steps',
-    save_stepsLabel: 'Save Steps',
-    plot_lossLabel: 'Plot Loss',
-    overwrite_output_dirLabel: 'Overwrite Output Directory',
-    
-    // Placeholders
-    trust_remote_codePlaceholder: 'Select trust remote code',
-    stagePlaceholder: 'Select training stage',
-    finetuning_typePlaceholder: 'Select fine-tuning type',
-    lora_rankPlaceholder: 'Enter LoRA rank',
-    lora_targetPlaceholder: 'Enter LoRA target modules',
-    templatePlaceholder: 'Select template',
-    cutoff_lenPlaceholder: 'Enter cutoff length',
-    max_samplesPlaceholder: 'Enter max samples',
-    overwrite_cachePlaceholder: 'Select overwrite cache',
-    preprocessing_num_workersPlaceholder: 'Enter preprocessing workers',
-    per_device_train_batch_sizePlaceholder: 'Enter batch size',
-    gradient_accumulation_stepsPlaceholder: 'Enter gradient accumulation steps',
-    learning_ratePlaceholder: 'Enter learning rate',
-    num_train_epochsPlaceholder: 'Enter number of epochs',
-    lr_scheduler_typePlaceholder: 'Select LR scheduler type',
-    warmup_ratioPlaceholder: 'Enter warmup ratio',
-    bf16Placeholder: 'Select BF16',
-    output_dirPlaceholder: 'Enter output directory',
-    logging_stepsPlaceholder: 'Enter logging steps',
-    save_stepsPlaceholder: 'Enter save steps',
-    plot_lossPlaceholder: 'Select plot loss',
-    overwrite_output_dirPlaceholder: 'Select overwrite output directory',
-  },
-  zh: {
-    trainNewModel: '训练新模型',
-    modelNameLabel: '模型名称',
-    modelNamePlaceholder: '输入模型名称',
-    modelNameError: '请提供模型名称。',
-    modelPathLabel: '模型路径',
-    modelPathPlaceholder: '输入模型路径（例如，/models/base）',
-    modelPathError: '请提供模型路径。',
-    datasetLabel: '数据集',
-    datasetPlaceholder: '输入数据集名称或路径',
-    datasetError: '请提供数据集。',
-    trainMethodLabel: '训练方法',
-    selectTrainMethod: '选择训练方法',
-    trainMethodError: '请选择训练方法。',
-    selectModelName: '选择模型',
-    baseModel: '基础模型',
-    advancedModel: '高级模型',
-    supervisedLearning: '监督学习',
-    rlhf: '人类反馈强化学习',
-    finetuning: '微调',
-    distillation: '知识蒸馏',
-    startTraining: '开始训练',
-    submitting: '提交中...',
-    trainingStarted: '模型训练任务已开始',
-    previewCurlCommand: '预览 Curl 命令',
-    loadConfig: '加载配置',
-    saveConfig: '保存配置',
-    configSaved: '配置保存成功',
-    configLoaded: '配置加载成功',
-    curlCommandCopied: 'Curl 命令已复制到剪贴板',
-    checkStatus: '检查状态',
-    advancedOptions: '高级选项',
-    basicOptions: '基本选项',
-    modelConfiguration: '模型配置',
-    finetuningConfiguration: '微调配置',
-    datasetConfiguration: '数据集配置',
-    trainingConfiguration: '训练配置',
-    outputConfiguration: '输出配置',
-    
-    // Custom section titles in Chinese
-    modelConfigSection: '模型设置',
-    finetuningConfigSection: '微调设置',
-    datasetConfigSection: '数据集处理',
-    trainingConfigSection: '训练参数',
-    outputConfigSection: '输出配置',
-    
-    // Field labels (Chinese translations would go here)
-    trust_remote_codeLabel: '信任远程代码',
-    stageLabel: '训练阶段',
-    finetuning_typeLabel: '微调类型',
-    lora_rankLabel: 'LoRA 排名',
-    lora_targetLabel: 'LoRA 目标',
-    templateLabel: '模板',
-    cutoff_lenLabel: '截断长度',
-    max_samplesLabel: '最大样本',
-    overwrite_cacheLabel: '覆盖缓存',
-    preprocessing_num_workersLabel: '预处理工作线程',
-    per_device_train_batch_sizeLabel: '每个设备的批量大小',
-    gradient_accumulation_stepsLabel: '梯度累积步数',
-    learning_rateLabel: '学习率',
-    num_train_epochsLabel: '训练轮数',
-    lr_scheduler_typeLabel: '学习率调度器类型',
-    warmup_ratioLabel: '预热比例',
-    bf16Label: 'BF16',
-    output_dirLabel: '输出目录',
-    logging_stepsLabel: '日志记录步数',
-    save_stepsLabel: '保存步数',
-    plot_lossLabel: '绘制损失',
-    overwrite_output_dirLabel: '覆盖输出目录',
-    
-    // Placeholders
-    trust_remote_codePlaceholder: '选择信任远程代码',
-    stagePlaceholder: '选择训练阶段',
-    finetuning_typePlaceholder: '选择微调类型',
-    lora_rankPlaceholder: '输入 LoRA 排名',
-    lora_targetPlaceholder: '输入 LoRA 目标模块',
-    templatePlaceholder: '选择模板',
-    cutoff_lenPlaceholder: '输入截断长度',
-    max_samplesPlaceholder: '输入最大样本',
-    overwrite_cachePlaceholder: '选择覆盖缓存',
-    preprocessing_num_workersPlaceholder: '输入预处理工作线程',
-    per_device_train_batch_sizePlaceholder: '输入批量大小',
-    gradient_accumulation_stepsPlaceholder: '输入梯度累积步数',
-    learning_ratePlaceholder: '输入学习率',
-    num_train_epochsPlaceholder: '输入训练轮数',
-    lr_scheduler_typePlaceholder: '选择学习率调度器类型',
-    warmup_ratioPlaceholder: '输入预热比例',
-    bf16Placeholder: '选择 BF16',
-    output_dirPlaceholder: '输入输出目录',
-    logging_stepsPlaceholder: '输入日志记录步数',
-    save_stepsPlaceholder: '输入保存步数',
-    plot_lossPlaceholder: '选择绘制损失',
-    overwrite_output_dirPlaceholder: '选择覆盖输出目录',
-  }
-};
+import { translations } from './TrainTranslation'
 
 // Advanced form field sections with custom header names
 const advancedFieldSections = {
@@ -789,7 +599,7 @@ const Train = () => {
     }
   };
   
-  // Add toggle button for advanced options
+  // Add toggle handler
   const handleToggleAdvanced = () => {
     setShowAdvanced(!showAdvanced);
     setSearchQuery('');
@@ -798,6 +608,11 @@ const Train = () => {
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+  
+  // Handle clearing the search query
+  const handleClearSearch = () => {
+    setSearchQuery('');
   };
   
   // Update form buttons to include advanced toggle
@@ -844,49 +659,20 @@ const Train = () => {
   
   return (
     <div className="train-container">
-      {/* Create a centered toggle section with both text and button */}
-      <div className={`options-toggle-section mb-4 p-3 border rounded ${currentTheme.name}-theme`}>
-        <div className="d-flex justify-content-between align-items-center flex-wrap">
-          <div className="d-flex align-items-center mb-2 mb-sm-0">
-            <span className="me-3 fw-medium">Configure Training Options</span>
-            <span className="toggle-divider mx-3">|</span>
-            <Button 
-              variant={showAdvanced ? "primary" : "outline-primary"}
-              onClick={handleToggleAdvanced}
-              className="px-4"
-            >
-              {showAdvanced 
-                ? translations[currentLocale === 'zh' ? 'zh' : 'en'].basicOptions 
-                : translations[currentLocale === 'zh' ? 'zh' : 'en'].advancedOptions}
-            </Button>
-          </div>
-          
-          {/* Add search input */}
-          <div className="search-container">
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search fields..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-              <span className="input-group-text">
-                <i className="bi bi-search"></i>
-              </span>
-              {searchQuery && (
-                <button 
-                  className="btn btn-outline-secondary" 
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                >
-                  <i className="bi bi-x"></i>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Replace the inline toggle section with the shared component */}
+      <OptionsToggle
+        showAdvanced={showAdvanced}
+        onToggleAdvanced={handleToggleAdvanced}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onClearSearch={handleClearSearch}
+        toggleText={{
+          advanced: translations[currentLocale === 'zh' ? 'zh' : 'en'].advancedOptions,
+          basic: translations[currentLocale === 'zh' ? 'zh' : 'en'].basicOptions
+        }}
+        title="Configure Training Options"
+        theme={currentTheme.name}
+      />
       
       <ModelForm
         title="trainNewModel"

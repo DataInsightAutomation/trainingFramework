@@ -2,7 +2,7 @@ import React from 'react';
 import { useAppStore } from "../../store/appStore";
 import { tabConfig } from '../../constants/config/tabConfig';
 import ThemedContent from '../../components/shared/ThemedContent';
-import MainLayout from '../../components/core/layout/MainLayout';
+import MainLayout from '../../components/core/layout/mainLayout/MainLayout';
 
 const WebUi = () => {
     // Get the tab key directly from the top level

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Form, Button, Card, Row, Col, Alert } from 'react-bootstrap';
-import { useAppStore } from '../../store/appStore';
-import TextField from '../core/field/text/TextField';
-import SearchableSelectField from '../core/field/searchableSelect/SearchableSelectField';
-import { DropDown } from '../core/field/dropdown/Dropdown';
-import MultiSelectField from '../core/field/multiSelect/MultiSelectField'; // Import MultiSelectField
+import { useAppStore } from '../../../store/appStore';
+import TextField from '../../core/field/text/TextField';
+import SearchableSelectField from '../../core/field/searchableSelect/SearchableSelectField';
+import { DropDown } from '../../core/field/dropdown/Dropdown';
+import MultiSelectField from '../../core/field/multiSelect/MultiSelectField'; // Import MultiSelectField
 import './ModelForm.scss'; // Import the SCSS file
 
 export interface FormField {

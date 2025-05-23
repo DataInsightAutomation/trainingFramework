@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAppStore } from '../../../store/appStore';
-import Header from './header/Header';
-import Footer from './footer/Footer';
-import LeftPanel from './leftPanel/LeftPanel';
-import AxiosInterceptor from '../../../apis/AxiosInterceptor';
+import { useAppStore } from '../../../../store/appStore';
+import Header from '../header/Header';
+import Footer from '../footer/Footer';
+import LeftPanel from '../leftPanel/LeftPanel';
+import AxiosInterceptor from '../../../../apis/AxiosInterceptor';
 import './MainLayout.scss';
 
 interface MainLayoutProps {
