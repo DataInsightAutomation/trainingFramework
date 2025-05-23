@@ -137,3 +137,19 @@
     padding-right: 1.5rem;
   }
 }
+
+// Add styling for range inputs
+.range-field-container {
+  display: flex;
+  align-items: center;
+  
+  .form-range {
+    flex-grow: 1;
+  }
+  
+  .range-value {
+    min-width: 40px;
+    margin-left: 10px;
+    text-align: right;
+  }
+}

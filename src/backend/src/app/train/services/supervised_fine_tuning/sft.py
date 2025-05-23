@@ -38,17 +38,22 @@ async def simulate_training(job_id: str):
             get_train_args(args)
 
         ray_args = get_ray_args(args)
-        callbacks = callbacks or []
-        if ray_args.use_ray:
-            callbacks.append(RayTrainReportCallback())
-            trainer = get_ray_trainer(
-                training_function=_training_function,
-                train_loop_config={"args": args, "callbacks": callbacks},
-                ray_args=ray_args,
-            )
-            trainer.fit()
-        else:
-            _training_function(config={"args": args, "callbacks": callbacks})
+
+
+        print(args, 'args')
+        print(ray_args, 'ray_args')
+
+        # callbacks = callbacks or []
+        # if ray_args.use_ray:
+        #     callbacks.append(RayTrainReportCallback())
+        #     trainer = get_ray_trainer(
+        #         training_function=_training_function,
+        #         train_loop_config={"args": args, "callbacks": callbacks},
+        #         ray_args=ray_args,
+        #     )
+        #     trainer.fit()
+        # else:
+        #     _training_function(config={"args": args, "callbacks": callbacks})
 
 
 

@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { Context } from '../../utils/context';
+import React from 'react';
+import { useAppStore } from '../../store/appStore';
 
 interface ThemedContentProps {
   children: React.ReactNode;
@@ -7,15 +7,15 @@ interface ThemedContentProps {
 }
 
 const ThemedContent: React.FC<ThemedContentProps> = ({ children, className = '' }) => {
-  const { state } = useContext(Context);
-  const theme = state.currentTheme;
+  // Use Zustand store directly
+  const { currentTheme } = useAppStore();
 
   return (
     <div 
       className={`themed-content ${className}`}
       style={{ 
-        backgroundColor: theme.colors.background,
-        color: theme.colors.text,
+        backgroundColor: currentTheme.colors.background,
+        color: currentTheme.colors.text,
         minHeight: '100%'
       }}
     >

@@ -1,13 +1,13 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Tab from "react-bootstrap/Tab";
 import Nav from "react-bootstrap/Nav";
-import { Context } from '../../../../utils/context';
+import { useAppStore } from '../../../../store/appStore';
 import { tabConfig } from '../../../../constants/config/tabConfig';
 import './LeftPanel.scss';
 
 const LeftPanel = () => {
-  const { state, setState } = useContext(Context);
-  const theme = state.currentTheme;
+  // Get and set active tab via top-level state, not locale-specific
+  const { currentTheme, en, activeKeyLeftPanel, setActiveTab } = useAppStore();
   const panelRef = useRef<HTMLDivElement>(null);
   const [resizing, setResizing] = useState(false);
   
@@ -17,7 +17,7 @@ const LeftPanel = () => {
     return savedWidth ? parseInt(savedWidth, 10) : 250;
   });
 
-  const activeKey = state.en?.activeKeyLeftPanel;
+  const activeKey = en?.activeKeyLeftPanel;
   
   // Save panel width to localStorage when it changes
   useEffect(() => {
@@ -61,20 +61,15 @@ const LeftPanel = () => {
     setResizing(true);
   };
 
+  // Use the direct setter function
   const setActiveKey = (key: string) => {
-    setState({
-      ...state,
-      en: {
-        ...state.en,
-        activeKeyLeftPanel: key,
-      },
-    });
+    setActiveTab(key);
   };
-
+  
   return (
     <div 
       ref={panelRef}
-      className={`left-panel ${theme.name}-theme ${resizing ? 'resizing' : ''}`}
+      className={`left-panel ${currentTheme.name}-theme ${resizing ? 'resizing' : ''}`}
       style={{ 
         width: `${panelWidth}px`,
       }}

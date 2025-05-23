@@ -1,11 +1,11 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Navbar, Container, Nav, Dropdown, Button } from 'react-bootstrap';
-import { Context } from '../../../../utils/context';
+import { useAppStore } from '../../../../store/appStore';
 
 const Header = () => {
-  const { state, setState, toggleTheme } = useContext(Context);
-  const locale = state.currentLocale || 'en';
-  const theme = state.currentTheme;
+  // Use Zustand store directly
+  const { currentLocale, currentTheme, toggleTheme, setLocale } = useAppStore();
+  const locale = currentLocale || 'en';
   
   // Simple translations
   const translations = {
@@ -35,19 +35,16 @@ const Header = () => {
   
   const t = translations[locale as keyof typeof translations];
 
-  // Function to change the language in the context
+  // Function to change the language
   const changeLanguage = (newLocale: string) => {
-    setState(prevState => ({
-      ...prevState,
-      currentLocale: newLocale as 'en' | 'zh' | 'vi' | 'fr'
-    }));
+    setLocale(newLocale as 'en' | 'zh' | 'vi' | 'fr');
     
     // Also store in localStorage for persistence
     localStorage.setItem('preferredLocale', newLocale);
   };
 
   return (
-    <header className="text-white p-2 shadow-sm" style={{ backgroundColor: theme.colors.primary }}>
+    <header className="text-white p-2 shadow-sm" style={{ backgroundColor: currentTheme.colors.primary }}>
       <Container fluid className="d-flex justify-content-between align-items-center">
         <div className="fw-bold fs-5">{t.title}</div>
         
@@ -58,13 +55,13 @@ const Header = () => {
           
           {/* Theme Toggle Button */}
           <Button 
-            variant={theme.name === 'light' ? 'outline-light' : 'light'} 
+            variant={currentTheme.name === 'light' ? 'outline-light' : 'light'} 
             size="sm" 
             className="ms-2 d-flex align-items-center"
             onClick={toggleTheme}
           >
-            <i className={`bi bi-${theme.name === 'light' ? 'moon' : 'sun'} me-1`}></i>
-            {theme.name === 'light' ? t.darkTheme : t.lightTheme}
+            <i className={`bi bi-${currentTheme.name === 'light' ? 'moon' : 'sun'} me-1`}></i>
+            {currentTheme.name === 'light' ? t.darkTheme : t.lightTheme}
           </Button>
           
           {/* Language Dropdown */}

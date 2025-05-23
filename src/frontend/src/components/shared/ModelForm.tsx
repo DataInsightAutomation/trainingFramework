@@ -1,21 +1,35 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Form, Button, Card, Row, Col, Alert } from 'react-bootstrap';
-import { Context } from '../../utils/context';
+import { useAppStore } from '../../store/appStore';
 import TextField from '../core/field/text/TextField';
 import SearchableSelectField from '../core/field/searchableSelect/SearchableSelectField';
 import { DropDown } from '../core/field/dropdown/Dropdown';
+import MultiSelectField from '../core/field/multiSelect/MultiSelectField'; // Import MultiSelectField
 import './ModelForm.scss'; // Import the SCSS file
 
 export interface FormField {
     name: string;
-    type: 'text' | 'select' | 'searchableSelect'; // Include searchableSelect type
+    type: 'text' | 'select' | 'searchableSelect' | 'multiSelect' | 'sectionHeader' | 'number' | 'range';
     colSpan?: number;
-    options?: {
+    options?: ReadonlyArray<{
+        readonly value: string;
+        readonly label?: string;
+        readonly directLabel?: string;
+    }> | Array<{
         value: string;
         label?: string;
         directLabel?: string;
-    }[];
+    }>;
     required?: boolean;
+    collapsible?: boolean;
+    expanded?: boolean;
+    onToggle?: () => void;
+    customTitle?: string;
+    min?: number;
+    max?: number;
+    step?: number;
+    // Add support for search highlighting
+    searchHighlight?: string;
 }
 
 // Add a button configuration interface
@@ -53,16 +67,17 @@ const ModelForm: React.FC<FormConfig> = ({
     formData,
     onChange,
 }) => {
-    const { state } = useContext(Context);
+    // Use Zustand store directly
+    const { currentLocale, currentTheme } = useAppStore();
     const [validated, setValidated] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [resultMessage, setResultMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
     const [hoveredButtons, setHoveredButtons] = useState<Record<string, boolean>>({});
-    const locale = state.currentLocale || 'en';
-    const theme = state.currentTheme;
+    const locale = currentLocale || 'en';
+    const theme = currentTheme;
     const t = translations[locale as keyof typeof translations];
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         onChange(name, value);
     };
@@ -141,16 +156,75 @@ const ModelForm: React.FC<FormConfig> = ({
                 {row.map(field => {
                     const fieldKey = `field-${field.name}`;
                     const colSpan = field.colSpan || 6;
+                    
+                    // Handle section headers
+                    if (field.type === 'sectionHeader') {
+                        // If collapsible, render with toggle controls
+                        if (field.collapsible) {
+                            // Use custom title if provided, otherwise generate from section name
+                            const titleKey = field.customTitle || `${field.name.replace('Header', '')}Configuration`;
+                            
+                            // Get the title text, possibly with highlighting
+                            const titleText = field.searchHighlight 
+                                ? <span dangerouslySetInnerHTML={{ __html: field.searchHighlight }} />
+                                : t[titleKey] || field.name;
+                            
+                            return (
+                                <Col md={colSpan} key={fieldKey}>
+                                    <div 
+                                        className={`collapsible-section-header d-flex align-items-center justify-content-between ${field.expanded ? 'expanded' : ''} ${theme.name}-theme`}
+                                        onClick={field.onToggle}
+                                    >
+                                        <h4>
+                                            {titleText}
+                                        </h4>
+                                        <span className="chevron-icon">
+                                            <i className="bi bi-chevron-down"></i>
+                                        </span>
+                                    </div>
+                                </Col>
+                            );
+                        }
+                        
+                        // Regular non-collapsible section header
+                        const titleKey = field.customTitle || `${field.name.replace('Header', '')}Configuration`;
+                        return (
+                            <Col md={colSpan} key={fieldKey}>
+                                <h4 className="mt-4 mb-3 border-bottom pb-2">
+                                    {t[titleKey] || field.name}
+                                </h4>
+                            </Col>
+                        );
+                    }
+                    
                     const placeholderKey = `select${field.name.charAt(0).toUpperCase() + field.name.slice(1)}`;
                     const placeholderText = t[placeholderKey] || `Select ${field.name}`;
-                    const fieldLabel = t[`${field.name}Label`];
+                    const fieldLabel = field.searchHighlight 
+    ? <span dangerouslySetInnerHTML={{ __html: field.searchHighlight }} />
+    : t[`${field.name}Label`];
 
                     return (
                         <Form.Group as={Col} md={colSpan} controlId={field.name} key={fieldKey}>
                             {/* Always show the label at the Form.Group level for consistency */}
                             <Form.Label>{fieldLabel}</Form.Label>
 
-                            {field.type === 'searchableSelect' ? (
+                            {field.type === 'multiSelect' ? (
+                                <MultiSelectField
+                                    name={field.name}
+                                    value={formData[field.name] || ''}
+                                    placeholder={t[`${field.name}Placeholder`]}
+                                    options={field.options?.map(option => ({
+                                        value: option.value,
+                                        label: option.directLabel || (option.label ? t[option.label] : option.value)
+                                    })) || []}
+                                    onChange={onChange}
+                                    required={field.required !== false}
+                                    validated={validated}
+                                    error={t[`${field.name}Error`]}
+                                    theme={theme}
+                                    noLabel={true}
+                                />
+                            ) : field.type === 'searchableSelect' ? (
                                 <SearchableSelectField
                                     name={field.name}
                                     value={formData[field.name] || ''}
@@ -182,11 +256,47 @@ const ModelForm: React.FC<FormConfig> = ({
                                     placeholder={t[`${field.name}Placeholder`]} 
                                     theme={theme} 
                                     formData={formData} 
-                                    field={{ ...field, options: field.options ?? [] }} 
+                                    field={{ 
+                                        ...field, 
+                                        options: field.options ? [...field.options].map(opt => ({
+                                            value: opt.value,
+                                            label: opt.label,
+                                            directLabel: opt.directLabel
+                                        })) : [] 
+                                    }} 
                                     handleChange={handleChange} 
                                     t={t}
                                     validated={validated} // Pass validation state to dropdown
                                 />
+                            ) : field.type === 'number' ? (
+                                <Form.Control
+                                    type="number"
+                                    name={field.name}
+                                    value={formData[field.name] || ''}
+                                    onChange={handleChange}
+                                    placeholder={t[`${field.name}Placeholder`]}
+                                    min={field.min}
+                                    max={field.max}
+                                    step={field.step || 1}
+                                    required={field.required !== false}
+                                />
+                            ) : field.type === 'range' ? (
+                                <div className="range-field-container">
+                                    <Form.Control
+                                        type="range"
+                                        name={field.name}
+                                        value={formData[field.name] || field.min || 0}
+                                        onChange={handleChange}
+                                        min={field.min}
+                                        max={field.max}
+                                        step={field.step || 1}
+                                        className="form-range"
+                                        required={field.required !== false}
+                                    />
+                                    <div className="range-value">
+                                        {formData[field.name] || field.min || 0}
+                                    </div>
+                                </div>
                             ) : (
                                 // Text field without label (since we handle it above)
                                 <TextField

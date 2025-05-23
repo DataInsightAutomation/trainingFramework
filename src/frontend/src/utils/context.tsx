@@ -1,15 +1,15 @@
 import { createContext } from "react";
 import { Theme, lightTheme, darkTheme } from "../themes/theme";
 
+// Keeping these types for backward compatibility
 type Locale = 'en' | 'vi' | 'fr' | 'zh';
-// Update to separate UI settings from locale-specific settings
 type SettingKey = 'activeKeyLeftPanel' | 'theme' | 'userName';
 
 // Define the train form data type
 export interface TrainFormData {
   modelName: string;
   modelPath: string;
-  dataset: string;
+  dataset: string; // This will now store comma-separated values
   trainMethod: string;
 }
 
@@ -25,23 +25,21 @@ export interface EvaluateFormData {
 type LocaleKeyState = {
     currentLocale: Locale;
     currentTheme: Theme;
-    // Move UI visibility settings to top level (language-independent)
     showHeader: boolean;
     showLeftPanel: boolean;
     showFooter: boolean;
     trainFormData?: TrainFormData;
-    evaluateFormData?: EvaluateFormData; // Add evaluate form data to the state
+    evaluateFormData?: EvaluateFormData;
 } & {
     [locale in Locale]?: {
         [key in SettingKey]?: string | boolean;
     };
 };
 
-// Update defaultState to move UI visibility to top level
+// DEPRECATED: For backward compatibility only. Use useAppStore instead.
 export const defaultState: LocaleKeyState = {
     currentLocale: "en" as Locale,
-    currentTheme: lightTheme, // Default to light theme
-    // Define UI visibility at top level
+    currentTheme: lightTheme,
     showHeader: true,
     showLeftPanel: true,
     showFooter: true,
@@ -60,46 +58,42 @@ export const defaultState: LocaleKeyState = {
     },
     en: {
         activeKeyLeftPanel: "element1",
-        theme: "light", // Keep this for backward compatibility
+        theme: "light",
         userName: "",
-        // Remove these from locale-specific state
     },
     vi: {
         activeKeyLeftPanel: "element1",
         theme: "light",
         userName: "",
-        // Remove these from locale-specific state
     },
     fr: {
         activeKeyLeftPanel: "element1",
         theme: "light",
         userName: "",
-        // Remove these from locale-specific state
     },
-    zh: { // Add Chinese locale
+    zh: {
         activeKeyLeftPanel: "element1",
         theme: "light",
         userName: "",
-        // Remove these from locale-specific state
     },
 };
 
+// DEPRECATED: Maintain for backward compatibility
+// Use the useAppStore hook from /store/appStore instead
 interface ContextValue {
     state: LocaleKeyState;
     setState: React.Dispatch<React.SetStateAction<LocaleKeyState>>;
-    // Add these UI toggle functions
     toggleHeader: () => void;
     toggleLeftPanel: () => void;
     toggleFooter: () => void;
-    // Add functions for train form data
     updateTrainFormData: (data: Partial<TrainFormData>) => void;
     resetTrainFormData: () => void;
-    // Add functions for evaluate form data
     updateEvaluateFormData: (data: Partial<EvaluateFormData>) => void;
     resetEvaluateFormData: () => void;
-    toggleTheme: () => void; // Add theme toggle function
+    toggleTheme: () => void;
 }
 
+// Creating a dummy context for backward compatibility
 export const Context = createContext<ContextValue>({
     state: defaultState,
     setState: () => { },
@@ -110,5 +104,13 @@ export const Context = createContext<ContextValue>({
     resetTrainFormData: () => {},
     updateEvaluateFormData: () => {},
     resetEvaluateFormData: () => {},
-    toggleTheme: () => {}, // Add theme toggle function
+    toggleTheme: () => {},
 });
+
+// Add a console warning for deprecated usage
+if (process.env.NODE_ENV !== 'production') {
+  console.warn(
+    'The Context API from utils/context.tsx is deprecated. ' +
+    'Please use the useAppStore hook from store/appStore.ts instead.'
+  );
+}

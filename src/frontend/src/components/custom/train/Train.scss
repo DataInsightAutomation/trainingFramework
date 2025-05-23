@@ -1,0 +1,313 @@
+.train-container {
+  // Intel color palette
+  --intel-blue: #0071c5;
+  --intel-blue-light: #00a3e0;
+  --intel-blue-dark: #1b365d;
+  --intel-blue-hover: #00578f;
+  --intel-highlight: #80c3e6;
+  --intel-accent: #00aeef;
+  
+  // Button hover colors
+  --btn-outline-primary-hover-bg: var(--intel-blue);
+  --btn-outline-primary-hover-color: white;
+  --btn-outline-secondary-hover-bg: #6c757d;
+  --btn-outline-secondary-hover-color: white;
+  --btn-outline-success-hover-bg: #198754;
+  --btn-outline-success-hover-color: white;
+  --btn-outline-info-hover-bg: #0dcaf0;
+  --btn-outline-info-hover-color: white;
+  
+  // Theme-aware colors for the options toggle section
+  .options-toggle-section {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    
+    // Light theme (default)
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    
+    .fw-medium {
+      color: #6c757d;
+    }
+    
+    .toggle-divider {
+      color: #6c757d;
+      font-weight: 300;
+    }
+    
+    // Dark theme overrides
+    .dark-theme &, &.dark-theme {
+      background-color: #2b3035;
+      border-color: #495057;
+      
+      .fw-medium {
+        color: #adb5bd;
+      }
+      
+      .toggle-divider {
+        color: #6c757d;
+      }
+    }
+    
+    &:hover {
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    // Style the button with Intel colors
+    button {
+      min-width: 160px;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-1px);
+      }
+      
+      &.btn-primary {
+        background-color: var(--intel-blue);
+        border-color: var(--intel-blue);
+        
+        &:hover, &:focus {
+          background-color: var(--intel-blue-hover);
+          border-color: var(--intel-blue-hover);
+        }
+      }
+      
+      &.btn-outline-primary {
+        color: var(--intel-blue);
+        border-color: var(--intel-blue);
+        
+        &:hover, &:focus {
+          color: white;
+          background-color: var(--intel-blue);
+        }
+      }
+    }
+    
+    // Search input styling with Intel colors
+    .search-container {
+      min-width: 250px;
+      max-width: 350px;
+      
+      .input-group {
+        .form-control:focus {
+          border-color: var(--intel-blue-light);
+          box-shadow: 0 0 0 0.25rem rgba(0, 113, 197, 0.25);
+        }
+      }
+    }
+  }
+  
+  // Fix button hover styles in the form
+  .model-form-buttons {
+    .btn-outline-primary {
+      border-color: var(--intel-blue);
+      color: var(--intel-blue);
+      
+      &:hover, &.hovered {
+        background-color: var(--btn-outline-primary-hover-bg) !important;
+        color: var(--btn-outline-primary-hover-color) !important;
+        border-color: var(--intel-blue) !important;
+      }
+    }
+    
+    .btn-outline-secondary {
+      &:hover, &.hovered {
+        background-color: var(--btn-outline-secondary-hover-bg) !important;
+        color: var(--btn-outline-secondary-hover-color) !important;
+      }
+    }
+    
+    .btn-outline-success {
+      &:hover, &.hovered {
+        background-color: var(--btn-outline-success-hover-bg) !important;
+        color: var(--btn-outline-success-hover-color) !important;
+      }
+    }
+    
+    .btn-outline-info {
+      &:hover, &.hovered {
+        background-color: var(--btn-outline-info-hover-bg) !important;
+        color: var(--btn-outline-info-hover-color) !important;
+      }
+    }
+  }
+  
+  // Custom styles for collapsible section headers with Intel colors
+  .collapsible-section-header {
+    cursor: pointer;
+    padding: 12px 16px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #6c757d;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+    
+    h4 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--intel-blue-dark);
+    }
+    
+    .chevron-icon {
+      transition: transform 0.2s ease;
+      color: var(--intel-blue);
+      font-size: 1.1rem;
+    }
+    
+    &:hover {
+      background-color: #f0f2f5;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-left-color: var(--intel-blue-light);
+    }
+    
+    &.expanded {
+      border-left-color: var(--intel-blue);
+      
+      .chevron-icon {
+        transform: rotate(180deg);
+      }
+    }
+    
+    // Highlighting for sections with matches
+    &.has-matches {
+      border-left-color: var(--intel-accent);
+    }
+  }
+  
+  // Dark theme styling for form fields
+  &.dark-theme,
+  .dark-theme {
+    // Form control styling for dark theme
+    .form-control, 
+    .form-select,
+    .dropdown-toggle,
+    .custom-select,
+    .react-select__control {
+      background-color: #2b3035 !important;
+      color: #e9ecef !important;
+      border-color: #495057 !important;
+      
+      &:focus {
+        background-color: #2b3035 !important;
+        color: #e9ecef !important;
+        border-color: var(--intel-blue-light) !important;
+        box-shadow: 0 0 0 0.25rem rgba(0, 113, 197, 0.25) !important;
+      }
+      
+      &::placeholder {
+        color: #6c757d !important;
+      }
+    }
+    
+    // Style dropdown menus in dark theme
+    .dropdown-menu,
+    .react-select__menu {
+      background-color: #2b3035 !important;
+      border-color: #495057 !important;
+      
+      .dropdown-item,
+      .react-select__option {
+        color: #e9ecef !important;
+        
+        &:hover, &:focus, &.active {
+          background-color: #343a40 !important;
+        }
+      }
+    }
+    
+    // Form label styling
+    .form-label {
+      color: #e9ecef !important;
+    }
+    
+    // Searched values in multiselect
+    .multi-select-selected-value {
+      background-color: #343a40 !important;
+      color: #e9ecef !important;
+      border-color: #495057 !important;
+    }
+    
+    // Input group styling
+    .input-group-text {
+      background-color: #343a40 !important;
+      color: #e9ecef !important;
+      border-color: #495057 !important;
+    }
+  }
+  
+  // Highlight style for search matches 
+  .search-highlight {
+    background-color: var(--intel-highlight);
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: inline-block;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--intel-blue);
+    }
+  }
+  
+  // Override Bootstrap's button colors
+  .btn-primary {
+    background-color: var(--intel-blue);
+    border-color: var(--intel-blue);
+    
+    &:hover, &:focus, &:active {
+      background-color: var(--intel-blue-hover) !important;
+      border-color: var(--intel-blue-hover) !important;
+    }
+  }
+  
+  .btn-outline-primary {
+    color: var(--intel-blue);
+    border-color: var(--intel-blue);
+    
+    &:hover, &:focus, &:active {
+      background-color: var(--intel-blue) !important;
+      border-color: var(--intel-blue) !important;
+    }
+  }
+}
+
+// Global overrides for Intel colors
+:root {
+  --bs-primary: #0071c5;
+  --bs-primary-rgb: 0, 113, 197;
+  
+  // Override Bootstrap form controls focus
+  .form-control:focus, 
+  .form-select:focus {
+    border-color: #0071c5;
+    box-shadow: 0 0 0 0.25rem rgba(0, 113, 197, 0.25);
+  }
+}
+
+// Apply dark theme styles to model form components
+.model-form-card.dark-theme {
+  background-color: #212529 !important;
+  border-color: #343a40 !important;
+  
+  .model-form-header {
+    background-color: #343a40 !important;
+    color: #e9ecef !important;
+    border-color: #495057 !important;
+  }
+  
+  .card-body {
+    background-color: #212529 !important;
+    color: #e9ecef !important;
+  }
+}

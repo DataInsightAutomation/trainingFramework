@@ -242,6 +242,9 @@ importers:
       wordcloud:
         specifier: ^1.2.2
         version: 1.2.3
+      zustand:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/react@18.2.27)(immer@9.0.21)(react@18.2.0)
     devDependencies:
       '@babel/core':
         specifier: ^7.26.9
@@ -9963,6 +9966,24 @@ packages:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
+  zustand@5.0.5:
+    resolution: {integrity: sha512-mILtRfKW9xM47hqxGIxCv12gXusoY/xTSHBYApXozR0HmQv299whhBeeAcRy+KrPPybzosvJBCOmVjq6x12fCg==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -15256,7 +15277,7 @@ snapshots:
       eslint-config-standard-jsx: 3.0.0(eslint-plugin-react@6.10.3(eslint@3.3.1))(eslint@3.3.1)
       eslint-plugin-react: 6.10.3(eslint@3.3.1)
 
-  eslint-config-standard@6.0.0(eslint-plugin-promise@2.0.1(eslint@3.3.1))(eslint-plugin-standard@2.3.1(eslint@9.14.0(jiti@2.4.2)))(eslint@3.3.1):
+  eslint-config-standard@6.0.0(eslint-plugin-promise@2.0.1(eslint@3.3.1))(eslint-plugin-standard@2.3.1(eslint@3.3.1))(eslint@3.3.1):
     dependencies:
       eslint: 3.3.1
       eslint-plugin-promise: 2.0.1(eslint@3.3.1)
@@ -20296,7 +20317,7 @@ snapshots:
   standard-react@4.0.0:
     dependencies:
       eslint: 3.3.1
-      eslint-config-standard: 6.0.0(eslint-plugin-promise@2.0.1(eslint@3.3.1))(eslint-plugin-standard@2.3.1(eslint@9.14.0(jiti@2.4.2)))(eslint@3.3.1)
+      eslint-config-standard: 6.0.0(eslint-plugin-promise@2.0.1(eslint@3.3.1))(eslint-plugin-standard@2.3.1(eslint@3.3.1))(eslint@3.3.1)
       eslint-config-standard-jsx: 3.0.0(eslint-plugin-react@6.10.3(eslint@3.3.1))(eslint@3.3.1)
       eslint-config-standard-react: 4.0.0(eslint-plugin-react@6.10.3(eslint@3.3.1))(eslint@3.3.1)
       eslint-plugin-promise: 2.0.1(eslint@3.3.1)
@@ -21764,5 +21785,11 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yocto-queue@1.2.1: {}
+
+  zustand@5.0.5(@types/react@18.2.27)(immer@9.0.21)(react@18.2.0):
+    optionalDependencies:
+      '@types/react': 18.2.27
+      immer: 9.0.21
+      react: 18.2.0
 
   zwitch@2.0.4: {}

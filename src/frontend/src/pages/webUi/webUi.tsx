@@ -1,16 +1,16 @@
-import React, { useContext } from 'react';
-import { Context } from "../../utils/context";
+import React from 'react';
+import { useAppStore } from "../../store/appStore";
 import { tabConfig } from '../../constants/config/tabConfig';
 import ThemedContent from '../../components/shared/ThemedContent';
 import MainLayout from '../../components/core/layout/MainLayout';
 
 const WebUi = () => {
-    const { state } = useContext(Context);
-    const activeTabKey = state.en?.activeKeyLeftPanel;
+    // Get the tab key directly from the top level
+    const { activeKeyLeftPanel } = useAppStore();
     
     const renderContent = () => {
         // Find the active tab configuration
-        const activeTab = tabConfig.find(tab => tab.key === activeTabKey);
+        const activeTab = tabConfig.find(tab => tab.key === activeKeyLeftPanel);
         
         if (activeTab) {
             const Component = activeTab.component;

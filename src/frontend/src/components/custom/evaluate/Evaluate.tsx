@@ -1,8 +1,9 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Context, EvaluateFormData } from '../../../utils/context';
+import React, { useState, useEffect } from 'react';
+import { EvaluateFormData } from '../../../utils/context';
+import { useAppStore } from '../../../store/appStore';
 import ModelForm, { FormField, FormButton } from '../../shared/ModelForm';
-import { trainAPI } from '../../../apis/api'; // Import API for consistency
-
+// import { trainAPI, resourceAPI } from '../../../apis/api';
+import { resourceService } from '../../../services/resourceService';
 // Simple translations for localization
 const translations = {
   en: {
@@ -79,20 +80,19 @@ type TranslationLocale = keyof typeof translations;
 
 // Define the form fields with better type consistency
 const evaluateFields: FormField[] = [
-  // Make modelName a searchable select for better UX, matching Train component
   { 
     name: 'modelName', 
     type: 'searchableSelect',
-    options: [
-      { value: 'llama3-8b', directLabel: 'Llama 3 (8B)' },
-      { value: 'gpt4', directLabel: 'GPT-4' },
-      { value: 'mistral-7b', directLabel: 'Mistral (7B)' },
-      { value: 'mixtral', directLabel: 'Mixtral 8x7B' },
-    ] 
+    options: [] // Will be populated from API
   },
   { name: 'modelPath', type: 'text' },
   { name: 'checkpointPath', type: 'text', colSpan: 12 },
-  { name: 'dataset', type: 'text' },
+  { 
+    name: 'dataset', 
+    type: 'multiSelect',
+    options: [], // Will be populated from API
+    required: true
+  },
   { 
     name: 'evaluateMethod', 
     type: 'select',
@@ -107,8 +107,9 @@ const evaluateFields: FormField[] = [
 ];
 
 const Evaluate = () => {
-  const { state, updateEvaluateFormData } = useContext(Context);
-  const formData: EvaluateFormData = state.evaluateFormData || {
+  // Use Zustand store directly
+  const { evaluateFormData, currentLocale, updateEvaluateFormData } = useAppStore();
+  const formData: EvaluateFormData = evaluateFormData || {
     modelName: '',
     modelPath: '',
     checkpointPath: '',
@@ -116,8 +117,62 @@ const Evaluate = () => {
     evaluateMethod: ''
   };
 
+  const [modelOptions, setModelOptions] = useState<{value: string, directLabel: string}[]>([]);
+  const [datasetOptions, setDatasetOptions] = useState<{value: string, directLabel: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load models and datasets from API
+  useEffect(() => {
+    const fetchResources = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Use API service instead of direct Axios calls
+        const modelsResponse = await resourceService.getModels();
+        if (modelsResponse && modelsResponse.models) {
+          const modelsList = modelsResponse.models.map((model: any) => ({
+            value: model.id,
+            directLabel: model.name
+          }));
+          setModelOptions(modelsList);
+        }
+        
+        const datasetsResponse = await resourceService.getDatasets();
+        if (datasetsResponse && datasetsResponse.datasets) {
+          const datasetsList = datasetsResponse.datasets.map((dataset: any) => ({
+            value: dataset.id,
+            directLabel: dataset.name
+          }));
+          setDatasetOptions(datasetsList);
+        }
+      } catch (error) {
+        console.error('Failed to fetch resources:', error);
+        setError('Failed to load models or datasets. Using default options.');
+        
+        // Fallback to default models and datasets
+        setModelOptions([
+          { value: 'llama3-8b', directLabel: 'Llama 3 (8B)' },
+          { value: 'gpt4', directLabel: 'GPT-4' }
+        ]);
+        
+        setDatasetOptions([
+          { value: 'alpaca-cleaned', directLabel: 'Alpaca (Cleaned)' },
+          { value: 'squad-v2', directLabel: 'SQuAD v2' }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Call the function
+    fetchResources();
+  }, []);
+  
+  // Update evaluateFields with dynamic options
+  evaluateFields[0].options = modelOptions;
+  evaluateFields[3].options = datasetOptions;
 
   const handleSubmit = async (data: Record<string, string>) => {
     try {
@@ -128,7 +183,7 @@ const Evaluate = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Return success message to display in alert
-      const locale: 'en' | 'zh' = state.currentLocale === 'zh' ? 'zh' : 'en';
+      const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
       return `${translations[locale].evaluationStarted} "${data.modelName}"`;
     } catch (error) {
       console.error('Evaluation submission failed:', error);
@@ -165,7 +220,7 @@ const Evaluate = () => {
     a.click();
     document.body.removeChild(a);
     
-    const locale = (state.currentLocale === 'zh') ? 'zh' : 'en';
+    const locale = (currentLocale === 'zh') ? 'zh' : 'en';
     alert(translations[locale].configSaved);
   };
   
@@ -181,7 +236,7 @@ const Evaluate = () => {
           try {
             const config = JSON.parse(event.target?.result as string);
             updateEvaluateFormData(config);
-            const locale: 'en' | 'zh' = state.currentLocale === 'zh' ? 'zh' : 'en';
+            const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
             alert(translations[locale].configLoaded);
           } catch (error) {
             console.error('Failed to parse config file:', error);
@@ -228,7 +283,7 @@ const Evaluate = () => {
       onSubmit={handleSubmit}
       formData={formData as unknown as Record<string, string>}
       onChange={handleChange}
-      buttons={formButtons} // Add buttons for consistency with Train
+      buttons={formButtons}
     />
   );
 };

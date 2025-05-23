@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -7,7 +6,6 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import initializeStore from './redux/store/store'; // Import the store promise
 import { persistStore } from 'redux-persist';
-// import store from './redux/store'; // If you have a synchronous store
 
 const Root = () => {
   const [store, setStore] = useState(null);

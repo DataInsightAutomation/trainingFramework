@@ -351,3 +351,26 @@ export const trainAPI = {
     }
   }
 };
+
+// // Add the resourceAPI module for models and datasets
+// export const resourceAPI = {
+//   // Get all available models
+//   getModels: async () => {
+//     try {
+//       return getData('v1/resources/models', false);
+//     } catch (error) {
+//       console.error("Error fetching models:", error);
+//       throw error;
+//     }
+//   },
+  
+//   // Get all available datasets
+//   getDatasets: async () => {
+//     try {
+//       return getData('v1/resources/datasets', false);
+//     } catch (error) {
+//       console.error("Error fetching datasets:", error);
+//       throw error;
+//     }
+//   }
+// };
