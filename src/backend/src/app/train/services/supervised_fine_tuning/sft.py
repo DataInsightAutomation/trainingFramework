@@ -66,4 +66,5 @@ async def simulate_training(job_id: str):
 # dataset_dir: /home/dut7071/lun/LLaMA-Factory/data
     TRAIN_ARGS['dataset_dir'] = os.path.join(os.getcwd(), '../data')
     TRAIN_ARGS['dataloader_num_workers'] = 0
+    TRAIN_ARGS['dataset'] = "custom_test_hugginface_alpaca"
     run_exp(TRAIN_ARGS)

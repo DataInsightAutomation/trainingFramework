@@ -2,3 +2,4 @@ saves
 data/mini_alpaca_*.json
 settings.json
 *.pyc
+cache
