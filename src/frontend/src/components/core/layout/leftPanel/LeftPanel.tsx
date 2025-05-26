@@ -7,7 +7,7 @@ import './LeftPanel.scss';
 
 const LeftPanel = () => {
   // Get and set active tab via top-level state, not locale-specific
-  const { currentTheme, en, activeKeyLeftPanel, setActiveTab } = useAppStore();
+  const { currentTheme, activeKeyLeftPanel, setActiveTab } = useAppStore();
   const panelRef = useRef<HTMLDivElement>(null);
   const [resizing, setResizing] = useState(false);
   
@@ -16,8 +16,6 @@ const LeftPanel = () => {
     const savedWidth = localStorage.getItem('leftPanelWidth');
     return savedWidth ? parseInt(savedWidth, 10) : 250;
   });
-
-  const activeKey = en?.activeKeyLeftPanel;
   
   // Save panel width to localStorage when it changes
   useEffect(() => {
@@ -76,7 +74,7 @@ const LeftPanel = () => {
     >
       <Tab.Container 
         id="left-tabs" 
-        activeKey={typeof activeKey === "string" ? activeKey : undefined}
+        activeKey={activeKeyLeftPanel}
         onSelect={k => setActiveKey(k || tabConfig[0].key)}
       >
         <div className="left-panel-content">
