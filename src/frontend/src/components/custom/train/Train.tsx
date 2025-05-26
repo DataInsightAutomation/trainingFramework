@@ -1,25 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { TrainFormData } from '../../../utils/context';
 import { useAppStore } from '../../../store/appStore';
 import ModelForm, { FormField, FormButton } from '../../shared/ModelForm/ModelForm';
 import { resourceService } from '../../../services/resourceService';
 import { EndPoints } from '#constants/endpoint';
 import { trainingService } from '#services/trainingService';
-import { Button } from 'react-bootstrap';
-import OptionsToggle from '../../shared/OptionsToggle';
+import ModelConfigLayout, { ModelConfigContext } from '../../shared/ModelConfigLayout/ModelConfigLayout';
 import './Train.scss';
-import { translations } from './TrainTranslation'
+import { translations } from './TrainTranslation';
 
 // Advanced form field sections with custom header names
 const advancedFieldSections = {
   modelConfig: {
     title: 'modelConfigSection',
     fields: [
-      { name: 'trust_remote_code', type: 'select', options: [
-          { value: 'true', directLabel: 'True' },
-          { value: 'false', directLabel: 'False' },
-        ]
-      },
+      { name: 'trust_remote_code', type: 'toggle', defaultValue: 'true' },
       { name: 'stage', type: 'select', options: [
           { value: 'sft', directLabel: 'SFT' },
           { value: 'rm', directLabel: 'Reward Model' },
@@ -59,11 +54,7 @@ const advancedFieldSections = {
         step: 100,
         required: false // Explicitly mark as not required
       },
-      { name: 'overwrite_cache', type: 'select', options: [
-          { value: 'true', directLabel: 'True' },
-          { value: 'false', directLabel: 'False' },
-        ]
-      },
+      { name: 'overwrite_cache', type: 'toggle', defaultValue: 'false' },
       { name: 'preprocessing_num_workers', type: 'number', min: 1, max: 32, step: 1 },
     ]
   },
@@ -81,29 +72,17 @@ const advancedFieldSections = {
         ]
       },
       { name: 'warmup_ratio', type: 'range', min: 0, max: 0.5, step: 0.01 },
-      { name: 'bf16', type: 'select', options: [
-          { value: 'true', directLabel: 'True' },
-          { value: 'false', directLabel: 'False' },
-        ]
-      },
+      { name: 'bf16', type: 'checkbox', defaultValue: 'true' }, // Changed from toggle to checkbox
     ]
   },
   outputConfig: {
     title: 'outputConfigSection',
     fields: [
-      { name: 'output_dir', type: 'text' },
+      { name: 'output_dir', type: 'text', required: false },
       { name: 'logging_steps', type: 'number', min: 1, max: 1000, step: 1 },
       { name: 'save_steps', type: 'number', min: 10, max: 10000, step: 10 },
-      { name: 'plot_loss', type: 'select', options: [
-          { value: 'true', directLabel: 'True' },
-          { value: 'false', directLabel: 'False' },
-        ]
-      },
-      { name: 'overwrite_output_dir', type: 'select', options: [
-          { value: 'true', directLabel: 'True' },
-          { value: 'false', directLabel: 'False' },
-        ]
-      },
+      { name: 'plot_loss', type: 'toggle', defaultValue: 'true' },
+      { name: 'overwrite_output_dir', type: 'toggle', defaultValue: 'true' },
     ]
   },
 } as const;
@@ -139,13 +118,14 @@ const basicFields: FormField[] = [
 ];
 
 const Train = () => {
-  const { trainFormData, currentLocale, currentTheme, updateTrainFormData } = useAppStore();
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  // Use the shared context for advanced mode and search
+  const { showAdvanced, searchQuery } = useContext(ModelConfigContext);
+  
+  const { trainFormData, currentLocale, updateTrainFormData } = useAppStore();
   const [modelOptions, setModelOptions] = useState<{value: string, directLabel: string}[]>([]);
   const [datasetOptions, setDatasetOptions] = useState<{value: string, directLabel: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   
   // Track expanded/collapsed state of each section
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -434,7 +414,6 @@ const Train = () => {
   }, []);
   
   // Handle form submission via the API
-  // Enhance handleSubmit to provide more specific validation error messages
   const handleSubmit = async (data: Record<string, string>) => {
     try {
       console.log('Train form data before submission:', data);
@@ -639,22 +618,6 @@ const Train = () => {
     }
   };
   
-  // Add toggle handler
-  const handleToggleAdvanced = () => {
-    setShowAdvanced(!showAdvanced);
-    setSearchQuery('');
-  };
-  
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-  
-  // Handle clearing the search query
-  const handleClearSearch = () => {
-    setSearchQuery('');
-  };
-  
   // Update form buttons to include advanced toggle
   const formButtons: FormButton[] = [
     {
@@ -693,39 +656,32 @@ const Train = () => {
     modelOptions, 
     datasetOptions,
     expandedSections,
-    searchQuery, // Add search dependency
+    searchQuery,
     currentLocale
   ]);
   
   return (
-    <div className="train-container">
-      {/* Replace the inline toggle section with the shared component */}
-      <OptionsToggle
-        showAdvanced={showAdvanced}
-        onToggleAdvanced={handleToggleAdvanced}
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        onClearSearch={handleClearSearch}
-        toggleText={{
-          advanced: translations[currentLocale === 'zh' ? 'zh' : 'en'].advancedOptions,
-          basic: translations[currentLocale === 'zh' ? 'zh' : 'en'].basicOptions
-        }}
-        title="Configure Training Options"
-        theme={currentTheme.name}
-      />
-      
-      <ModelForm
-        title="trainNewModel"
-        submitButtonText="startTraining"
-        buttons={formButtons}
-        fields={currentFields}
-        translations={translations}
-        onSubmit={handleSubmit}
-        formData={formData as unknown as Record<string, string>}
-        onChange={handleChange}
-      />
-    </div>
+    <ModelForm
+      title="trainNewModel"
+      submitButtonText="startTraining"
+      buttons={formButtons}
+      fields={currentFields}
+      translations={translations}
+      onSubmit={handleSubmit}
+      formData={formData as unknown as Record<string, string>}
+      onChange={handleChange}
+    />
   );
 };
 
-export default Train;
+// Create a wrapper component that includes the shared layout
+const TrainWithLayout = () => (
+  <ModelConfigLayout 
+    title="Configure Training Options"
+    translations={translations}
+  >
+    <Train />
+  </ModelConfigLayout>
+);
+
+export default TrainWithLayout;

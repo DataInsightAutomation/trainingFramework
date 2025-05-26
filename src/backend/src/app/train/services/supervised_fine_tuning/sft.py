@@ -31,6 +31,7 @@ async def simulate_training(job_id: str, train_args: Optional[dict[str, Any]] = 
         import ray
         from ray.train.huggingface.transformers import RayTrainReportCallback
     from llamafactory.train.tuner import _training_function
+    # from llamafactory.train.tuner import run_exp as original_run_exp
 
     def run_exp(args: Optional[dict[str, Any]] = None, callbacks: Optional[list["TrainerCallback"]] = None) -> None:
         args = read_args(args)
@@ -62,6 +63,7 @@ async def simulate_training(job_id: str, train_args: Optional[dict[str, Any]] = 
     example_path = "../examples"
     # tiny_random_llama3_file_name  = example_path + "tiny-random-llama3.yaml"
     tiny_random_llama3_file_name  = "tiny-random-llama3.yaml"
+    tiny_random_llama3_file_name  = "intel_llama3_lora_sft.yaml"
     # tiny_random_llama3_file_name  = "intel_llama3_lora_sft.yaml"
     tiny_random_llama3_file_name = os.path.join(example_path, tiny_random_llama3_file_name)
 
@@ -76,4 +78,5 @@ async def simulate_training(job_id: str, train_args: Optional[dict[str, Any]] = 
     print('received full_params:', train_args)
     train_args["dataset_dir"] = os.path.join(os.getcwd(), '../data')
     train_args["dataloader_num_workers"] = 0
+    # train_args["do_train"] = True
     run_exp(train_args)

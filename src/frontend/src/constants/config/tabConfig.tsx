@@ -1,5 +1,5 @@
-import Evaluate from "../../components/custom/evaluate/Evaluate";
-import Train from "../../components/custom/train/Train";
+import EvaluateWithLayout from "../../components/custom/evaluate/Evaluate";
+import TrainWithLayout from "../../components/custom/train/Train";
 
 export interface TabItem {
   key: string;
@@ -10,27 +10,27 @@ export interface TabItem {
 
 export const tabConfig: TabItem[] = [
   {
-    key: "element1",
+    key: "train",
     label: "Train",
     icon: "bi bi-graph-up", // Bootstrap icon example
-    component: Train
+    component: TrainWithLayout
   },
   {
-    key: "element2",
+    key: "evaluate",
     label: "Evaluate",
     icon: "bi bi-clipboard-data",
-    component: Evaluate
+    component: EvaluateWithLayout
   },
   {
-    key: "element3",
+    key: "export",
     label: "Export",
-    icon: "bi bi-gear", // Example icon
+    icon: "bi bi-box-arrow-up", // More appropriate icon
     component: () => <div>Export</div> // Placeholder component
   },
   {
-    key: "element4",
+    key: "inference",
     label: "Inference / Prediction / Deployment",
-    icon: "bi bi-gear", // Example icon
+    icon: "bi bi-lightning", // More appropriate icon
     component: () => <div>Inference / Prediction / Deployment</div> // Placeholder component
   }
   // Add more tabs easily by adding to this array

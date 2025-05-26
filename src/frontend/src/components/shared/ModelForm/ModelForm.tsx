@@ -5,11 +5,13 @@ import TextField from '../../core/field/text/TextField';
 import SearchableSelectField from '../../core/field/searchableSelect/SearchableSelectField';
 import { DropDown } from '../../core/field/dropdown/Dropdown';
 import MultiSelectField from '../../core/field/multiSelect/MultiSelectField'; // Import MultiSelectField
+import ToggleField from '../../core/field/toggle/ToggleField'; // Import the new ToggleField component
+import CheckboxField from '../../core/field/checkbox/CheckboxField'; // Import the new CheckboxField component
 import './ModelForm.scss'; // Import the SCSS file
 
 export interface FormField {
     name: string;
-    type: 'text' | 'select' | 'searchableSelect' | 'multiSelect' | 'sectionHeader' | 'number' | 'range';
+    type: 'text' | 'select' | 'searchableSelect' | 'multiSelect' | 'sectionHeader' | 'number' | 'range' | 'toggle' | 'checkbox';
     colSpan?: number;
     options?: ReadonlyArray<{
         readonly value: string;
@@ -30,6 +32,7 @@ export interface FormField {
     step?: number;
     // Add support for search highlighting
     searchHighlight?: string;
+    defaultValue?: string;
 }
 
 // Add a button configuration interface
@@ -218,14 +221,39 @@ const ModelForm: React.FC<FormConfig> = ({
     : t[`${field.name}Label`];
 
                     return (
-                        <Form.Group as={Col} md={colSpan} controlId={field.name} key={fieldKey}>
-                            {/* Always show the label at the Form.Group level for consistency */}
-                            <Form.Label>
-                                {fieldLabel}
-                                {field.required && <span className="text-danger"> *</span>}
-                            </Form.Label>
+                        <Form.Group as={Col} md={colSpan} controlId={field.type === 'checkbox' ? undefined : field.name} key={fieldKey}>
+                            {/* Only show label at Form.Group level if not checkbox */}
+                            {field.type !== 'checkbox' && (
+                                <Form.Label>
+                                    {fieldLabel}
+                                    {field.required && <span className="text-danger"> *</span>}
+                                </Form.Label>
+                            )}
 
-                            {field.type === 'multiSelect' ? (
+                            {field.type === 'checkbox' ? (
+                                <CheckboxField
+                                    name={field.name}
+                                    label={t[`${field.name}Label`] || field.name}
+                                    value={formData[field.name] || field.defaultValue || 'false'}
+                                    onChange={onChange}
+                                    required={field.required !== false}
+                                    validated={validated}
+                                    error={t[`${field.name}Error`]}
+                                    theme={theme}
+                                    disabled={field.disabled}
+                                />
+                            ) : field.type === 'toggle' ? (
+                                <ToggleField
+                                    name={field.name}
+                                    value={formData[field.name] || field.defaultValue || 'false'}
+                                    onChange={onChange}
+                                    required={field.required !== false}
+                                    validated={validated}
+                                    error={t[`${field.name}Error`]}
+                                    theme={theme}
+                                    noLabel={true}
+                                />
+                            ) : field.type === 'multiSelect' ? (
                                 <MultiSelectField
                                     name={field.name}
                                     value={formData[field.name] || ''}

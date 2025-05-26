@@ -64,7 +64,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         dataset: '',
         evaluateMethod: ''
     },
-    activeKeyLeftPanel: "element1",
+    activeKeyLeftPanel: "train",
     en: {
         theme: "light",
         userName: "",

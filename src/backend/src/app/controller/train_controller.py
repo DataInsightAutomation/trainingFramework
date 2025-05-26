@@ -62,6 +62,7 @@ async def train_model(request: TrainRequest):
             "dataset": ','.join(request.datasets) if request.datasets else None,
             # stage is the training method mapped to internal representation
             "stage": map_train_method_from_input(request.train_method), 
+            "do_train": True, # seems like need, not sure when it should no need.
         }
         
         if is_advanced:

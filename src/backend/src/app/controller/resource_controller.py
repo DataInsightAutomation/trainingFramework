@@ -10,8 +10,8 @@ router = APIRouter(
 
 # Mock data for models - in production, this would come from a database or file system
 AVAILABLE_MODELS = [
-    Model(id="llamafactory/tiny-random-Llama-3", name="Llama-3.2-1B-instruct", description="Small Llama 3 instruction-tuned model"),
-    Model(id="llama3-1b", name="Llama-3.2-1B", description="Small Llama 3 base model"),
+    Model(id="llamafactory/tiny-random-Llama-3", name="Tiny-random-llama-3", description="Small Llama 3 instruction-tuned model"),
+    Model(id="meta-llama/Llama-3.2-1B-Instruct", name="Llama-3.2-1B-instruct", description="Small Llama 3 base model"),
     Model(id="llama3-8b", name="Llama 3 (8B)", description="Medium-sized Llama 3 model"),
     Model(id="llama3-70b", name="Llama 3 (70B)", description="Large Llama 3 model"),
     Model(id="gpt4", name="GPT-4", description="OpenAI GPT-4 model"),

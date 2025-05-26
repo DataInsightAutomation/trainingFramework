@@ -1,86 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { EvaluateFormData } from '../../../utils/context';
 import { useAppStore } from '../../../store/appStore';
 import ModelForm, { FormField, FormButton } from '../../shared/ModelForm/ModelForm';
 import { resourceService } from '../../../services/resourceService';
-import OptionsToggle from '../../shared/OptionsToggle';
-// Simple translations for localization
-const translations = {
-  en: {
-    evaluateModel: 'Evaluate Model',
-    modelNameLabel: 'Model Name',
-    modelNamePlaceholder: 'Enter model name',
-    modelNameError: 'Please provide a model name.',
-    modelPathLabel: 'Model Path',
-    modelPathPlaceholder: 'Enter model path (e.g., /models/base)',
-    modelPathError: 'Please provide a model path.',
-    checkpointPathLabel: 'Checkpoint Path',
-    checkpointPathPlaceholder: 'Enter checkpoint path (e.g., /checkpoints/finetuned-model)',
-    checkpointPathError: 'Please provide a checkpoint path.',
-    datasetLabel: 'Dataset',
-    datasetPlaceholder: 'Enter dataset name or path',
-    datasetError: 'Please provide a dataset.',
-    evaluateMethodLabel: 'Evaluation Method',
-    selectevaluateMethod: 'Select an evaluation method',
-    accuracy: 'Accuracy',
-    f1Score: 'F1 Score',
-    precision: 'Precision',
-    recall: 'Recall',
-    bleu: 'BLEU Score',
-    startEvaluation: 'Start Evaluation',
-    submitting: 'Submitting...',
-    evaluationStarted: 'Evaluation job started for model',
-    selectLanguage: 'Language',
-    english: 'English',
-    chinese: '中文',
-    previewCommand: 'Preview Command',
-    loadConfig: 'Load Config',
-    saveConfig: 'Save Config',
-    configSaved: 'Configuration saved successfully',
-    configLoaded: 'Configuration loaded successfully',
-    commandCopied: 'Command copied to clipboard',
-    advancedOptions: 'Advanced Options',
-    basicOptions: 'Basic Options',
-  },
-  zh: {
-    evaluateModel: '评估模型',
-    modelNameLabel: '模型名称',
-    modelNamePlaceholder: '输入模型名称',
-    modelNameError: '请提供模型名称。',
-    modelPathLabel: '模型路径',
-    modelPathPlaceholder: '输入模型路径（例如，/models/base）',
-    modelPathError: '请提供模型路径。',
-    checkpointPathLabel: '检查点路径',
-    checkpointPathPlaceholder: '输入检查点路径（例如，/checkpoints/finetuned-model）',
-    checkpointPathError: '请提供检查点路径。',
-    datasetLabel: '数据集',
-    datasetPlaceholder: '输入数据集名称或路径',
-    datasetError: '请提供数据集。',
-    evaluateMethodLabel: '评估方法',
-    selectevaluateMethod: '选择评估方法',
-    accuracy: '准确率',
-    f1Score: 'F1分数',
-    precision: '精确率',
-    recall: '召回率',
-    bleu: 'BLEU分数',
-    startEvaluation: '开始评估',
-    submitting: '提交中...',
-    evaluationStarted: '模型评估任务已开始',
-    selectLanguage: '语言',
-    english: 'English',
-    chinese: '中文',
-    previewCommand: '预览命令',
-    loadConfig: '加载配置',
-    saveConfig: '保存配置',
-    configSaved: '配置保存成功',
-    configLoaded: '配置加载成功',
-    commandCopied: '命令已复制到剪贴板',
-    advancedOptions: '高级选项',
-    basicOptions: '基本选项',
-  }
-} as const;
-
-type TranslationLocale = keyof typeof translations;
+import ModelConfigLayout, { ModelConfigContext } from '../../shared/ModelConfigLayout/ModelConfigLayout';
+import { translations } from './EvaluateTranslation';
 
 // Define the form fields with better type consistency
 const evaluateFields: FormField[] = [
@@ -110,9 +34,30 @@ const evaluateFields: FormField[] = [
   }
 ];
 
+// Advanced field sections for evaluate
+const advancedFieldSections = {
+  evaluationConfig: {
+    title: 'evaluationConfigSection',
+    fields: [
+      // Add your advanced evaluation fields here
+      { name: 'metric_type', type: 'select', options: [
+          { value: 'accuracy', directLabel: 'Accuracy' },
+          { value: 'f1', directLabel: 'F1 Score' },
+          { value: 'precision', directLabel: 'Precision' },
+        ]
+      },
+      // Add more fields as needed
+    ]
+  },
+  // Add more sections as needed
+};
+
 const Evaluate = () => {
-  // Use Zustand store directly - add currentTheme to the destructuring
-  const { evaluateFormData, currentLocale, currentTheme, updateEvaluateFormData } = useAppStore();
+  // Use the shared context for advanced mode and search
+  const { showAdvanced, searchQuery } = useContext(ModelConfigContext);
+  
+  // Use Zustand store directly
+  const { evaluateFormData, currentLocale, updateEvaluateFormData } = useAppStore();
   const formData: EvaluateFormData = evaluateFormData || {
     modelName: '',
     modelPath: '',
@@ -125,28 +70,22 @@ const Evaluate = () => {
   const [datasetOptions, setDatasetOptions] = useState<{value: string, directLabel: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   
-  // Add field sections for the evaluate component, similar to how it's done in Train
-  const advancedFieldSections = {
-    evaluationConfig: {
-      title: 'evaluationConfigSection',
-      fields: [
-        // Add your advanced evaluation fields here
-        { name: 'metric_type', type: 'select', options: [
-            { value: 'accuracy', directLabel: 'Accuracy' },
-            { value: 'f1', directLabel: 'F1 Score' },
-            { value: 'precision', directLabel: 'Precision' },
-          ]
-        },
-        // Add more fields as needed
-      ]
-    },
+  // Track expanded sections state
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    evaluationConfig: true,
     // Add more sections as needed
+  });
+  
+  // Toggle section expanded/collapsed state
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
   };
   
-  // Function to highlight matches
+  // Function to highlight matches (from shared code)
   const highlightMatch = (text: string, query: string) => {
     if (!query.trim() || !text) return text;
     
@@ -154,34 +93,77 @@ const Evaluate = () => {
     return text.replace(regex, '<span class="search-highlight">$1</span>');
   };
   
-  // Add filter and search functionality
+  // Load models and datasets from API (you may want to move this to the shared layout)
+  useEffect(() => {
+    // ...existing code for fetching resources...
+  }, []);
+  
+  // Get form fields based on mode and search (similar to Train)
   const getFormFields = () => {
     // Create a deep copy of evaluate fields
     const fieldsWithOptions = JSON.parse(JSON.stringify(evaluateFields));
     
     // Apply options
-    fieldsWithOptions[0].options = modelOptions;
-    fieldsWithOptions[3].options = datasetOptions;
+    if (modelOptions.length > 0) {
+      fieldsWithOptions[0].options = modelOptions;
+    }
     
-    // Apply search filtering and highlighting logic similar to Train component
+    if (datasetOptions.length > 0) {
+      fieldsWithOptions[3].options = datasetOptions;
+    }
+    
+    // Apply search filtering and highlighting logic
     if (searchQuery.trim()) {
-      // Implementation similar to Train component
-      // ...
+      // Filter fields based on search query
+      return fieldsWithOptions.filter(field => {
+        const labelKey = `${field.name}Label`;
+        const locale = currentLocale === 'zh' ? 'zh' : 'en';
+        const label = translations[locale][labelKey] || field.name;
+        return label.toLowerCase().includes(searchQuery.toLowerCase());
+      }).map(field => {
+        // Add search highlighting
+        const labelKey = `${field.name}Label`;
+        const locale = currentLocale === 'zh' ? 'zh' : 'en';
+        const label = translations[locale][labelKey] || field.name;
+        
+        if (label.toLowerCase().includes(searchQuery.toLowerCase())) {
+          field.searchHighlight = highlightMatch(label, searchQuery);
+        }
+        return field;
+      });
     }
     
-    // Handle advanced mode
+    // When advanced mode is enabled, add advanced fields
     if (showAdvanced) {
-      // Implementation similar to Train component
-      // ...
+      let allFields = [...fieldsWithOptions];
+      
+      // Add each section with proper handling
+      Object.entries(advancedFieldSections).forEach(([sectionKey, section]) => {
+        // Add section header
+        allFields.push({
+          name: `${sectionKey}Header`,
+          type: 'sectionHeader',
+          colSpan: 12,
+          collapsible: true,
+          expanded: expandedSections[sectionKey],
+          onToggle: () => toggleSection(sectionKey),
+          customTitle: section.title
+        });
+        
+        // Only add fields if section is expanded
+        if (expandedSections[sectionKey]) {
+          allFields = [...allFields, ...section.fields];
+        }
+      });
+      
+      return allFields;
     }
     
+    // Return basic fields by default
     return fieldsWithOptions;
   };
   
-  // Update evaluateFields with dynamic options
-  evaluateFields[0].options = modelOptions;
-  evaluateFields[3].options = datasetOptions;
-
+  // Form submission handler
   const handleSubmit = async (data: Record<string, string>) => {
     try {
       setIsLoading(true);
@@ -205,7 +187,7 @@ const Evaluate = () => {
     updateEvaluateFormData({ [name as keyof EvaluateFormData]: value });
   };
 
-  // Define button actions for consistency with Train component
+  // Define button actions (unchanged)
   const handlePreviewCommand = (data: Record<string, string>) => {
     const command = `curl -X POST http://api.example.com/evaluate \\
   -H "Content-Type: application/json" \\
@@ -256,7 +238,7 @@ const Evaluate = () => {
     input.click();
   };
 
-  // Define buttons for consistency with Train component
+  // Form buttons (unchanged)
   const formButtons: FormButton[] = [
     {
       key: 'preview-command',
@@ -287,53 +269,32 @@ const Evaluate = () => {
     modelOptions,
     datasetOptions,
     searchQuery,
-    currentLocale
+    currentLocale,
+    expandedSections
   ]);
   
-  // Add toggle handler
-  const handleToggleAdvanced = () => {
-    setShowAdvanced(!showAdvanced);
-    setSearchQuery('');
-  };
-  
-  // Add search handlers
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-  
-  const handleClearSearch = () => {
-    setSearchQuery('');
-  };
-  
   return (
-    <div className="evaluate-container">
-      {/* Use the new OptionsToggle component */}
-      <OptionsToggle
-        showAdvanced={showAdvanced}
-        onToggleAdvanced={handleToggleAdvanced}
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        onClearSearch={handleClearSearch}
-        toggleText={{
-          advanced: translations[currentLocale === 'zh' ? 'zh' : 'en'].advancedOptions,
-          basic: translations[currentLocale === 'zh' ? 'zh' : 'en'].basicOptions
-        }}
-        title="Configure Evaluation Options"
-        theme={currentTheme.name}
-      />
-      
-      <ModelForm
-        title="evaluateModel"
-        submitButtonText="startEvaluation"
-        buttons={formButtons}
-        fields={currentFields}
-        translations={translations}
-        onSubmit={handleSubmit}
-        formData={formData as unknown as Record<string, string>}
-        onChange={handleChange}
-      />
-    </div>
+    <ModelForm
+      title="evaluateModel"
+      submitButtonText="startEvaluation"
+      buttons={formButtons}
+      fields={currentFields}
+      translations={translations}
+      onSubmit={handleSubmit}
+      formData={formData as unknown as Record<string, string>}
+      onChange={handleChange}
+    />
   );
 };
 
-export default Evaluate;
+// Create a wrapper component that includes the shared layout
+const EvaluateWithLayout = () => (
+  <ModelConfigLayout 
+    title="Configure Evaluation Options"
+    translations={translations}
+  >
+    <Evaluate />
+  </ModelConfigLayout>
+);
+
+export default EvaluateWithLayout;
