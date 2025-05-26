@@ -21,5 +21,17 @@ export const tabConfig: TabItem[] = [
     icon: "bi bi-clipboard-data",
     component: Evaluate
   },
+  {
+    key: "element3",
+    label: "Export",
+    icon: "bi bi-gear", // Example icon
+    component: () => <div>Export</div> // Placeholder component
+  },
+  {
+    key: "element4",
+    label: "Inference / Prediction / Deployment",
+    icon: "bi bi-gear", // Example icon
+    component: () => <div>Inference / Prediction / Deployment</div> // Placeholder component
+  }
   // Add more tabs easily by adding to this array
 ];
