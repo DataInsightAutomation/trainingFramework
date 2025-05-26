@@ -115,7 +115,11 @@ const basicFields: FormField[] = [
     type: 'searchableSelect',
     options: [] // Will be populated from API
   },
-  { name: 'modelPath', type: 'text' },
+  { 
+    name: 'modelPath', 
+    type: 'text',
+    required: false // Make this field optional
+  },
   { 
     name: 'dataset', 
     type: 'multiSelect',

@@ -17,6 +17,17 @@ router = APIRouter(
 )
 
 
+def map_train_method_from_input(train_method: str) -> str:
+    """
+    Map the input train method to the internal representation.
+    """
+    if train_method == "supervised":
+        return "sft"
+    elif train_method == "rlhf":
+        return "rlhf"
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported train method: {train_method}")
+
 @router.post("/v1/train",
     response_model=TrainResponse,
     status_code=status.HTTP_200_OK,
@@ -48,8 +59,9 @@ async def train_model(request: TrainRequest):
         full_params = {
             "model_name_or_path": request.model_name,
             "model_path": request.model_path,
-            "datasets": request.datasets,
-            "train_method": request.train_method,
+            "dataset": ','.join(request.datasets) if request.datasets else None,
+            # stage is the training method mapped to internal representation
+            "stage": map_train_method_from_input(request.train_method), 
         }
         
         if is_advanced:
@@ -62,7 +74,7 @@ async def train_model(request: TrainRequest):
                 for field_name, field_value in advanced_params.items():
                     print(f"  - {field_name}: {field_value}")
                     full_params[field_name] = field_value
-        
+
         # Apply method-specific defaults for missing parameters
         defaults = get_default_config(request.train_method)
         
@@ -81,7 +93,13 @@ async def train_model(request: TrainRequest):
             
             full_params["output_dir"] = f"saves/{model_short_name}/{training_method}/{finetuning_type}/{stage}"
             print(f"  - Generated output_dir: {full_params['output_dir']}")
-        
+
+        # Ensure model_name_or_path is either a local path or remote model path
+        if request.model_path:
+            print('model_path is not provided, using model_name instead')
+            full_params["model_name_or_path"] = request.model_name
+        del full_params["model_path"]
+            
         # Generate a job ID
         job_id = f"train-{hash(request.model_name)}-{int(time.time())}"
 
@@ -94,8 +112,8 @@ async def train_model(request: TrainRequest):
         }
 
         # Start a background task to run the training
-        await simulate_training(job_id)
-
+        await simulate_training(job_id, full_params)
+        print("job completed for job_id:", job_id)
         return {"job_id": job_id, "status": "PENDING"}
     except Exception as e:
         print(f"Error handling training request: {e}")

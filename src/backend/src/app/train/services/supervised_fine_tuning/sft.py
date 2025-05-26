@@ -9,7 +9,7 @@ from ....api.router import job_status
 from llamafactory.train.callbacks import TrainerCallback
 
 
-async def simulate_training(job_id: str):
+async def simulate_training(job_id: str, train_args: Optional[dict[str, Any]] = None) -> None:
     """Simulate a training job for demo purposes"""
     # stages = ["PREPARING", "TRAINING", "FINALIZING", "COMPLETED"]
 
@@ -43,17 +43,17 @@ async def simulate_training(job_id: str):
         print(args, 'args')
         print(ray_args, 'ray_args')
 
-        # callbacks = callbacks or []
-        # if ray_args.use_ray:
-        #     callbacks.append(RayTrainReportCallback())
-        #     trainer = get_ray_trainer(
-        #         training_function=_training_function,
-        #         train_loop_config={"args": args, "callbacks": callbacks},
-        #         ray_args=ray_args,
-        #     )
-        #     trainer.fit()
-        # else:
-        #     _training_function(config={"args": args, "callbacks": callbacks})
+        callbacks = callbacks or []
+        if ray_args.use_ray:
+            callbacks.append(RayTrainReportCallback())
+            trainer = get_ray_trainer(
+                training_function=_training_function,
+                train_loop_config={"args": args, "callbacks": callbacks},
+                ray_args=ray_args,
+            )
+            trainer.fit()
+        else:
+            _training_function(config={"args": args, "callbacks": callbacks})
 
 
 
@@ -71,5 +71,9 @@ async def simulate_training(job_id: str):
 # dataset_dir: /home/dut7071/lun/LLaMA-Factory/data
     TRAIN_ARGS['dataset_dir'] = os.path.join(os.getcwd(), '../data')
     TRAIN_ARGS['dataloader_num_workers'] = 0
-    TRAIN_ARGS['dataset'] = "custom_test_hugginface_alpaca"
-    run_exp(TRAIN_ARGS)
+    # TRAIN_ARGS['dataset'] = "custom_test_hugginface_alpaca"
+    # run_exp(TRAIN_ARGS)
+    print('received full_params:', train_args)
+    train_args["dataset_dir"] = os.path.join(os.getcwd(), '../data')
+    train_args["dataloader_num_workers"] = 0
+    run_exp(train_args)
