@@ -26,12 +26,30 @@ export const trainingService = {
   /**
    * Start a new training job
    * @param trainingData The training configuration
+   * @param isAdvancedMode Whether advanced options should be included
    * @returns Promise with job information
    */
-  startTraining: async (trainingData: TrainingRequest): Promise<TrainingResponse> => {
+  startTraining: async (trainingData: TrainingRequest, isAdvancedMode: boolean = false): Promise<TrainingResponse> => {
     try {
-      console.log("Training service starting job with data:", trainingData);
-      const response = await postData(EndPoints.startTraining, trainingData);
+      // If not in advanced mode, ensure we only send basic fields
+      let finalData: TrainingRequest;
+      
+      if (!isAdvancedMode) {
+        // In basic mode, create a new object with only the basic fields
+        finalData = {
+          model_name: trainingData.model_name,
+          model_path: trainingData.model_path,
+          datasets: trainingData.datasets,
+          train_method: trainingData.train_method,
+        };
+        console.log("Training service using BASIC mode - filtering out advanced parameters");
+      } else {
+        finalData = trainingData;
+        console.log("Training service using ADVANCED mode - including all parameters");
+      }
+      
+      console.log("Training service starting job with data:", finalData);
+      const response = await postData(EndPoints.startTraining, finalData);
       
       // Store job ID in local storage for later reference
       if (response.job_id) {

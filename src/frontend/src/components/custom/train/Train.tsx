@@ -51,7 +51,14 @@ const advancedFieldSections = {
     title: 'datasetConfigSection',
     fields: [
       { name: 'cutoff_len', type: 'number', min: 128, max: 8192, step: 32 },
-      { name: 'max_samples', type: 'number', min: 100, max: 100000, step: 100 },
+      { 
+        name: 'max_samples', 
+        type: 'number', 
+        min: 100, 
+        max: 100000, 
+        step: 100,
+        required: false // Explicitly mark as not required
+      },
       { name: 'overwrite_cache', type: 'select', options: [
           { value: 'true', directLabel: 'True' },
           { value: 'false', directLabel: 'False' },
@@ -423,8 +430,34 @@ const Train = () => {
   }, []);
   
   // Handle form submission via the API
+  // Enhance handleSubmit to provide more specific validation error messages
   const handleSubmit = async (data: Record<string, string>) => {
     try {
+      console.log('Train form data before submission:', data);
+      
+      // Check for any validation issues before proceeding
+      const validationIssues = [];
+      
+      // Validate dataset is provided
+      if (!data.dataset) {
+        validationIssues.push("Dataset is required");
+      }
+      
+      // Validate modelName is provided
+      if (!data.modelName) {
+        validationIssues.push("Model name is required");
+      }
+      
+      // Validate max_samples if provided
+      if (data.max_samples && Number(data.max_samples) < 100) {
+        validationIssues.push("Max samples must be at least 100");
+      }
+      
+      // If there are validation issues, throw an error
+      if (validationIssues.length > 0) {
+        throw new Error(`Validation failed: ${validationIssues.join(', ')}`);
+      }
+      
       // Show some loading state if needed
       setIsLoading(true);
       
@@ -441,6 +474,7 @@ const Train = () => {
       
       // Add advanced parameters only when advanced mode is enabled
       if (showAdvanced) {
+        console.log('Advanced mode: including advanced configuration options');
         // Process each advanced section's fields
         Object.entries(advancedFieldSections).forEach(([sectionKey, section]) => {
           for (const field of section.fields) {
@@ -468,12 +502,14 @@ const Train = () => {
             }
           }
         });
+      } else {
+        console.log('Basic mode: excluding advanced configuration options');
       }
       
       console.log('Sending training request with data:', requestData);
       
-      // Call the API endpoint with the prepared data
-      const response = await trainingService.startTraining(requestData);
+      // Call the API endpoint with the prepared data, passing showAdvanced flag
+      const response = await trainingService.startTraining(requestData, showAdvanced);
       
       // Get the job ID from the response
       const jobId = response.job_id;

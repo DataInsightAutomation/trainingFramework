@@ -87,8 +87,21 @@ const ModelForm: React.FC<FormConfig> = ({
         const form = e.currentTarget;
 
         if (form.checkValidity() === false) {
+            
+            // Log which fields failed validation
+            const invalidFields = Array.from(form.elements)
+                .filter((element: any) => !element.checkValidity() && element.name)
+                .map((element: any) => element.name);
+            
             e.stopPropagation();
             setValidated(true);
+            
+            // Show a generic error message
+            setResultMessage({
+                type: 'danger',
+                text: 'Please check the form for errors and try again.'
+            });
+            
             return;
         }
 
@@ -103,6 +116,7 @@ const ModelForm: React.FC<FormConfig> = ({
                 text: message
             });
         } catch (error) {
+            console.error("Form submission error:", error);
             setResultMessage({
                 type: 'danger',
                 text: error instanceof Error ? error.message : 'An error occurred'
@@ -128,7 +142,7 @@ const ModelForm: React.FC<FormConfig> = ({
         setHoveredButtons(prev => ({ ...prev, [buttonKey]: false }));
     };
 
-    // Render form fields based on configuration
+    // Enhanced rendering for form fields with better validation feedback
     const renderFields = () => {
         // Group fields by row
         const rows: FormField[][] = [];
@@ -206,7 +220,10 @@ const ModelForm: React.FC<FormConfig> = ({
                     return (
                         <Form.Group as={Col} md={colSpan} controlId={field.name} key={fieldKey}>
                             {/* Always show the label at the Form.Group level for consistency */}
-                            <Form.Label>{fieldLabel}</Form.Label>
+                            <Form.Label>
+                                {fieldLabel}
+                                {field.required && <span className="text-danger"> *</span>}
+                            </Form.Label>
 
                             {field.type === 'multiSelect' ? (
                                 <MultiSelectField
@@ -269,17 +286,29 @@ const ModelForm: React.FC<FormConfig> = ({
                                     validated={validated} // Pass validation state to dropdown
                                 />
                             ) : field.type === 'number' ? (
-                                <Form.Control
-                                    type="number"
-                                    name={field.name}
-                                    value={formData[field.name] || ''}
-                                    onChange={handleChange}
-                                    placeholder={t[`${field.name}Placeholder`]}
-                                    min={field.min}
-                                    max={field.max}
-                                    step={field.step || 1}
-                                    required={field.required !== false}
-                                />
+                                <>
+                                    <Form.Control
+                                        type="number"
+                                        name={field.name}
+                                        value={formData[field.name] || ''}
+                                        onChange={handleChange}
+                                        placeholder={t[`${field.name}Placeholder`]}
+                                        min={field.min}
+                                        max={field.max}
+                                        step={field.step || 1}
+                                        required={field.required !== false}
+                                    />
+                                    <Form.Text className="text-muted">
+                                        {field.min !== undefined && field.max !== undefined ? 
+                                            `Valid range: ${field.min} - ${field.max}` : ''}
+                                    </Form.Text>
+                                    <Form.Control.Feedback type="invalid">
+                                        {t[`${field.name}Error`] || 
+                                          `Please enter a valid value ${field.min !== undefined ? 
+                                            `(minimum: ${field.min}${field.max !== undefined ? `, maximum: ${field.max}` : ''})` : 
+                                            field.max !== undefined ? `(maximum: ${field.max})` : ''}`}
+                                    </Form.Control.Feedback>
+                                </>
                             ) : field.type === 'range' ? (
                                 <div className="range-field-container">
                                     <Form.Control
@@ -312,13 +341,6 @@ const ModelForm: React.FC<FormConfig> = ({
                                     noLabel={true} // Add a prop to hide the label in the TextField component
                                 />
                             )}
-
-                            {/* Show error feedback for selects at the Form.Group level */}
-                            {/* {field.type !== 'searchableSelect' && field.type !== 'text' && (
-                                <Form.Control.Feedback type="invalid">
-                                    {t[`${field.name}Error`]}
-                                </Form.Control.Feedback>
-                            )} */}
                         </Form.Group>
                     );
                 })}

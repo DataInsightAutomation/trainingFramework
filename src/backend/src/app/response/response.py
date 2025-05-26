@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 class TrainResponse(BaseModel):
     job_id: str
@@ -9,54 +9,56 @@ class TrainRequest(BaseModel):
     # Basic parameters (always required)
     model_name: str
     model_path: str
-    datasets: list[str]
+    datasets: List[str]
     train_method: str
     
-    # Advanced parameters (all optional with defaults)
-    # Model configuration
-    trust_remote_code: bool = Field(default=True)
-    stage: str = Field(default="sft")
-    do_train: bool = Field(default=True)
+    # Advanced parameters with Optional[Type] = None
+    # This means they only get values when explicitly provided
+    trust_remote_code: Optional[bool] = None
+    stage: Optional[str] = None
+    do_train: Optional[bool] = None
     
     # Fine-tuning configuration
-    finetuning_type: str = Field(default="lora")
-    lora_rank: int = Field(default=8)
-    lora_target: str = Field(default="all")
-    template: str = Field(default="llama3")
+    finetuning_type: Optional[str] = None
+    lora_rank: Optional[int] = None
+    lora_target: Optional[str] = None
+    template: Optional[str] = None
     
     # Dataset configuration
-    cutoff_len: int = Field(default=2048)
-    max_samples: Optional[int] = Field(default=None)
-    overwrite_cache: bool = Field(default=False)
-    preprocessing_num_workers: int = Field(default=4)
-    dataloader_num_workers: int = Field(default=0)
+    cutoff_len: Optional[int] = None
+    max_samples: Optional[int] = None
+    overwrite_cache: Optional[bool] = None
+    preprocessing_num_workers: Optional[int] = None
+    dataloader_num_workers: Optional[int] = None
     
     # Output configuration
-    output_dir: Optional[str] = Field(default=None)
-    logging_steps: int = Field(default=10)
-    save_steps: int = Field(default=500)
-    plot_loss: bool = Field(default=True)
-    overwrite_output_dir: bool = Field(default=True)
-    save_only_model: bool = Field(default=False)
-    report_to: str = Field(default="none")
+    output_dir: Optional[str] = None
+    logging_steps: Optional[int] = None
+    save_steps: Optional[int] = None
+    plot_loss: Optional[bool] = None
+    overwrite_output_dir: Optional[bool] = None
+    save_only_model: Optional[bool] = None
+    report_to: Optional[str] = None
     
     # Training parameters
-    per_device_train_batch_size: int = Field(default=1)
-    gradient_accumulation_steps: int = Field(default=8)
-    learning_rate: float = Field(default=0.0001)
-    num_train_epochs: float = Field(default=1.0)
-    lr_scheduler_type: str = Field(default="cosine")
-    warmup_ratio: float = Field(default=0.1)
-    bf16: bool = Field(default=True)
-    resume_from_checkpoint: Optional[str] = Field(default=None)
-    dataset_dir: Optional[str] = Field(default=None)
+    per_device_train_batch_size: Optional[int] = None
+    gradient_accumulation_steps: Optional[int] = None
+    learning_rate: Optional[float] = None
+    num_train_epochs: Optional[float] = None
+    lr_scheduler_type: Optional[str] = None
+    warmup_ratio: Optional[float] = None
+    bf16: Optional[bool] = None
+    resume_from_checkpoint: Optional[str] = None
+    dataset_dir: Optional[str] = None
     
     # Additional parameters can be passed without validation
-    additional_params: Optional[dict] = Field(default=None)
+    additional_params: Optional[Dict[str, Any]] = None
 
     class Config:
-        # This allows additional fields to be accepted
-        extra = "allow"
+        # Exclude None values when converting to dict
+        exclude_none = True
+        # Only accept explicitly defined fields
+        extra = "ignore"
 
 class StatusResponse(BaseModel):
     job_id: str
