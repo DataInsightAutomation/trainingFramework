@@ -1,11 +1,44 @@
 .model-config-container {
   width: 100%;
   
-  // Common styling for the model config container
+  // Make the options toggle sticky with solid background
   .options-toggle-container {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     margin-bottom: 1rem;
+    width: 100%;
+    
+    // Target the exact classes from your component
+    .options-toggle-section {
+      // Override the existing padding/margin classes with 
+      margin-bottom: 1rem ;
+      padding: 1rem ;
+      
+      // Solid backgrounds instead of transparent
+      &.light-theme {
+        background-color: #ffffff ; // Solid white
+        border-color: #dee2e6 ;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) ;
+      }
+      
+      &.dark-theme {
+        background-color: #343a40 ; // Solid dark background
+        border-color: #6c757d ;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3) ;
+      }
+    }
   }
   
-  // Make the layout consistent with padding
-  padding: 0.5rem 0;
+  // Add some padding to prevent content from being hidden behind sticky header
+  padding-bottom: 1rem;
+}
+
+// Add global overrides for these specific classes to ensure they have proper backgrounds
+.options-toggle-section.mb-4.p-3.border.rounded.light-theme {
+  background-color: #ffffff ;
+}
+
+.options-toggle-section.mb-4.p-3.border.rounded.dark-theme {
+  background-color: #343a40 ;
 }
