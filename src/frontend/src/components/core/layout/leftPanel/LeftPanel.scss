@@ -17,12 +17,38 @@
     background-color: #f8f9fa;
     color: #212529;
     border-right-color: #dee2e6;
+    
+    .tab-link {
+      color: #495057;
+      
+      &:hover {
+        background-color: #e9ecef;
+      }
+      
+      &.active {
+        background-color: #0d6efd;
+        color: #fff;
+      }
+    }
   }
   
   &.dark-theme {
     background-color: #343a40;
     color: #e9ecef;
     border-right-color: #495057;
+    
+    .tab-link {
+      color: #e9ecef;
+      
+      &:hover {
+        background-color: #495057;
+      }
+      
+      &.active {
+        background-color: #0d6efd;
+        color: #fff;
+      }
+    }
   }
   
   .left-panel-content {
