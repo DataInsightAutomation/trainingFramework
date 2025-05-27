@@ -38,14 +38,14 @@ export const translations = {
     datasetConfiguration: 'Dataset Configuration',
     trainingConfiguration: 'Training Configuration',
     outputConfiguration: 'Output Configuration',
-    
+
     // Custom section titles
     modelConfigSection: 'Model Settings',
     finetuningConfigSection: 'Fine-tuning Settings',
     datasetConfigSection: 'Dataset Processing',
     trainingConfigSection: 'Training Parameters',
     outputConfigSection: 'Output Configuration',
-    
+
     // Field labels
     trust_remote_codeLabel: 'Trust Remote Code',
     stageLabel: 'Training Stage',
@@ -69,7 +69,7 @@ export const translations = {
     save_stepsLabel: 'Save Steps',
     plot_lossLabel: 'Plot Loss',
     overwrite_output_dirLabel: 'Overwrite Output Directory',
-    
+
     // Placeholders
     trust_remote_codePlaceholder: 'Select trust remote code',
     stagePlaceholder: 'Select training stage',
@@ -93,11 +93,17 @@ export const translations = {
     save_stepsPlaceholder: 'Enter save steps',
     plot_lossPlaceholder: 'Select plot loss',
     overwrite_output_dirPlaceholder: 'Select overwrite output directory',
-        evaluationConfigSection: 'Evaluation Settings',
+    evaluationConfigSection: 'Evaluation Settings',
     metric_typeLabel: 'Metric Type',
     metric_typePlaceholder: 'Select a metric type',
+    addCustomModel: 'Add custom model: "{input}"',
+    enterCustomModelName: 'Enter custom model name or path',
+    modelNameDescription: 'Select a model or enter a custom model name/path (e.g., local path or HuggingFace model ID)',
   },
   zh: {
+    addCustomModel: '添加自定义模型: "{input}"',
+    enterCustomModelName: '输入自定义模型名称或路径',
+    modelNameDescription: '选择模型或输入自定义模型名称/路径（例如，本地路径或 HuggingFace 模型 ID）',
     trainNewModel: '训练新模型',
     modelNameLabel: '模型名称',
     modelNamePlaceholder: '输入模型名称',
@@ -135,14 +141,14 @@ export const translations = {
     datasetConfiguration: '数据集配置',
     trainingConfiguration: '训练配置',
     outputConfiguration: '输出配置',
-    
+
     // Custom section titles in Chinese
     modelConfigSection: '模型设置',
     finetuningConfigSection: '微调设置',
     datasetConfigSection: '数据集处理',
     trainingConfigSection: '训练参数',
     outputConfigSection: '输出配置',
-    
+
     // Field labels (Chinese translations would go here)
     trust_remote_codeLabel: '信任远程代码',
     stageLabel: '训练阶段',
@@ -166,7 +172,7 @@ export const translations = {
     save_stepsLabel: '保存步数',
     plot_lossLabel: '绘制损失',
     overwrite_output_dirLabel: '覆盖输出目录',
-    
+
     // Placeholders
     trust_remote_codePlaceholder: '选择信任远程代码',
     stagePlaceholder: '选择训练阶段',
@@ -190,7 +196,7 @@ export const translations = {
     save_stepsPlaceholder: '输入保存步数',
     plot_lossPlaceholder: '选择绘制损失',
     overwrite_output_dirPlaceholder: '选择覆盖输出目录',
-        evaluationConfigSection: '评估设置',
+    evaluationConfigSection: '评估设置',
     metric_typeLabel: '指标类型',
     metric_typePlaceholder: '选择指标类型',
   }

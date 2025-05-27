@@ -1,0 +1,77 @@
+.searchable-select-container {
+  position: relative;
+  width: 100%;
+  
+  .searchable-select-dropdown {
+    position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 2px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+    
+    &.light-theme {
+      background-color: #fff;
+    }
+    
+    &.dark-theme {
+      background-color: #343a40;
+    }
+    
+    .list-group-item {
+      &.active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+      
+      &.create-option {
+        color: #0d6efd;
+        font-weight: 500;
+        background-color: #f0f7ff; // Light blue background to stand out
+        border-left: 3px solid #0d6efd; // Left border for emphasis
+        
+        &:hover {
+          background-color: #e0f0ff;
+        }
+        
+        .small {
+          font-size: 80%;
+        }
+      }
+      
+      &.dark-theme.create-option {
+        color: #6ea8fe;
+        background-color: #343a45; // Darker blue for dark theme
+        border-left: 3px solid #6ea8fe;
+        
+        &:hover {
+          background-color: #3a4149;
+        }
+      }
+    }
+  }
+  
+  .form-text {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+}
+
+// Add this to TrainTranslation.ts to support the new fields
+// exports.translations = {
+//   en: {
+//     ...existing translations...,
+//     addCustomModel: 'Add custom model: "{input}"',
+//     enterCustomModelName: 'Enter custom model name or path',
+//     modelNameDescription: 'Select a model or enter a custom model name/path (e.g., local path or HuggingFace model ID)'
+//   },
+//   zh: {
+//     ...existing translations...,
+//     addCustomModel: '添加自定义模型: "{input}"',
+//     enterCustomModelName: '输入自定义模型名称或路径',
+//     modelNameDescription: '选择模型或输入自定义模型名称/路径（例如，本地路径或 HuggingFace 模型 ID）'
+//   }
+// }

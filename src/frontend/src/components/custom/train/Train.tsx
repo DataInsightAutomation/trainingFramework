@@ -92,7 +92,12 @@ const basicFields: FormField[] = [
   {
     name: 'modelName', 
     type: 'searchableSelect',
-    options: [] // Will be populated from API
+    options: [], // Will be populated from API
+    creatable: true, // Allow creating custom options
+    createMessage: 'addCustomModel', // Translation key for "Add custom model: {input}"
+    createPlaceholder: 'enterCustomModelName', // Translation key for placeholder
+    customOptionPrefix: 'custom', // Prefix for custom option values
+    description: 'modelNameDescription' // Add a description explaining custom model input
   },
   { 
     name: 'modelPath', 
@@ -449,11 +454,29 @@ const Train = () => {
       
       // Start with basic parameters that are always included
       const requestData: any = {
-        model_name: data.modelName,
-        model_path: data.modelPath,
         datasets: datasets,
         train_method: data.trainMethod,
       };
+      
+      // Handle custom model inputs
+      if (data.modelName && data.modelName.startsWith('custom:')) {
+        // Extract the actual model name/path from the custom input
+        const customModelName = data.modelName.replace('custom:', '');
+        requestData.model_name = customModelName;
+        requestData.is_custom_model = true;
+        
+        // If modelPath is empty but we have a custom model, we'll use the custom name as the path
+        if (!data.modelPath) {
+          requestData.model_path = customModelName;
+        } else {
+          requestData.model_path = data.modelPath;
+        }
+      } else {
+        // Regular model selection
+        requestData.model_name = data.modelName;
+        requestData.model_path = data.modelPath;
+        requestData.is_custom_model = false;
+      }
       
       // Add advanced parameters only when advanced mode is enabled
       if (showAdvanced) {

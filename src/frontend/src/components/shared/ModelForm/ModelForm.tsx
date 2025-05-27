@@ -33,6 +33,12 @@ export interface FormField {
     // Add support for search highlighting
     searchHighlight?: string;
     defaultValue?: string;
+    creatable?: boolean; // For searchableSelect, allows creating new options
+    createMessage?: string; // Message to show when creating a new option
+    createPlaceholder?: string; // Placeholder text for the create input
+    customOptionPrefix?: string; // Prefix for custom option values
+    description?: string; // Additional description text for the field
+    disabled?: boolean; // Optional property to disable the field
 }
 
 // Add a button configuration interface
@@ -273,7 +279,7 @@ const ModelForm: React.FC<FormConfig> = ({
                                 <SearchableSelectField
                                     name={field.name}
                                     value={formData[field.name] || ''}
-                                    placeholder={placeholderText}
+                                    placeholder={field.createPlaceholder ? t[field.createPlaceholder] : placeholderText}
                                     options={field.options?.map(option => ({
                                         value: option.value,
                                         label: option.directLabel || (option.label ? t[option.label] : option.value)
@@ -284,6 +290,12 @@ const ModelForm: React.FC<FormConfig> = ({
                                     error={t[`${field.name}Error`]}
                                     theme={theme}
                                     noLabel={true}
+                                    // Pass through all creatable props
+                                    creatable={field.creatable}
+                                    createMessage={field.createMessage ? t[field.createMessage] : field.createMessage}
+                                    createPlaceholder={field.createPlaceholder ? t[field.createPlaceholder] : field.createPlaceholder}
+                                    customOptionPrefix={field.customOptionPrefix}
+                                    description={field.description ? t[field.description] : field.description}
                                 />
                             ) : field.type === 'select' ? (
                                 <DropDown
