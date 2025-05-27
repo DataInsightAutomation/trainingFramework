@@ -29,9 +29,9 @@ export const tabConfig: TabItem[] = [
   },
   {
     key: "inference",
-    label: "Inference / Prediction / Deployment",
+    label: "Inference",
     icon: "bi bi-lightning", // More appropriate icon
-    component: () => <div>Inference / Prediction / Deployment</div> // Placeholder component
+    component: () => <div>Inference</div> // Placeholder component
   }
   // Add more tabs easily by adding to this array
 ];
