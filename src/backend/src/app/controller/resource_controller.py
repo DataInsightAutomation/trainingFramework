@@ -32,6 +32,7 @@ AVAILABLE_MODELS = [
 AVAILABLE_DATASETS = [
     Dataset(id="alpaca-cleaned", name="Alpaca (Cleaned)", description="Cleaned version of the Stanford Alpaca dataset", category="Instruction"),
     Dataset(id="custom_test_hugginface_alpaca", name="Custom Test Huggingface Alpaca", description="Custom test dataset based on Huggingface Alpaca mini", category="Instruction"),
+    Dataset(id="custom_test_smaller_alpaca_test", name="Custom Test Smaller Alpaca Test", description="Custom test dataset based on a smaller version of Alpaca", category="Instruction"),
     Dataset(id="alpaca-gpt4", name="Alpaca-GPT4", description="GPT-4 generated Alpaca dataset", category="Instruction"),
     Dataset(id="dolly-15k", name="Dolly 15k", description="Databricks' Dolly 15k instruction dataset", category="Instruction"),
     Dataset(id="oasst1", name="Open Assistant", description="Open Assistant dataset", category="Conversation"),
