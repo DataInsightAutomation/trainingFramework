@@ -4,7 +4,7 @@ import time
 import os
 import logging
 from app.response.response import TrainRequest, TrainResponse
-from app.train.services.supervised_fine_tuning.supervised_fine_tuning import simulate_training as run_training_job
+from app.services.train.supervised_fine_tuning.supervised_fine_tuning import simulate_training as run_training_job
 from ..api.router import job_status
 from app.config.training_defaults import get_default_config
 
