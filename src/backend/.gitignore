@@ -3,3 +3,6 @@ data/mini_alpaca_*.json
 settings.json
 *.pyc
 cache
+data
+misc/mini*.json
+misc/alpaca_data_cleaned.json
