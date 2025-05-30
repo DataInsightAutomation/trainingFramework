@@ -123,7 +123,7 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
             'template', 'cutoff_len', 'max_samples', 'overwrite_cache', 'preprocessing_num_workers',
             'per_device_train_batch_size', 'gradient_accumulation_steps', 'learning_rate',
             'num_train_epochs', 'lr_scheduler_type', 'warmup_ratio', 'bf16',
-            'output_dir', 'logging_steps', 'save_steps', 'plot_loss', 'overwrite_output_dir'
+            'output_dir', 'logging_steps', 'save_steps', 'plot_loss', 'overwrite_output_dir',
         ])
         
         logger.info(f"Request type: {'Advanced' if is_advanced else 'Basic'}")
@@ -143,12 +143,25 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
             "has_custom_datasets": custom_datasets_found,
             "stage": map_train_method_from_input(request.train_method), 
             "do_train": True,
+            # Add Intel-specific options
+            # "use_ipex": True,
         }
         
+        # Add token if provided
+        if hasattr(request, 'token') and request.token:
+            full_params["hub_token"] = request.token  # Add to params for functions that accept it directly
+            os.environ["HF_TOKEN"] = request.token    # Set in environment for libraries that check env vars
+            # Add this additional environment variable for better compatibility
+            os.environ["HUGGING_FACE_HUB_TOKEN"] = request.token
+            logger.info("Token provided for training (set in environment variables)")
+        else:
+            os.environ["HF_TOKEN"] = ''    # Set in environment for libraries that check env vars
+            os.environ["HUGGING_FACE_HUB_TOKEN"] = ''
+
         # Add advanced parameters if provided
         if is_advanced:
             advanced_params = {k: v for k, v in request_dict.items() 
-                            if k not in ["model_name", "model_path", "datasets", "train_method"]}
+                            if k not in ["model_name", "model_path", "datasets", "train_method", "token"]}
             full_params.update(advanced_params)
 
         # Apply method-specific defaults for missing parameters

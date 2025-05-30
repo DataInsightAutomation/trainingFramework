@@ -41,6 +41,7 @@ export const trainingService = {
           model_path: trainingData.model_path,
           datasets: trainingData.datasets,
           train_method: trainingData.train_method,
+          token: trainingData.token,
         };
         console.log("Training service using BASIC mode - filtering out advanced parameters");
       } else {

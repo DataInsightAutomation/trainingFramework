@@ -99,6 +99,11 @@ export const translations = {
     addCustomModel: 'Add custom model: "{input}"',
     enterCustomModelName: 'Enter custom model name or path',
     modelNameDescription: 'Select a model or enter a custom model name/path (e.g., local path or HuggingFace model ID)',
+
+    // Token field translations
+    tokenLabel: 'API Token',
+    tokenPlaceholder: 'Enter your API token',
+    tokenDescription: 'Optional: Provide an API token for authentication with model providers',
   },
   zh: {
     addCustomModel: '添加自定义模型: "{input}"',
@@ -199,5 +204,10 @@ export const translations = {
     evaluationConfigSection: '评估设置',
     metric_typeLabel: '指标类型',
     metric_typePlaceholder: '选择指标类型',
+
+    // Token field translations in Chinese
+    tokenLabel: 'API 令牌',
+    tokenPlaceholder: '输入您的 API 令牌',
+    tokenDescription: '可选：提供 API 令牌用于模型提供商的身份验证',
   }
 };

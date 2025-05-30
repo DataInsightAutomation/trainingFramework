@@ -119,6 +119,12 @@ const basicFields: FormField[] = [
       { value: 'finetuning', label: 'finetuning' },
       { value: 'distillation', label: 'distillation' }
     ]
+  },
+  {
+    name: 'token',
+    type: 'text',
+    required: false,
+    description: 'tokenDescription' // Add a translation key for the description
   }
 ];
 
@@ -155,6 +161,7 @@ const Train = () => {
     modelPath: '',
     dataset: '',
     trainMethod: '',
+    token: '', // Add default empty value for token
     
     // Advanced options with defaults
     trust_remote_code: 'true',
@@ -457,6 +464,11 @@ const Train = () => {
         datasets: datasets,
         train_method: data.trainMethod,
       };
+      
+      // Add token if provided
+      if (data.token) {
+        requestData.token = data.token;
+      }
       
       // Handle custom model inputs
       if (data.modelName && data.modelName.startsWith('custom:')) {

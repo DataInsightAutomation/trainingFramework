@@ -11,6 +11,7 @@ class TrainRequest(BaseModel):
     model_path: str
     datasets: List[str]
     train_method: str
+    token: Optional[str] = None
     
     # Advanced parameters with Optional[Type] = None
     # This means they only get values when explicitly provided
