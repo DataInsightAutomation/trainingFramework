@@ -1,9 +1,9 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Context } from '../../../utils/context';
-import Header from './header/Header';
-import Footer from './footer/Footer';
-import LeftPanel from './leftPanel/LeftPanel';
-import AxiosInterceptor from '../../../apis/AxiosInterceptor';
+import React, { useState, useEffect } from 'react';
+import { useAppStore } from '../../../../store/appStore';
+import Header from '../header/Header';
+import Footer from '../footer/Footer';
+import LeftPanel from '../leftPanel/LeftPanel';
+import AxiosInterceptor from '../../../../apis/AxiosInterceptor';
 import './MainLayout.scss';
 
 interface MainLayoutProps {
@@ -11,14 +11,9 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const { state, toggleHeader, toggleLeftPanel, toggleFooter } = useContext(Context);
+  // Use Zustand store directly instead of Context
+  const { showHeader, showLeftPanel, showFooter, currentTheme, toggleHeader, toggleLeftPanel, toggleFooter } = useAppStore();
   
-  // Get UI state directly from state
-  const showHeader = state.showHeader;
-  const showLeftPanel = state.showLeftPanel;
-  const showFooter = state.showFooter;
-  const theme = state.currentTheme;
-
   // Track panel width
   const [leftPanelWidth, setLeftPanelWidth] = useState(() => {
     const savedWidth = localStorage.getItem('leftPanelWidth');
@@ -51,15 +46,40 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     };
   }, [leftPanelWidth]);
 
+  // Add keyboard shortcut for header and footer toggle
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Shift+H for header toggle
+      if (event.shiftKey && event.key === 'H') {
+        toggleHeader();
+      }
+      // Shift+F for footer toggle
+      if (event.shiftKey && event.key === 'F') {
+        toggleFooter();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [toggleHeader, toggleFooter]);
+
   return (
-    <div className={`main-layout ${theme.name}-theme`}>
+    <div className={`main-layout ${currentTheme.name}-theme`}>
       <AxiosInterceptor />
       
-      {/* Header Toggle Button */}
+      {/* Header Toggle Button - Always visible regardless of header state */}
       <div
-        className={`toggle-button header-toggle ${showHeader ? 'header-visible' : 'header-hidden'} ${theme.name}-theme`}
+        className={`toggle-button header-toggle always-visible ${currentTheme.name}-theme`}
         onClick={toggleHeader}
-        title={showHeader ? 'Hide Header' : 'Show Header'}
+        title={showHeader ? 'Hide Header (Shift+H)' : 'Show Header (Shift+H)'}
+        style={{
+          position: 'fixed',
+          top: showHeader ? 'auto' : '0',
+          zIndex: 1100,
+          boxShadow: '0 0 5px rgba(0,0,0,0.2)'
+        }}
       >
         {showHeader ? '▲' : '▼'}
       </div>
@@ -74,7 +94,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <LeftPanel />
               
               <div
-                className={`toggle-button panel-toggle panel-hide-toggle ${theme.name}-theme`}
+                className={`toggle-button panel-toggle panel-hide-toggle ${currentTheme.name}-theme`}
                 onClick={toggleLeftPanel}
                 title="Hide Left Panel"
               >
@@ -86,7 +106,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {/* Panel Show Button when hidden */}
           {!showLeftPanel && (
             <div
-              className={`toggle-button panel-toggle panel-show-toggle ${theme.name}-theme`}
+              className={`toggle-button panel-toggle panel-show-toggle ${currentTheme.name}-theme`}
               onClick={toggleLeftPanel}
               title="Show Left Panel"
             >
@@ -104,11 +124,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </div>
       </div>
 
-      {/* Footer Toggle Button */}
+      {/* Footer Toggle Button - Always visible regardless of footer state */}
       <div
-        className={`toggle-button footer-toggle ${showFooter ? 'footer-visible' : 'footer-hidden'} ${theme.name}-theme`}
+        className={`toggle-button footer-toggle always-visible ${currentTheme.name}-theme`}
         onClick={toggleFooter}
-        title={showFooter ? 'Hide Footer' : 'Show Footer'}
+        title={showFooter ? 'Hide Footer (Shift+F)' : 'Show Footer (Shift+F)'}
+        style={{
+          position: 'fixed',
+          bottom: showFooter ? '40px' : '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999, // Higher z-index to ensure visibility
+          boxShadow: '0 0 5px rgba(0,0,0,0.3)',
+          padding: '5px 10px',
+          borderRadius: showFooter ? '4px 4px 0 0' : '0 0 4px 4px',
+          opacity: 0.9, // Slightly transparent
+          cursor: 'pointer'
+        }}
       >
         {showFooter ? '▼' : '▲'}
       </div>

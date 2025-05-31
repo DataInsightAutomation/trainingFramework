@@ -112,3 +112,4 @@ def main():
 if __name__ == "__main__":
     main()
 # uvicorn api:app --host 0.0.0.0 --port 8001 --reload
+# gunicorn api:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001 --workers 4

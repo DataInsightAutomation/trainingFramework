@@ -1,15 +1,19 @@
-import React from "react";
-import { ContextProvider } from './utils/ContextProvider';
+import React from 'react';
+import { useAppStore } from './store/appStore';
+import ContextBridge from './providers/ContextBridge';
 import { AppRoute } from "./routes/AppRoute";
-import LoaderWatchdog from './components/shared/LoaderWatchdog';
+// Import Bootstrap Icons
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
-function App() {
+const App = () => {
   return (
-    <ContextProvider>
-      <LoaderWatchdog />
-      <AppRoute />
-    </ContextProvider>
+    <div className="app">
+      {/* Wrap with ContextBridge to provide compatibility */}
+      <ContextBridge>
+        <AppRoute />
+      </ContextBridge>
+    </div>
   );
-}
+};
 
 export default App;

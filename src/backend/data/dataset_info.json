@@ -11,8 +11,12 @@
   "custom_test_smaller_alpaca_eval": {
     "file_name": "mini_alpaca_100_eval.json"
   },
-  "custom_test_smaller_alpaca_train": {
+  "custom_test_smaller_alpaca_test": {
     "file_name": "mini_alpaca_50_pred.json"
+  },
+  "custom_test_hugginface_alpaca": {
+    "file_name": "mini_alpaca_500.json",
+    "hf_hub_url": "teohklun/alpaca_mini_slice"
   },
   "alpaca_zh_demo": {
     "file_name": "alpaca_zh_demo.json"

@@ -5,6 +5,8 @@ from fastapi import APIRouter
 from app import controller
 
 api_router = APIRouter()
+
+# Global job status dictionary
 job_status = {}
 
 import logging
