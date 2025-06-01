@@ -6,3 +6,6 @@ cache
 data
 misc/mini*.json
 misc/alpaca_data_cleaned.json
+
+# huggingface default output_dir
+trainer_output
