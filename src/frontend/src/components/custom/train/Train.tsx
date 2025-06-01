@@ -396,7 +396,30 @@ const Train = () => {
         });
 
         // Find token field and move it after finetuning_type if needed
-        const tokenIndex = fieldsWithOptions.findIndex(f => f.name === 'token');
+        interface FormFieldOption {
+          value: string;
+          label?: string;
+          directLabel?: string;
+        }
+
+        interface FormField {
+          name: string;
+          type: string;
+          options?: FormFieldOption[];
+          required?: boolean;
+          colSpan?: number;
+          description?: string;
+          defaultValue?: string;
+          min?: number;
+          max?: number;
+          step?: number;
+          creatable?: boolean;
+          createMessage?: string;
+          createPlaceholder?: string;
+          customOptionPrefix?: string;
+        }
+
+        const tokenIndex: number = fieldsWithOptions.findIndex((f: FormField) => f.name === 'token');
         if (tokenIndex > trainMethodIndex + 3) { // If token is after our newly inserted fields
           // Remove token from its current position
           const tokenField = fieldsWithOptions.splice(tokenIndex, 1)[0];
@@ -436,164 +459,160 @@ const Train = () => {
     formData
   ]);
 
-  // Handle form submission via the API
+  // Helper functions to make handleSubmit more readable
+  
+  // Validate form data
+  const validateForm = (data: Record<string, string>): string[] => {
+    const issues = [];
+    
+    if (!data.dataset) issues.push("Dataset is required");
+    if (!data.modelName) issues.push("Model name is required");
+    if (data.max_samples && Number(data.max_samples) < 100) {
+      issues.push("Max samples must be at least 100");
+    }
+    
+    return issues;
+  };
+  
+  // Prepare the basic request data
+  const prepareBasicRequestData = (data: Record<string, string>) => {
+    const datasets = data.dataset.split(',').map(d => d.trim()).filter(d => d);
+    
+    const requestData: any = {
+      datasets,
+      train_method: data.trainMethod,
+      finetuning_type: data.finetuning_type,
+    };
+    
+    // Add token if provided
+    if (data.token) requestData.token = data.token;
+    
+    // Handle stage based on training method
+    requestData.stage = data.trainMethod === 'rlhf' && data.stage 
+      ? data.stage 
+      : (data.stage || 'sft');
+    
+    // Handle LoRA parameters
+    if (data.finetuning_type === 'lora' || data.finetuning_type === 'qlora') {
+      requestData.lora_rank = data.lora_rank 
+        ? parseInt(data.lora_rank, 10) 
+        : 8; // Default value
+    }
+    
+    return requestData;
+  };
+  
+  // Process model information
+  const processModelInfo = (data: Record<string, string>, requestData: any) => {
+    if (data.modelName && data.modelName.startsWith('custom:')) {
+      const customModelName = data.modelName.replace('custom:', '');
+      requestData.model_name = customModelName;
+      requestData.is_custom_model = true;
+      requestData.model_path = data.modelPath || customModelName;
+    } else {
+      requestData.model_name = data.modelName;
+      requestData.model_path = data.modelPath;
+      requestData.is_custom_model = false;
+    }
+    return requestData;
+  };
+  
+  // Process advanced parameters when in advanced mode
+  const addAdvancedParameters = (data: Record<string, string>, requestData: any) => {
+    Object.entries(advancedFieldSections).forEach(([_, section]) => {
+      for (const field of section.fields) {
+        const fieldName = field.name;
+        const value = data[fieldName];
+        
+        if (!value) continue;
+        
+        // Convert values to appropriate types
+        if (value === 'true' || value === 'false') {
+          requestData[fieldName] = value === 'true';
+        } else if (!isNaN(Number(value))) {
+          requestData[fieldName] = value.includes('.')
+            ? parseFloat(value)
+            : parseInt(value, 10);
+        } else {
+          requestData[fieldName] = value;
+        }
+      }
+    });
+    return requestData;
+  };
+  
+  // Extract error message from API error response
+  const getErrorMessage = (error: any): string => {
+    if (
+      typeof error === 'object' && 
+      error?.response?.data?.message
+    ) {
+      return error.response.data.message;
+    }
+    return 'Failed to start training. Please try again later.';
+  };
+
+  // Refactored handleSubmit with improved readability
   const handleSubmit = async (data: Record<string, string>): Promise<string> => {
     try {
       console.log('Train form data before submission:', data);
-
-      // Check for any validation issues before proceeding
-      const validationIssues = [];
-
-      // Validate dataset is provided
-      if (!data.dataset) {
-        validationIssues.push("Dataset is required");
-      }
-
-      // Validate modelName is provided
-      if (!data.modelName) {
-        validationIssues.push("Model name is required");
-      }
-
-      // Validate max_samples if provided
-      if (data.max_samples && Number(data.max_samples) < 100) {
-        validationIssues.push("Max samples must be at least 100");
-      }
-
-      // If there are validation issues, throw an error
+      
+      // 1. Validate the form data
+      const validationIssues = validateForm(data);
       if (validationIssues.length > 0) {
         throw new Error(`Validation failed: ${validationIssues.join(', ')}`);
       }
-
-      // Show some loading state if needed
+      
+      // 2. Show loading state
       setIsLoading(true);
-
-      // Parse datasets into an array before sending to API
-      const datasets = data.dataset.split(',').map(d => d.trim()).filter(d => d);
-
-      // Start with basic parameters that are always included
-      const requestData: any = {
-        datasets: datasets,
-        train_method: data.trainMethod,
-        finetuning_type: data.finetuning_type, // Always include finetuning_type
-      };
-
-      // For RLHF, ensure stage is included
-      if (data.trainMethod === 'rlhf' && data.stage) {
-        requestData.stage = data.stage;
-      }
-
-      // Add lora_rank if present and relevant (will only be present in advanced mode now)
-      if (data.lora_rank && (data.finetuning_type === 'lora' || data.finetuning_type === 'qlora')) {
-        requestData.lora_rank = parseInt(data.lora_rank, 10);
-      } else if ((data.finetuning_type === 'lora' || data.finetuning_type === 'qlora')) {
-        // If LoRA is selected but no rank is provided, use the default value
-        requestData.lora_rank = 8;
-      }
-
-      // Handle custom model inputs
-      if (data.modelName && data.modelName.startsWith('custom:')) {
-        // Extract the actual model name/path from the custom input
-        const customModelName = data.modelName.replace('custom:', '');
-        requestData.model_name = customModelName;
-        requestData.is_custom_model = true;
-
-        // If modelPath is empty but we have a custom model, we'll use the custom name as the path
-        if (!data.modelPath) {
-          requestData.model_path = customModelName;
-        } else {
-          requestData.model_path = data.modelPath;
-        }
-      } else {
-        // Regular model selection
-        requestData.model_name = data.modelName;
-        requestData.model_path = data.modelPath;
-        requestData.is_custom_model = false;
-      }
-
-      // Add advanced parameters only when advanced mode is enabled
+      
+      // 3. Prepare request data
+      let requestData = prepareBasicRequestData(data);
+      
+      // 4. Process model information
+      requestData = processModelInfo(data, requestData);
+      
+      // 5. Add advanced parameters if in advanced mode
       if (showAdvanced) {
         console.log('Advanced mode: including advanced configuration options');
-        // Process each advanced section's fields
-        Object.entries(advancedFieldSections).forEach(([sectionKey, section]) => {
-          for (const field of section.fields) {
-            const fieldName = field.name;
-            const value = data[fieldName];
-
-            if (value) {
-              // Convert boolean strings to actual booleans
-              if (value === 'true' || value === 'false') {
-                requestData[fieldName] = value === 'true';
-              }
-              // Convert numeric strings to numbers
-              else if (!isNaN(Number(value))) {
-                // Check if it needs to be an integer or float
-                if (value.includes('.')) {
-                  requestData[fieldName] = parseFloat(value);
-                } else {
-                  requestData[fieldName] = parseInt(value, 10);
-                }
-              }
-              // Keep strings as is
-              else {
-                requestData[fieldName] = value;
-              }
-            }
-          }
-        });
+        requestData = addAdvancedParameters(data, requestData);
       } else {
         console.log('Basic mode: excluding advanced configuration options');
       }
-
+      
+      // 6. Log the final request data
       console.log('Sending training request with data:', requestData);
-
-      // Call the API endpoint with the prepared data, passing showAdvanced flag
+      
+      // 7. Make the API call
       const response = await trainingService.startTraining(requestData, showAdvanced);
-
-      // Get the job ID from the response
+      
+      // 8. Process the response
       const jobId = response.job_id;
-
-      // Save the job ID for later status checking
       if (jobId) {
         localStorage.setItem('lastTrainingJobId', jobId);
       }
-
+      
       console.log('Training submitted successfully:', response);
-
-      // Return a success message for the form
+      
+      // 9. Return success message
       const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
       return `${translations[locale].trainingStarted} "${data.modelName}" (Job ID: ${jobId || 'unknown'})`;
+      
     } catch (error) {
       console.error('Training submission failed:', error);
-
-      // Extract error message from API response if available
-      let errorMessage = 'Failed to start training. Please try again later.';
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response === 'object' &&
-        (error as any).response !== null &&
-        'data' in (error as any).response &&
-        typeof (error as any).response.data === 'object' &&
-        (error as any).response.data !== null &&
-        'message' in (error as any).response.data
-      ) {
-        errorMessage = (error as any).response.data.message;
-      }
-
-      throw new Error(errorMessage);
+      throw new Error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   // Add custom handler for field changes to manage train method changes
   const handleFormChange = (name: string, value: string) => {
     // Special case for train method to update stage as well
     if (name === 'trainMethod') {
       setCurrentTrainMethod(value);
       const newStage = value === 'rlhf' ? 'rm' : 'sft';
-      
+
       // Update both values at once
       setFormData(prev => ({
         ...prev,
@@ -602,7 +621,7 @@ const Train = () => {
       }));
       return;
     }
-    
+
     // For ALL field types, directly update form data to prevent infinite loops
     setFormData(prev => ({
       ...prev,
@@ -660,7 +679,7 @@ const Train = () => {
   return (
     <>
       {/* Error banner */}
-      <ErrorBanner 
+      <ErrorBanner
         message={error}
         retryCount={showErrorBanner ? 2 : 0}
         onRetry={() => setRetryCount(prev => prev + 1)}

@@ -286,108 +286,141 @@ const Export: React.FC = () => {
     return fields;
   }, [currentFields, formData]);
 
-  // Handle form submission via API
+  // Helper functions to make handleSubmit more readable
+  
+  // Validate required fields based on current mode
+  const validateRequiredFields = (data: Record<string, string>): string[] => {
+    const requiredFields = ['modelNameOrPath', 'adapterNameOrPath', 'exportDir'];
+    
+    // Add conditional validation for advanced mode
+    if (showAdvanced && data.pushToHub === 'true') {
+      requiredFields.push('hfHubToken');
+      
+      if (data.exportType === 'merged' || data.exportType === 'both') {
+        requiredFields.push('exportHubModelId');
+      }
+      
+      if (data.exportType === 'adapter' || data.exportType === 'both') {
+        requiredFields.push('adapterHubModelId');
+      }
+    }
+
+    return requiredFields.filter(field => !data[field]);
+  };
+  
+  // Prepare the request data based on form inputs and mode
+  const prepareRequestData = (data: Record<string, string>): any => {
+    // Start with required fields
+    const requestData: any = {
+      model_name_or_path: data.modelNameOrPath,
+      adapter_name_or_path: data.adapterNameOrPath,
+      export_dir: data.exportDir,
+    };
+    
+    // Handle mode-specific settings
+    if (!showAdvanced) {
+      // Basic mode defaults
+      requestData.merge_adapter = true;
+      requestData.export_adapter = false;
+      requestData.quantization = false;
+    } else {
+      // Advanced mode settings
+      if (data.exportSize) {
+        requestData.export_size = parseInt(data.exportSize);
+      }
+      
+      if (data.exportDevice) {
+        requestData.export_device = data.exportDevice;
+      }
+      
+      if (data.exportLegacyFormat === 'true') {
+        requestData.legacy_format = true;
+      }
+      
+      // Quantization settings
+      if (data.quantization === 'true') {
+        requestData.quantization = true;
+        requestData.quantization_bits = parseInt(data.exportQuantizationBit || '8');
+        
+        if (data.exportQuantizationDataset) {
+          requestData.quantization_dataset = data.exportQuantizationDataset;
+        }
+        
+        if (data.exportQuantizationNsamples) {
+          requestData.quantization_nsamples = parseInt(data.exportQuantizationNsamples);
+        }
+        
+        if (data.exportQuantizationMaxlen) {
+          requestData.quantization_maxlen = parseInt(data.exportQuantizationMaxlen);
+        }
+      }
+      
+      // Hub upload settings
+      if (data.pushToHub === 'true') {
+        requestData.push_to_hub = true;
+        requestData.private = data.private === 'true';
+        requestData.hf_token = data.hfHubToken;
+        
+        if (data.exportType === 'merged' || data.exportType === 'both') {
+          requestData.hub_model_id = data.exportHubModelId;
+        }
+        
+        if (data.exportType === 'adapter' || data.exportType === 'both') {
+          requestData.adapter_hub_model_id = data.adapterHubModelId;
+        }
+      }
+    }
+    
+    return requestData;
+  };
+  
+  // Format success message
+  const formatSuccessMessage = (modelName: string, jobId: string): string => {
+    const locale = currentLocale === 'zh' ? 'zh' : 'en';
+    return `${translations[locale].exportStarted} "${modelName}" (Job ID: ${jobId})`;
+  };
+
+  // Refactored handleSubmit with improved readability
   const handleSubmit = async (data: Record<string, string>): Promise<string> => {
     try {
       console.log('Export form data:', data);
       
-      // If in advanced mode, mark that we've submitted in advanced mode
+      // Update advanced mode submission state
       if (showAdvanced) {
         setHasSubmittedInAdvancedMode(true);
       }
 
-      // Only validate fields relevant to the current mode
-      const requiredFields = ['modelNameOrPath', 'adapterNameOrPath', 'exportDir'];
-      
-      // Add conditional validation for advanced mode - only if we're in advanced mode
-      if (showAdvanced && data.pushToHub === 'true') {
-        requiredFields.push('hfHubToken');
-        
-        if (data.exportType === 'merged' || data.exportType === 'both') {
-          requiredFields.push('exportHubModelId');
-        }
-        
-        if (data.exportType === 'both') {
-          requiredFields.push('adapterHubModelId');
-        }
-      }
-
-      // Check required fields
-      const missingFields = requiredFields.filter(field => !data[field]);
+      // 1. Validate required fields
+      const missingFields = validateRequiredFields(data);
       if (missingFields.length > 0) {
         throw new Error(`Required fields missing: ${missingFields.join(', ')}`);
       }
 
+      // 2. Show loading state
       setIsLoading(true);
       
-      // Prepare API request - only include necessary fields based on mode
-      const requestData: any = {
-        model_name_or_path: data.modelNameOrPath,
-        adapter_name_or_path: data.adapterNameOrPath,
-        export_dir: data.exportDir,
-      };
+      // 3. Prepare request data
+      const requestData = prepareRequestData(data);
+      
+      // 4. Call the API
+      const response = await exportService.startExport(requestData, showAdvanced);
+      console.log('Export API response:', response);
 
-      // In basic mode, we always use these defaults
-      if (!showAdvanced) {
-        // Default export behavior for basic mode (explicitly set)
-        requestData.merge_adapter = true;
-        requestData.export_adapter = false;
-        requestData.quantization = false;
-        // Only include these fields, ignore any advanced fields that might be in data
+      // 5. Process the response
+      if (response && response.job_id) {
+        localStorage.setItem('lastExportJobId', response.job_id);
+        return formatSuccessMessage(data.modelNameOrPath, response.job_id);
       } else {
-        // Add advanced options if needed in advanced mode
-        if (showAdvanced) {
-          // Add the new export configuration fields
-          if (data.exportSize) {
-            requestData.export_size = parseInt(data.exportSize);
-          }
-
-          if (data.exportDevice) {
-            requestData.export_device = data.exportDevice;
-          }
-
-          // Quantization settings
-          if (data.quantization === 'true') {
-            requestData.quantization = true;
-            requestData.quantization_bits = parseInt(data.quantizationBits || '8');
-          }
-        }
+        throw new Error('Invalid response from server');
+      }
+    } catch (error: any) {
+      console.error('Export failed:', error);
+      
+      // Extract API error details if available
+      if (error.response?.data) {
+        throw new Error(`Export failed: ${error.response.data.detail || error.message}`);
       }
       
-      try {
-        // Call API with explicit error handling
-        const response = await exportService.startExport(requestData, showAdvanced);
-        console.log('Export API response:', response);
-
-        if (response && response.job_id) {
-          localStorage.setItem('lastExportJobId', response.job_id);
-          
-          // Remove the reference to non-existent uiState
-          // The following lines were causing the error:
-          // if (showAdvanced !== uiState.showAdvanced) {
-          //   console.log('Fixing UI state mismatch after submission');
-          //   setUiState(prev => ({ ...prev, showAdvanced: showAdvanced }));
-          // }
-          
-          // Return success message with properly referenced locale
-          const locale = currentLocale === 'zh' ? 'zh' : 'en';
-          return `${translations[locale].exportStarted} "${data.modelNameOrPath}" (Job ID: ${response.job_id})`;
-        } else {
-          console.warn('Unexpected API response format:', response);
-          throw new Error('Invalid response from server');
-        }
-      } catch (apiError: any) {
-        console.error('API call failed:', apiError);
-        // Extract detailed error message if available
-        if (apiError.response && apiError.response.data) {
-          console.error('API error details:', apiError.response.data);
-          throw new Error(`Export failed: ${apiError.response.data.detail || apiError.message}`);
-        }
-        throw apiError;
-      }
-
-    } catch (error) {
-      console.error('Export failed:', error);
       throw error; // Re-throw to show in form error state
     } finally {
       if (isMounted.current) {
@@ -395,7 +428,7 @@ const Export: React.FC = () => {
       }
     }
   };
-
+  
   // Button actions
   const handlePreviewCurl = (data: Record<string, string>) => {
     const exportData = {
