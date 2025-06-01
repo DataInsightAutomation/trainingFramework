@@ -15,7 +15,7 @@ if is_ray_available():
     import ray
     from ray.train.huggingface.transformers import RayTrainReportCallback
 
-from .dataset_adapters import ExtendedDataArguments, get_dataset
+from .dataset_adapters import get_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,6 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(train_args)
         
         # Use extended data arguments to control saving behavior
-        data_args = ExtendedDataArguments(**vars(data_args), _should_save=True)
         # Load tokenizer and template
         tokenizer_module = load_tokenizer(model_args)
         tokenizer = tokenizer_module["tokenizer"]

@@ -207,14 +207,3 @@ def get_dataset(
                 logger.info_rank0(f"Please launch the training with `tokenized_path: {data_args.tokenized_path}`.")
 
         return get_dataset_module(dataset_dict)
-@dataclass
-class ExtendedDataArguments(DataArguments):
-    _should_save: bool = True  # private backing variable
-
-    @property
-    def should_save(self):
-        return self._should_save
-
-    @should_save.setter
-    def should_save(self, value):
-        self._should_save = value
