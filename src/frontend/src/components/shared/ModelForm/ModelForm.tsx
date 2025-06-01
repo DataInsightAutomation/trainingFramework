@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Form, Button, Card, Row, Col, Alert } from 'react-bootstrap';
 import { useAppStore } from '../../../store/appStore';
 import TextField from '../../core/field/text/TextField';
@@ -40,6 +40,8 @@ export interface FormField {
     customOptionPrefix?: string; // Prefix for custom option values
     description?: string; // Additional description text for the field
     disabled?: boolean; // Optional property to disable the field
+    placeholder?: string; // Placeholder text for input fields
+    advancedOnly?: boolean; // Add property to mark fields that only appear in advanced mode
 }
 
 // Add a button configuration interface
@@ -66,17 +68,33 @@ export interface FormConfig {
     // ...other existing properties...
 }
 
-const ModelForm: React.FC<FormConfig> = ({
-    formType,
+interface ModelFormProps {
+    title: string;
+    submitButtonText: string;
+    fields: FormField[];
+    translations: Record<string, Record<string, string>>;
+    onSubmit: (data: Record<string, string>) => Promise<string>;
+    formData?: Record<string, string>;
+    onChange?: (name: string, value: string) => void;
+    buttons?: FormButton[];
+    isLoading?: boolean;
+    showAdvanced?: boolean;
+    validateVisibleFieldsOnly?: boolean; // Add this new prop
+}
+
+const ModelForm = ({
     title,
     submitButtonText,
-    buttons = [], // Default to empty array
     fields,
     translations,
     onSubmit,
-    formData,
+    formData = {},
     onChange,
-}) => {
+    buttons = [],
+    isLoading = false,
+    showAdvanced = false,
+    validateVisibleFieldsOnly = false // Default to false to maintain backward compatibility
+}: ModelFormProps) => {
     // Use Zustand store directly
     const { currentLocale, currentTheme } = useAppStore();
     const [validated, setValidated] = useState(false);
@@ -87,16 +105,62 @@ const ModelForm: React.FC<FormConfig> = ({
     const theme = currentTheme;
     const t = translations[locale as keyof typeof translations];
 
+    // Initialize form values from props or default
+    const [formValues, setFormValues] = useState<Record<string, string>>(formData || {});
+
+    // Add useEffect to reset validation when showAdvanced changes
+    useEffect(() => {
+        // Reset validation state when toggling between basic and advanced modes
+        if (validated) {
+            setValidated(false);
+            setResultMessage(null);
+        }
+    }, [showAdvanced]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        onChange(name, value);
+        if (onChange) {
+            onChange(name, value);
+        }
+    };
+
+    // Helper function to determine if a field should be visible based on current state
+    const isFieldVisible = (field: FormField): boolean => {
+        // If the field is marked as advanced-only and we're not in advanced mode, hide it
+        if (field.advancedOnly && !showAdvanced) {
+            return false;
+        }
+        
+        // Add other visibility conditions as needed
+        return true;
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const form = e.currentTarget;
+        
+        // Custom validation that respects validateVisibleFieldsOnly
+        let formIsValid = true;
+        
+        if (validateVisibleFieldsOnly) {
+            // When validateVisibleFieldsOnly is true, only check visible fields
+            const visibleRequiredFields = fields.filter(field => 
+                field.required && isFieldVisible(field) && field.type !== 'sectionHeader' && field.type !== 'empty'
+            );
+            
+            for (const field of visibleRequiredFields) {
+                const value = formData[field.name];
+                if (!value || value.trim() === '') {
+                    formIsValid = false;
+                    break;
+                }
+            }
+        } else {
+            // Default browser validation behavior
+            formIsValid = form.checkValidity();
+        }
 
-        if (form.checkValidity() === false) {
+        if (!formIsValid) {
 
             // Log which fields failed validation
             const invalidFields = Array.from(form.elements)
@@ -111,10 +175,11 @@ const ModelForm: React.FC<FormConfig> = ({
                 type: 'danger',
                 text: 'Please check the form for errors and try again.'
             });
+            console.log(invalidFields, 'invalidFields');
 
             return;
         }
-
+        
         setValidated(true);
         setIsSubmitting(true);
 
@@ -127,9 +192,30 @@ const ModelForm: React.FC<FormConfig> = ({
             });
         } catch (error) {
             console.error("Form submission error:", error);
+            
+            // Enhanced error handling for backend connectivity issues
+            let errorMessage = error instanceof Error ? error.message : 'An error occurred';
+            
+            // Check for connectivity-related errors
+            if (errorMessage.includes('unreachable') || 
+                errorMessage.includes('network')) {
+                
+                errorMessage = 'The server could not be reached. Please check your connection and try again later.';
+            } 
+            // Check for undefined property errors (which might indicate a JSON parsing issue)
+            else if (errorMessage.includes('Cannot read properties of undefined')) {
+                console.error('Possible JSON parsing issue or unexpected response format:', error);
+                errorMessage = 'There was an issue processing the server response. Please contact support if this persists.';
+                
+                // Log additional debugging information
+                if (error instanceof Error && error.stack) {
+                    console.debug('Error stack:', error.stack);
+                }
+            }
+            
             setResultMessage({
                 type: 'danger',
-                text: error instanceof Error ? error.message : 'An error occurred'
+                text: errorMessage
             });
         } finally {
             setIsSubmitting(false);
@@ -159,7 +245,10 @@ const ModelForm: React.FC<FormConfig> = ({
         let currentRow: FormField[] = [];
         let currentRowSpan = 0;
 
-        fields.forEach(field => {
+        // Only include fields that should be visible based on current state
+        const visibleFields = fields.filter(field => isFieldVisible(field));
+
+        visibleFields.forEach(field => {
             const span = field.colSpan || 6;
             if (currentRowSpan + span > 12) {
                 rows.push([...currentRow]);
@@ -202,7 +291,7 @@ const ModelForm: React.FC<FormConfig> = ({
                                         <h4>
                                             {titleText}
                                         </h4>
-                                        <span className="chevron-icon">
+                                        <span className="section-toggle-icon">
                                             <i className="bi bi-chevron-down"></i>
                                         </span>
                                     </div>
@@ -392,9 +481,28 @@ const ModelForm: React.FC<FormConfig> = ({
         ));
     };
 
-    // In the component's render function, add this debugging code
-    console.log('ModelFfdsfsorm rendering with fields:', fields.map(f => f.name));
+    // Modify validation logic to respect validateVisibleFieldsOnly
+    const validateForm = useCallback(() => {
+        const errors: Record<string, string> = {};
+        
+        fields.forEach(field => {
+            // Skip validation for fields that aren't supposed to be validated yet
+            if (validateVisibleFieldsOnly && field.required && !isFieldVisible(field)) {
+                return;
+            }
+            
+            // Standard validation logic for required fields
+            if (field.required && (!formValues[field.name] || formValues[field.name].trim() === '')) {
+                errors[field.name] = locale === 'zh' ? '此字段是必需的' : 'This field is required';
+            }
 
+            // ...existing validation logic...
+        });
+        
+        return errors;
+    }, [fields, formValues, locale, validateVisibleFieldsOnly]);
+
+    // In the component's render function, add this debugging code
     return (
         <main className={`model-form-container ${theme.name}-theme`}>
             <Card className={`model-form-card ${theme.name}-theme`}>

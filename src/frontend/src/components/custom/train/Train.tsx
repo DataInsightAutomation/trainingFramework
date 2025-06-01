@@ -8,6 +8,7 @@ import { trainingService } from '#services/trainingService';
 import ModelConfigLayout, { ModelConfigContext } from '../../shared/ModelConfigLayout/ModelConfigLayout';
 import './Train.scss';
 import { translations } from './TrainTranslation';
+import { saveConfig, loadConfig } from '../../../utils/configUtils';
 
 // Advanced form field sections with custom header names
 const advancedFieldSections = {
@@ -891,52 +892,27 @@ const Train = () => {
   };
 
   const handleSaveConfig = (data: Record<string, string>) => {
-    // Save config to localStorage or download as JSON
-    const configJson = JSON.stringify(data, null, 2);
-    localStorage.setItem('trainConfig', configJson);
+    const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
+    saveConfig(
+        data, 
+        'train', 
+        translations[locale].configSaved
+    );
+};
 
-    // Trigger download
-    const blob = new Blob([configJson], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'train-config.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    const locale = (currentLocale === 'zh') ? 'zh' : 'en';
-    alert(translations[locale].configSaved);
-  };
-
-  const handleLoadConfig = () => {
-    // Create a file input and trigger it
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const config = JSON.parse(event.target?.result as string);
+const handleLoadConfig = () => {
+    const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
+    loadConfig(
+        (config) => {
             // Update form data with loaded config
             updateTrainFormData(config);
-            const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
-            alert(translations[locale].configLoaded);
-          } catch (error) {
-            console.error('Failed to parse config file:', error);
-          }
-        };
-        reader.readAsText(file);
-      }
-    };
-    input.click();
-  };
+        },
+        translations[locale].configLoaded
+    );
+};
 
-  // Check status handler
-  const handleCheckStatus = async () => {
+// Check status handler
+const handleCheckStatus = async () => {
     const jobId = localStorage.getItem('lastTrainingJobId');
     if (!jobId) {
       alert('No recent training job found');

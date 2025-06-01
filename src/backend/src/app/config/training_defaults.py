@@ -22,7 +22,7 @@ DEFAULT_CONFIGS = {
         "logging_steps": 10,
         "save_steps": 500,
         "plot_loss": True,
-        "overwrite_output_dir": True
+        "overwrite_output_dir": True,
     },
     "rlhf": {
         # RLHF-specific defaults

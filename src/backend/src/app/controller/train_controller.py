@@ -2,13 +2,11 @@ import asyncio
 from fastapi import HTTPException, status, APIRouter, BackgroundTasks, Depends
 import time
 import os
-import logging
 from app.response.response import TrainRequest, TrainResponse
 from app.services.train.supervised_fine_tuning.supervised_fine_tuning import simulate_training as run_training_job
 from ..api.router import job_status
 from app.config.training_defaults import get_default_config
-
-logger = logging.getLogger(__name__)
+import logging as logger
 
 router = APIRouter(
     prefix="",

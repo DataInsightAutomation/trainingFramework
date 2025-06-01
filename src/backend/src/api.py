@@ -28,7 +28,10 @@ from fastapi import Depends, FastAPI, HTTPException, status, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
+from app.utils.logging_config import configure_logger
 
+# This configures root logger (only once)
+logger = configure_logger("training_api_server")
 from app.util.server_util import APIConfig, lifespan
 
 def create_app() -> FastAPI:
@@ -103,7 +106,7 @@ def main():
         app, 
         host=APIConfig.HOST, 
         port=APIConfig.PORT, 
-        log_level=APIConfig.LOG_LEVEL,
+        # log_level=APIConfig.LOG_LEVEL,
         # reload=APIConfig.ENABLE_RELOAD,
         # reload=True,
         access_log=True,

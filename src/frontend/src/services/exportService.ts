@@ -1,17 +1,18 @@
-import { getData, postData } from '../apis/api';
-import { EndPoints } from '#constants/endpoint';
+// import { api } from '../api/api'; // Fix import path for api
+import { getData, postData } from '../apis/api'; // Ensure correct import path for api
+import { EndPoints } from '../constants/endpoint';
 
 // Define export interfaces
 export interface ExportRequest {
   model_name_or_path: string;
   adapter_name_or_path: string;
   export_dir: string;
-  // export_format: string;
   export_hub_model_id?: string;
   hf_hub_token?: string;
   quantization?: boolean;
   quantization_bits?: number;
   merge_adapter?: boolean;
+  export_adapter?: boolean;
   push_to_hub?: boolean;
   private?: boolean;
   [key: string]: any; // For additional parameters
@@ -28,6 +29,11 @@ export interface ExportStatus {
   message: string;
   export_path?: string;
   hub_model_id?: string;
+  adapter_hub_model_id?: string;
+  export_results?: {
+    merged_model?: string;
+    adapter_only?: string;
+  };
   [key: string]: any; // For additional fields
 }
 
@@ -39,17 +45,17 @@ export const exportService = {
    * @returns Promise with job information
    */
   startExport: async (exportData: ExportRequest, isAdvancedMode: boolean = false): Promise<ExportResponse> => {
+    console.log('Starting export with data:', exportData);
     try {
       // If not in advanced mode, ensure we only send basic fields
       let finalData: ExportRequest;
-      
+
       if (!isAdvancedMode) {
         // In basic mode, create a new object with only the basic fields
         finalData = {
           model_name_or_path: exportData.model_name_or_path,
           adapter_name_or_path: exportData.adapter_name_or_path,
           export_dir: exportData.export_dir,
-          export_format: exportData.export_format,
           export_hub_model_id: exportData.export_hub_model_id,
           hf_hub_token: exportData.hf_hub_token,
         };
@@ -58,30 +64,35 @@ export const exportService = {
         finalData = exportData;
         console.log("Export service using ADVANCED mode - including all parameters");
       }
-      
-      console.log("Export service starting job with data:", finalData);
-      const response = await postData('/v1/export/', finalData);
-      
+
+      // Add debug log for the API endpoint
+
+      // Add timeout and better error handling
+      const response = await postData(EndPoints.exportModel, finalData);
+
       // Store job ID in local storage for later reference
       if (response.job_id) {
         localStorage.setItem('lastExportJobId', response.job_id);
       }
-      
+
       return response;
     } catch (error: any) {
       console.error("Export service error starting export:", error);
-      
+
       // Enhanced error handling
       if (!error.response) {
         throw new Error("The server is unreachable. Please check if the backend service is running.");
       } else if (error.code === 'ECONNABORTED') {
         throw new Error("The request timed out. The server might be overloaded or not responding.");
+      } else {
+        // Enhance error logging
+        console.error('Response error:', error.response.status, error.response.data);
       }
-      
+
       throw error;
     }
   },
-  
+
   /**
    * Get the status of an export job
    * @param jobId The ID of the job to check
@@ -93,15 +104,16 @@ export const exportService = {
       if (!storedJobId) {
         throw new Error("No job ID provided and no recent export job found");
       }
-      
-      const response = await getData(`/v1/export/status/${storedJobId}`, false);
-      return response;
+
+      // Fix getData is not defined error - use api.get instead
+      const response = await getData(`${EndPoints.getExportStatus}/${storedJobId}`);
+      return response.data;
     } catch (error) {
       console.error(`Export service error getting status for job:`, error);
       throw error;
     }
   },
-  
+
   /**
    * Get a preview of the curl command for an export request
    * @param exportData The export configuration

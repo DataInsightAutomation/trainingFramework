@@ -42,3 +42,65 @@
 .options-toggle-section.mb-4.p-3.border.rounded.dark-theme {
   background-color: #343a40 ;
 }
+
+/* Enhance the advanced toggle button visibility */
+.advanced-toggle-btn {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  /* Add a pulsing outline effect */
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    animation: pulse-border 2s infinite;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  /* Extra visual indication */
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    
+    i {
+      animation: spin 1s ease;
+    }
+  }
+  
+  /* Active state styling */
+  &.active {
+    background-color: #007bff;
+    color: white;
+    
+    &::after {
+      border-color: #007bff;
+    }
+  }
+}
+
+/* Add animation for the outline */
+@keyframes pulse-border {
+  0% {
+    border-color: rgba(0, 123, 255, 0);
+  }
+  50% {
+    border-color: rgba(0, 123, 255, 0.5);
+  }
+  100% {
+    border-color: rgba(0, 123, 255, 0);
+  }
+}
+
+/* Add spin animation for the gear icon */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

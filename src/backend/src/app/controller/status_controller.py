@@ -3,7 +3,6 @@ from app.response.response import StatusResponse
 from fastapi import status, FastAPI
 from fastapi import APIRouter, Depends
 from ..api.router import job_status
-
 router = APIRouter(
     prefix="",
     tags=["Project"],

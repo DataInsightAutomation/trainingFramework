@@ -30,6 +30,9 @@ export const EndPoints = {
   getModels: `${BASE_URL}/v1/resources/models`,
   getModelById: (id: string) => `${BASE_URL}/models/${id}`,
   
+  exportModel: `${BASE_URL}/v1/export`,
+  getExportModelById: (id: string) => `${BASE_URL}/export/${id}`,
+
   // Dataset endpoints
   getDatasets: `${BASE_URL}/v1/resources/datasets`,
   getDatasetById: (id: string) => `${BASE_URL}/datasets/${id}`,

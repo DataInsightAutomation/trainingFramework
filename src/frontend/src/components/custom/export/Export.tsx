@@ -1,528 +1,740 @@
-import React, { useState, useEffect, useMemo, useContext } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useContext } from 'react';
 import { useAppStore } from '../../../store/appStore';
 import ModelForm, { FormField, FormButton } from '../../shared/ModelForm/ModelForm';
 import { resourceService } from '../../../services/resourceService';
 import { exportService } from '#services/exportService';
-import { EndPoints } from '#constants/endpoint';
 import ModelConfigLayout, { ModelConfigContext } from '../../shared/ModelConfigLayout/ModelConfigLayout';
+import { saveConfig, loadConfig } from '../../../utils/configUtils';
 import './Export.scss';
+import { translations } from './ExportTranslation';
 
 // Define translations
-const translations = {
-    en: {
-        exportModel: 'Export Model',
-        modelNameOrPathLabel: 'Base Model',
-        modelNameOrPathPlaceholder: 'Enter base model name or path',
-        adapterNameOrPathLabel: 'Adapter Path',
-        adapterNameOrPathPlaceholder: 'Enter adapter path (e.g. saves/modelname/lora/sft)',
-        adapterNameOrPathDescription: 'Path to the trained adapter (LoRA weights)',
-        exportDirLabel: 'Export Directory',
-        exportDirPlaceholder: 'Enter local export directory path',
-        exportDirDescription: 'Local directory where the model will be saved',
-        exportHubModelIdLabel: 'HuggingFace Hub Model ID',
-        exportHubModelIdPlaceholder: 'username/model-name',
-        exportHubModelIdDescription: 'Model ID for uploading to HuggingFace Hub (optional)',
-        hfHubTokenLabel: 'HuggingFace Hub Token',
-        hfHubTokenPlaceholder: 'Enter your HuggingFace token',
-        hfHubTokenDescription: 'Required for uploading to HuggingFace Hub',
-        exportFormatLabel: 'Export Format',
-        exportTypeLabel: 'Export Type',
-        startExport: 'Start Export',
-        exportStarted: 'Export job started for model',
-        previewCurlCommand: 'Preview Curl Command',
-        loadConfig: 'Load Config',
-        saveConfig: 'Save Config',
-        configSaved: 'Configuration saved successfully',
-        configLoaded: 'Configuration loaded successfully',
-        checkStatus: 'Check Status',
-        advancedOptions: "Advanced Export Options",
-        basicOptions: "Basic Export Options",
-        formatLabel: "Export Format",
-        destinationLabel: "Export Destination",
-        
-        // Advanced options
-        exportConfigSection: 'Export Configuration',
-        quantizationLabel: 'Quantization',
-        quantizationDescription: 'Apply quantization during export',
-        quantizationBitsLabel: 'Quantization Bits',
-        quantizationBitsDescription: 'Number of bits for quantization',
-        mergeAdapterLabel: 'Merge Adapter',
-        mergeAdapterDescription: 'Merge LoRA adapter with base model',
-        pushToHubLabel: 'Push to Hub',
-        pushToHubDescription: 'Upload model to HuggingFace Hub',
-        privateLabel: 'Private Repository',
-        privateDescription: 'Make the HuggingFace repository private',
-    },
-    zh: {
-        exportModel: '导出模型',
-        modelNameOrPathLabel: '基础模型',
-        modelNameOrPathPlaceholder: '输入基础模型名称或路径',
-        adapterNameOrPathLabel: '适配器路径',
-        adapterNameOrPathPlaceholder: '输入适配器路径（例如 saves/modelname/lora/sft）',
-        adapterNameOrPathDescription: '训练好的适配器路径（LoRA 权重）',
-        exportDirLabel: '导出目录',
-        exportDirPlaceholder: '输入本地导出目录路径',
-        exportDirDescription: '保存模型的本地目录',
-        exportHubModelIdLabel: 'HuggingFace Hub 模型 ID',
-        exportHubModelIdPlaceholder: '用户名/模型名称',
-        exportHubModelIdDescription: '上传到 HuggingFace Hub 的模型 ID（可选）',
-        hfHubTokenLabel: 'HuggingFace Hub 令牌',
-        hfHubTokenPlaceholder: '输入您的 HuggingFace 令牌',
-        hfHubTokenDescription: '上传到 HuggingFace Hub 需要此令牌',
-        exportFormatLabel: '导出格式',
-        exportTypeLabel: '导出类型',
-        startExport: '开始导出',
-        exportStarted: '模型导出任务已开始',
-        previewCurlCommand: '预览 Curl 命令',
-        loadConfig: '加载配置',
-        saveConfig: '保存配置',
-        configSaved: '配置保存成功',
-        configLoaded: '配置加载成功',
-        checkStatus: '检查状态',
-        advancedOptions: "高级导出选项",
-        basicOptions: "基本导出选项",
-        formatLabel: "导出格式",
-        destinationLabel: "导出目的地",
-        
-        // Advanced options
-        exportConfigSection: '导出配置',
-        quantizationLabel: '量化',
-        quantizationDescription: '在导出过程中应用量化',
-        quantizationBitsLabel: '量化位数',
-        quantizationBitsDescription: '量化的位数',
-        mergeAdapterLabel: '合并适配器',
-        mergeAdapterDescription: '将 LoRA 适配器与基础模型合并',
-        pushToHubLabel: '推送到 Hub',
-        pushToHubDescription: '将模型上传到 HuggingFace Hub',
-        privateLabel: '私有仓库',
-        privateDescription: '将 HuggingFace 仓库设为私有',
-    }
+
+// Add this function to highlight text matches in field labels
+const highlightMatch = (text: string, query: string) => {
+    if (!query.trim() || !text) return text;
+
+    const regex = new RegExp(`(${query.trim()})`, 'gi');
+    return text.replace(regex, '<span class="search-highlight">$1</span>');
 };
 
-// Advanced export options
-const advancedFieldSections = {
-    exportConfig: {
-        title: 'exportConfigSection',
-        fields: [
-            { 
-                name: 'quantization', 
-                type: 'toggle', 
-                defaultValue: 'false',
-                description: 'quantizationDescription'
-            },
-            { 
-                name: 'quantizationBits', 
-                type: 'select', 
-                options: [
-                    { value: '4', directLabel: '4-bit' },
-                    { value: '8', directLabel: '8-bit' },
-                ],
-                description: 'quantizationBitsDescription'
-            },
-            { 
-                name: 'mergeAdapter', 
-                type: 'toggle', 
-                defaultValue: 'true',
-                description: 'mergeAdapterDescription'
-            },
-            { 
-                name: 'pushToHub', 
-                type: 'toggle', 
-                defaultValue: 'false',
-                description: 'pushToHubDescription'
-            },
-            { 
-                name: 'private', 
-                type: 'toggle', 
-                defaultValue: 'true',
-                description: 'privateDescription'
-            },
-        ]
-    },
-} as const;
+// Define the Export component
+const Export: React.FC = () => {
+    // Use refs to track if we're mounted to prevent state updates after unmount
+    const isMounted = useRef(true);
 
-// Basic export fields
-const basicFields: FormField[] = [
-    {
-        name: 'modelNameOrPath',
-        type: 'searchableSelect',
-        options: [], // Will be populated from API
-        creatable: true,
-        createMessage: 'addCustomModel',
-        createPlaceholder: 'enterCustomModelName',
-        customOptionPrefix: 'custom',
-        description: 'modelNameOrPathDescription',
-        required: true,
-    },
-    {
-        name: 'adapterNameOrPath',
-        type: 'text',
-        required: true,
-        description: 'adapterNameOrPathDescription'
-    },
-    {
-        name: 'exportDir',
-        type: 'text',
-        required: true,
-        description: 'exportDirDescription'
-    },
-    {
-        name: 'exportHubModelId',
-        type: 'text',
-        required: false,
-        description: 'exportHubModelIdDescription'
-    },
-    {
-        name: 'hfHubToken',
-        type: 'text',
-        required: false,
-        description: 'hfHubTokenDescription'
-    },
-    // {
-    //     name: 'exportFormat',
-    //     type: 'searchableSelect',
-    //     options: [
-    //         { value: 'pytorch', directLabel: 'PyTorch' },
-    //         { value: 'safetensors', directLabel: 'SafeTensors' },
-    //         { value: 'onnx', directLabel: 'ONNX' },
-    //     ],
-    //     required: true
-    // },
-];
-
-const Export = () => {
-    // Use the shared context for advanced mode and search
+    // Get advanced mode state directly from store first time
     const { showAdvanced, searchQuery } = useContext(ModelConfigContext);
-    
-    const { exportFormData, currentLocale, updateExportFormData } = useAppStore();
-    const [modelOptions, setModelOptions] = useState<{value: string, directLabel: string}[]>([]);
+
+    // Create a reference to store values
+    const storeRef = useRef({
+        currentLocale: useAppStore.getState().currentLocale || 'en',
+        exportFormData: useAppStore.getState().exportFormData,
+        showAdvanced: showAdvanced || false,
+    });
+
+    // Local component state
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
-    // Track expanded/collapsed state of each section
-    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-        exportConfig: true,
+    const [modelOptions, setModelOptions] = useState<any[]>([]);
+    const [formState, setFormState] = useState<Record<string, string>>(
+        storeRef.current.exportFormData || {
+            modelNameOrPath: '',
+            adapterNameOrPath: '',
+            exportDir: '',
+            exportFormat: 'safetensors',
+            exportType: 'merged',
+            quantization: 'false',
+            quantizationBits: '8',
+            pushToHub: 'false',
+            private: 'true',
+        }
+    );
+
+    // Use a separate state for UI-related properties that don't affect form data
+    // Use the context values directly rather than local copies
+    const [uiState, setUiState] = useState<{
+        searchQuery: string;
+        showAdvanced: boolean;
+        expandedConfig: boolean;
+    }>({
+        searchQuery: searchQuery || '',
+        showAdvanced: showAdvanced, // Use the context value directly
+        expandedConfig: true, // Set default value for expandedConfig
     });
-    
-    // Toggle section expanded/collapsed state
-    const toggleSection = (sectionKey: string) => {
+
+    // Expanded state for each section
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+        basicConfig: true,
+        quantizationConfig: true,
+        hubConfig: true
+    });
+
+    // Add a state to track whether form has been submitted in advanced mode
+    const [hasSubmittedInAdvancedMode, setHasSubmittedInAdvancedMode] = useState(false);
+
+    // Subscribe to store changes once on mount, cleanup on unmount
+    useEffect(() => {
+        // Update our ref with latest values
+        const updateStoreRef = () => {
+            const newStoreRef = {
+                currentLocale: useAppStore.getState().currentLocale || 'en',
+                exportFormData: useAppStore.getState().exportFormData,
+                showAdvanced: showAdvanced || false,
+                expandedSections: { exportConfig: false },
+            };
+
+            // Update the ref
+            storeRef.current = newStoreRef;
+
+            // Update form state from store if exportFormData changed
+            if (storeRef.current.exportFormData) {
+                setFormState(prev => ({
+                    ...prev,
+                    ...storeRef.current.exportFormData
+                }));
+            }
+        };
+
+        // Initial update
+        updateStoreRef();
+
+        // Subscribe to store changes
+        const unsubscribe = useAppStore.subscribe(updateStoreRef);
+
+        // Set isMounted to false on cleanup
+        return () => {
+            isMounted.current = false;
+            unsubscribe();
+        };
+    }, [showAdvanced]);
+
+    // Update UI state when context changes
+// Update UI state when context changes
+useEffect(() => {
+    if (isMounted.current) {
+        // When switching modes, we need to refresh the form state appropriately
+        if (showAdvanced !== uiState.showAdvanced) {
+            if (!showAdvanced) {
+                // When switching from advanced to basic mode,
+                // ensure we only keep basic fields in the form state
+                const basicFields = ['modelNameOrPath', 'adapterNameOrPath', 'exportDir'];
+                
+                // Create a completely new state object with only basic fields
+                const basicFormState: Record<string, string> = {};
+                
+                // Copy only basic fields
+                basicFields.forEach(field => {
+                    basicFormState[field] = formState[field] || '';
+                });
+                
+                console.log('Cleaned form state for basic mode:', basicFormState);
+                
+                // Update the form state with only basic fields
+                setFormState(basicFormState);
+                
+                // Don't update the store here - let the formState effect handle it
+                // Removing this line breaks the circular dependency
+                // useAppStore.getState().updateExportFormData?.(basicFormState);
+            }
+        }
+        
+        // Update the UI state with current context values
+        setUiState(prev => ({
+            ...prev,
+            showAdvanced: showAdvanced,
+            searchQuery: searchQuery || ''
+        }));
+    }
+}, [showAdvanced, searchQuery, uiState.showAdvanced]);
+
+    // Add a debug log to monitor state changes
+    useEffect(() => {
+        console.log("UI state updated:", uiState);
+    }, [uiState]);
+
+    // Load models from API - simplified with mount check
+    useEffect(() => {
+        const fetchModels = async () => {
+            if (!isMounted.current) return;
+
+            setIsLoading(true);
+            try {
+                const response = await resourceService.getModels();
+                if (isMounted.current && response?.models) {
+                    const options = response.models.map((model: any) => ({
+                        value: model.id,
+                        directLabel: model.name
+                    }));
+                    setModelOptions(options);
+                }
+            } catch (error) {
+                console.error('Failed to fetch models:', error);
+                if (isMounted.current) {
+                    setError('Failed to load models');
+                    setModelOptions([
+                        { value: 'llama3-8b', directLabel: 'Llama 3 (8B)' },
+                        { value: 'gpt4', directLabel: 'GPT-4' }
+                    ]);
+                }
+            } finally {
+                if (isMounted.current) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        fetchModels();
+    }, []);
+
+    // Basic form fields definition with modelOptions applied
+    const formFields = useMemo(() => {
+        // Create base fields - remove exportFormat from the basic fields
+        const basicFields: FormField[] = [
+            {
+                name: 'modelNameOrPath',
+                type: 'select',
+                required: true,
+                description: '',
+                placeholder: 'modelNameOrPathPlaceholder',
+                options: modelOptions
+            },
+            {
+                name: 'adapterNameOrPath',
+                type: 'text',
+                required: true,
+                description: 'adapterNameOrPathDescription',
+                placeholder: 'adapterNameOrPathPlaceholder'
+            },
+            {
+                name: 'exportDir',
+                type: 'text',
+                required: true,
+                description: 'exportDirDescription',
+                placeholder: 'exportDirPlaceholder'
+            }
+            // exportFormat field removed
+        ];
+
+        const staticAdvancedFields: FormField[] = [
+            // Basic settings sub-header
+            {
+                name: 'exportBasicConfigHeader',
+                type: 'sectionHeader',
+                colSpan: 12,
+                collapsible: true,
+                expanded: expandedSections.basicConfig,
+                onToggle: () => handleToggleSection('basicConfig'),
+                customTitle: 'exportBasicConfigSection'
+            },
+        ];
+
+        // Only add basic config fields if the section is expanded
+        if (expandedSections.basicConfig) {
+            staticAdvancedFields.push(
+                {
+                    name: 'exportSize',
+                    type: 'number',
+                    colSpan: 6,
+                    min: 1,
+                    max: 50,
+                    step: 1,
+                    defaultValue: '5',
+                    description: 'exportSizeDescription',
+                    placeholder: 'exportSizePlaceholder'
+                },
+                {
+                    name: 'exportDevice',
+                    type: 'select',
+                    colSpan: 6,
+                    options: [
+                        { value: 'cpu', directLabel: 'CPU' },
+                        { value: 'auto', directLabel: 'Auto (GPU if available)' }
+                    ],
+                    defaultValue: 'cpu',
+                    description: 'exportDeviceDescription'
+                },
+                {
+                    name: 'exportLegacyFormat',
+                    type: 'toggle',
+                    colSpan: 12,
+                    defaultValue: 'false',
+                    description: 'exportLegacyFormatDescription'
+                }
+            );
+        }
+
+        // Quantization settings sub-header
+        staticAdvancedFields.push({
+            name: 'exportQuantizationConfigHeader',
+            type: 'sectionHeader',
+            colSpan: 12,
+            collapsible: true,
+            expanded: expandedSections.quantizationConfig,
+            onToggle: () => handleToggleSection('quantizationConfig'),
+            customTitle: 'exportQuantizationConfigSection'
+        });
+
+        // Only add quantization fields if the section is expanded
+        if (expandedSections.quantizationConfig) {
+            // Quantization fields - only for merged model exports
+            if (formState.exportType === 'merged' || formState.exportType === 'both') {
+                staticAdvancedFields.push({
+                    name: 'quantization',
+                    type: 'toggle',
+                    defaultValue: 'false',
+                    description: 'quantizationDescription'
+                });
+
+                // When formState.quantization === 'true', fix the field name to match translation key
+                if (formState.quantization === 'true') {
+                    staticAdvancedFields.push(
+                        {
+                            name: 'exportQuantizationBit', // Changed from export_quantization_bit to match translation key
+                            type: 'select',
+                            options: [
+                                { value: '4', directLabel: '4-bit' },
+                                { value: '8', directLabel: '8-bit' },
+                            ],
+                            description: 'exportQuantizationBitDescription'
+                        },
+                        {
+                            name: 'exportQuantizationDataset',
+                            type: 'text',
+                            colSpan: 12,
+                            description: 'exportQuantizationDatasetDescription',
+                            placeholder: 'exportQuantizationDatasetPlaceholder'
+                        },
+                        {
+                            name: 'exportQuantizationNsamples',
+                            type: 'number',
+                            colSpan: 6,
+                            min: 1,
+                            max: 1000,
+                            step: 1,
+                            defaultValue: '128',
+                            description: 'exportQuantizationNsamplesDescription',
+                            placeholder: 'exportQuantizationNsamplesPlaceholder'
+                        },
+                        {
+                            name: 'exportQuantizationMaxlen',
+                            type: 'number',
+                            colSpan: 6,
+                            min: 128,
+                            max: 4096,
+                            step: 128,
+                            defaultValue: '1024',
+                            description: 'exportQuantizationMaxlenDescription',
+                            placeholder: 'exportQuantizationMaxlenPlaceholder'
+                        }
+                    );
+                }
+            }
+        }
+
+
+        // If not advanced mode, return just the basic fields
+        if (!showAdvanced) {
+            return basicFields;
+        }
+
+        // Advanced mode - add header and dynamic fields based on formState
+        const allFields = [...basicFields, ...staticAdvancedFields];
+
+        // Only add advanced fields if the main advanced config is expanded
+        if (uiState.expandedConfig) {
+            // Model repository settings sub-header (changed from HuggingFace Hub settings)
+            allFields.push({
+                name: 'exportHubConfigHeader',
+                type: 'sectionHeader',
+                colSpan: 12,
+                collapsible: true,
+                expanded: expandedSections.hubConfig,
+                onToggle: () => handleToggleSection('hubConfig'),
+                customTitle: 'exportModelRepositorySection' // Changed from 'exportHubConfigSection'
+            });
+
+            // Only add Hub-related fields if the Hub section is expanded
+            if (expandedSections.hubConfig) {
+                // Push to Hub toggle
+                allFields.push({
+                    name: 'pushToHub',
+                    type: 'toggle',
+                    defaultValue: 'true',
+                    description: 'pushToHubDescription'
+                });
+
+                // Conditional fields based on pushToHub value
+                if (formState.pushToHub === 'true') {
+                    // Export Type
+                    allFields.push({
+                        name: 'exportType',
+                        type: 'select',
+                        options: [
+                            { value: 'merged', directLabel: 'Merged Model Only' },
+                            { value: 'adapter', directLabel: 'Adapter Only' },
+                            { value: 'both', directLabel: 'Merged Model and Adapter' },
+                        ],
+                        required: true,
+                        description: 'exportTypeDescription'
+                    });
+
+                    // Model Hub IDs based on export type
+                    if (formState.exportType === 'merged' || formState.exportType === 'both') {
+                        allFields.push({
+                            name: 'exportHubModelId',
+                            type: 'text',
+                            required: true,
+                            description: 'exportHubModelIdDescription'
+                        });
+                    }
+
+                    if (formState.exportType === 'both') {
+                        allFields.push({
+                            name: 'adapterHubModelId',
+                            type: 'text',
+                            required: true,
+                            description: 'adapterHubModelIdDescription'
+                        });
+                    }
+
+                    // HF Token
+                    allFields.push({
+                        name: 'hfHubToken',
+                        type: 'text',
+                        required: true,
+                        description: 'hfHubTokenDescription'
+                    });
+
+                    // Private repo toggle
+                    allFields.push({
+                        name: 'private',
+                        type: 'toggle',
+                        defaultValue: 'true',
+                        description: 'privateDescription'
+                    });
+                }
+            }
+        } // Add missing closing bracket for the if (uiState.expandedConfig) block
+
+        // Handle search filtering and highlighting if search query exists
+        if (searchQuery.trim()) {
+            console.log("Filtering fields by search query:", searchQuery);
+            const locale = storeRef.current.currentLocale === 'zh' ? 'zh' : 'en';
+
+            // Apply highlighting to basic fields (but don't filter them)
+            basicFields.forEach((field) => {
+                const labelKey = `${field.name}Label`;
+                const label = translations[locale][labelKey as keyof typeof translations[typeof locale]] || field.name;
+
+                if (label.toLowerCase().includes(searchQuery.toLowerCase())) {
+                    field.searchHighlight = highlightMatch(label, searchQuery);
+                }
+            });
+
+            // In basic mode with search, return all basic fields with highlighting on matches
+            if (!showAdvanced) {
+                return basicFields; // Return ALL basic fields, not just matches
+            }
+
+            // For advanced mode with search, start with all basic fields
+            let allFields = [...basicFields];
+
+            // Apply highlighting to advanced fields and collect matches
+            const advancedFieldsWithMatches = staticAdvancedFields.filter(field => {
+                // For section headers, check the title
+                if (field.type === 'sectionHeader' && field.customTitle) {
+                    const titleKey = field.customTitle;
+                    const title = translations[locale][titleKey as keyof typeof translations[typeof locale]] || '';
+
+                    if (title.toLowerCase().includes(searchQuery.toLowerCase())) {
+                        field.searchHighlight = highlightMatch(title, searchQuery);
+                        field.expanded = true; // Expand matched sections
+                        return true;
+                    }
+                } else {
+                    // For regular fields, check the label
+                    const labelKey = `${field.name}Label`;
+                    const label = translations[locale][labelKey as keyof typeof translations[typeof locale]] || field.name;
+
+                    if (label.toLowerCase().includes(searchQuery.toLowerCase())) {
+                        field.searchHighlight = highlightMatch(label, searchQuery);
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+
+            // Add matching advanced fields to the list
+            allFields.push(...advancedFieldsWithMatches);
+
+            return allFields;
+        }
+
+        // Regular non-search behavior
+        return allFields;
+    }, [
+        modelOptions,
+        showAdvanced,
+        uiState.expandedConfig,
+        expandedSections,
+        formState.pushToHub,
+        formState.exportType,
+        formState.quantization,
+        searchQuery,
+        storeRef.current.currentLocale
+    ]);
+
+
+    // Handle form field changes
+    // const handleChange = useCallback((name: string, value: string) => {
+    //     // Update local form state
+    //     setFormState(prev => {
+    //         const newState = { ...prev, [name]: value };
+
+    //         // Store in app state (for persistence)
+    //         useAppStore.getState().updateExportFormData?.(newState);
+
+    //         return newState;
+    //     });
+    // }, []);
+// Handle form field changes
+const handleChange = useCallback((name: string, value: string) => {
+    // Only update local form state, don't directly call updateExportFormData
+    setFormState(prev => {
+        return { ...prev, [name]: value };
+    });
+}, []);
+
+// Add a debounced effect to sync formState with store
+// Using a ref to track previous state to avoid unnecessary updates
+const prevFormStateRef = useRef<Record<string, string>>({});
+useEffect(() => {
+    // Only update if we have meaningful form data, component is mounted,
+    // and the form state has actually changed
+    if (Object.keys(formState).length > 0 && 
+        isMounted.current && 
+        JSON.stringify(formState) !== JSON.stringify(prevFormStateRef.current)) {
+        
+        // Update our reference to current state
+        prevFormStateRef.current = {...formState};
+        
+        // Update store as a side effect, not during render
+        useAppStore.getState().updateExportFormData?.(formState);
+    }
+}, [formState]);
+
+    // Handle section toggle for any section
+    const handleToggleSection = useCallback((sectionKey: string) => {
         setExpandedSections(prev => ({
             ...prev,
             [sectionKey]: !prev[sectionKey]
         }));
-    };
-    
-    // Initialize form data with defaults
-    const defaultExportData = {
-        modelNameOrPath: '',
-        adapterNameOrPath: '',
-        exportDir: '',
-        exportHubModelId: '',
-        hfHubToken: '',
-        exportFormat: 'safetensors',
-        
-        // Advanced options
-        quantization: 'false',
-        quantizationBits: '8',
-        mergeAdapter: 'true',
-        pushToHub: 'false',
-        private: 'true',
-    };
-    
-    // Merge with existing form data or use defaults
-    const formData = exportFormData 
-        ? { ...defaultExportData, ...exportFormData }
-        : defaultExportData;
-    
-    // Function to highlight text matches in field labels
-    const highlightMatch = (text: string, query: string) => {
-        if (!query.trim() || !text) return text;
-        
-        const regex = new RegExp(`(${query.trim()})`, 'gi');
-        return text.replace(regex, '<span class="search-highlight">$1</span>');
-    };
-    
-    // Dynamically build the form fields based on mode and search query
-    const getFormFields = () => {
-        // Create a deep copy of basic fields to avoid modifying the original
-        const fieldsWithOptions = JSON.parse(JSON.stringify(basicFields));
-        
-        // Apply the current options to the fields
-        if (modelOptions.length > 0) {
-            fieldsWithOptions[0].options = modelOptions;
-        }
-        
-        // Apply search filtering and highlighting logic similar to Train.tsx
-        if (searchQuery.trim()) {
-            // Filter and highlight fields based on search query
-            // ...similar to the Train.tsx implementation
-            // This is abbreviated for clarity
-        }
-        
-        // Regular non-search behavior
-        if (!showAdvanced) {
-            return fieldsWithOptions;
-        }
-        
-        // Regular advanced mode without search
-        let allFields = [...fieldsWithOptions];
-        
-        // Add all advanced field sections
-        Object.entries(advancedFieldSections).forEach(([sectionKey, section]) => {
-            // Add collapsible section header with custom title
-            allFields.push({
-                name: `${sectionKey}Header`,
-                type: 'sectionHeader',
-                colSpan: 12,
-                collapsible: true,
-                expanded: expandedSections[sectionKey],
-                onToggle: () => toggleSection(sectionKey),
-                customTitle: section.title
-            });
-            
-            // Only add fields if section is expanded
-            if (expandedSections[sectionKey]) {
-                allFields = [...allFields, ...section.fields];
-            }
-        });
-        
-        return allFields;
-    };
-    
-    // Load models from API
-    useEffect(() => {
-        const fetchResources = async () => {
-            setIsLoading(true);
-            setError(null);
-            
-            try {
-                // Fetch available models
-                const modelsResponse = await resourceService.getModels();
-                if (modelsResponse && modelsResponse.models) {
-                    const modelsList = modelsResponse.models.map((model: any) => ({
-                        value: model.id,
-                        directLabel: model.name
-                    }));
-                    setModelOptions(modelsList);
-                }
-            } catch (error) {
-                console.error('Failed to fetch resources:', error);
-                setError('Failed to load models. Using default options.');
-                
-                // Fallback to default models
-                setModelOptions([
-                    { value: 'llama3-8b', directLabel: 'Llama 3 (8B)' },
-                    { value: 'gpt4', directLabel: 'GPT-4' }
-                ]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        
-        // Call the function
-        fetchResources();
     }, []);
-    
-    // Handle form submission via the API
-    const handleSubmit = async (data: Record<string, string>) => {
+
+    // Handle form submission via API
+    const handleSubmit = useCallback(async (data: Record<string, string>): Promise<string> => {
+        // if (!isMounted.current) return "Component is unmounted";
+
         try {
-            console.log('Export form data before submission:', data);
+            console.log('Export form data:', data);
             
-            // Check for validation issues
-            const validationIssues = [];
-            
-            if (!data.modelNameOrPath) {
-                validationIssues.push("Base model is required");
+            // If in advanced mode, mark that we've submitted in advanced mode
+            if (showAdvanced) {
+                setHasSubmittedInAdvancedMode(true);
             }
+
+            // Only validate fields relevant to the current mode
+            const requiredFields = ['modelNameOrPath', 'adapterNameOrPath', 'exportDir'];
             
-            if (!data.adapterNameOrPath) {
-                validationIssues.push("Adapter path is required");
-            }
-            
-            if (!data.exportDir) {
-                validationIssues.push("Export directory is required");
-            }
-            
-            // Check if we need token for HuggingFace Hub
-            if (data.pushToHub === 'true' || data.exportHubModelId) {
-                if (!data.hfHubToken) {
-                    validationIssues.push("HuggingFace Hub token is required for uploading to Hub");
+            // Add conditional validation for advanced mode - only if we're in advanced mode
+            if (showAdvanced && data.pushToHub === 'true') {
+                requiredFields.push('hfHubToken');
+                
+                if (data.exportType === 'merged' || data.exportType === 'both') {
+                    requiredFields.push('exportHubModelId');
                 }
                 
-                if (!data.exportHubModelId) {
-                    validationIssues.push("HuggingFace Hub Model ID is required for uploading to Hub");
+                if (data.exportType === 'both') {
+                    requiredFields.push('adapterHubModelId');
                 }
             }
-            
-            // If there are validation issues, throw an error
-            if (validationIssues.length > 0) {
-                throw new Error(`Validation failed: ${validationIssues.join(', ')}`);
+
+            // Check required fields
+            const missingFields = requiredFields.filter(field => !data[field]);
+            if (missingFields.length > 0) {
+                throw new Error(`Required fields missing: ${missingFields.join(', ')}`);
             }
-            
-            // Show loading state
+
             setIsLoading(true);
             
-            // Build request data for API
+            // Prepare API request - only include necessary fields based on mode
             const requestData: any = {
                 model_name_or_path: data.modelNameOrPath,
                 adapter_name_or_path: data.adapterNameOrPath,
                 export_dir: data.exportDir,
-                // export_format: data.exportFormat,
             };
-            
-            // Add optional fields
-            if (data.exportHubModelId) {
-                requestData.export_hub_model_id = data.exportHubModelId;
-            }
-            
-            // Add token if provided
-            if (data.hfHubToken) {
-                requestData.hf_hub_token = data.hfHubToken;
-            }
-            
-            // Add advanced parameters when advanced mode is enabled
-            if (showAdvanced) {
-                console.log('Advanced mode: including advanced configuration options');
-                
-                // Process advanced fields
-                if (data.quantization === 'true') {
-                    requestData.quantization = true;
-                    requestData.quantization_bits = parseInt(data.quantizationBits);
+
+            // In basic mode, we always use these defaults
+            if (!showAdvanced) {
+                // Default export behavior for basic mode (explicitly set)
+                requestData.merge_adapter = true;
+                requestData.export_adapter = false;
+                requestData.quantization = false;
+                // Only include these fields, ignore any advanced fields that might be in data
+            } else {
+                // Add advanced options if needed in advanced mode
+                if (showAdvanced) {
+                    // Add the new export configuration fields
+                    if (data.exportSize) {
+                        requestData.export_size = parseInt(data.exportSize);
+                    }
+
+                    if (data.exportDevice) {
+                        requestData.export_device = data.exportDevice;
+                    }
+
+                    // Quantization settings
+                    if (data.quantization === 'true') {
+                        requestData.quantization = true;
+                        requestData.quantization_bits = parseInt(data.quantizationBits || '8');
+                    }
                 }
-                
-                requestData.merge_adapter = data.mergeAdapter === 'true';
-                requestData.push_to_hub = data.pushToHub === 'true';
-                requestData.private = data.private === 'true';
             }
             
-            console.log('Sending export request with data:', requestData);
-            
-            // Call the API endpoint using exportService instead of fetch
-            const response = await exportService.startExport(requestData, showAdvanced);
-            
-            // Save the job ID for later status checking
-            if (response.job_id) {
-                localStorage.setItem('lastExportJobId', response.job_id);
+            try {
+                // Call API with explicit error handling
+                const response = await exportService.startExport(requestData, showAdvanced);
+                console.log('Export API response:', response);
+
+                if (response && response.job_id) {
+                    localStorage.setItem('lastExportJobId', response.job_id);
+                    
+                    // Add this check to ensure advanced state is preserved after successful submission
+                    if (showAdvanced !== uiState.showAdvanced) {
+                        console.log('Fixing UI state mismatch after submission');
+                        setUiState(prev => ({ ...prev, showAdvanced: showAdvanced }));
+                    }
+                    
+                    // Return success message
+                    const locale = storeRef.current.currentLocale === 'zh' ? 'zh' : 'en';
+                    return `${translations[locale].exportStarted} "${data.modelNameOrPath}" (Job ID: ${response.job_id})`;
+                } else {
+                    console.warn('Unexpected API response format:', response);
+                    throw new Error('Invalid response from server');
+                }
+            } catch (apiError: any) {
+                console.error('API call failed:', apiError);
+                // Extract detailed error message if available
+                if (apiError.response && apiError.response.data) {
+                    console.error('API error details:', apiError.response.data);
+                    throw new Error(`Export failed: ${apiError.response.data.detail || apiError.message}`);
+                }
+                throw apiError;
             }
-            
-            console.log('Export submitted successfully:', response);
-            
-            // Return a success message for the form
-            const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
-            return `${translations[locale].exportStarted} "${data.modelNameOrPath}" (Job ID: ${response.job_id || 'unknown'})`;
-            
+
         } catch (error) {
-            console.error('Export submission failed:', error);
-            
-            // Extract error message from API response if available
-            let errorMessage = 'Failed to start export. Please try again later.';
-            if (
-                typeof error === 'object' &&
-                error !== null &&
-                'message' in error
-            ) {
-                errorMessage = (error as Error).message;
-            }
-            
-            throw new Error(errorMessage);
+            console.error('Export failed:', error);
+            throw error; // Re-throw to show in form error state
         } finally {
-            setIsLoading(false);
+            if (isMounted.current) {
+                setIsLoading(false);
+            }
         }
-    };
+    }, [showAdvanced, uiState.showAdvanced, hasSubmittedInAdvancedMode]);
 
-    const handleChange = (name: string, value: string) => {
-        updateExportFormData({ [name]: value });
-    };
+    // Button actions
+    const handlePreviewCurl = useCallback((data: Record<string, string>) => {
+        const exportData = {
+            model_name_or_path: data.modelNameOrPath,
+            adapter_name_or_path: data.adapterNameOrPath,
+            export_dir: data.exportDir,
+            // export_format field removed - no longer needed
+        };
 
-    // Check status handler
-    const handleCheckStatus = async () => {
+        const curlCommand = exportService.getPreviewCurlCommand(exportData);
+        alert(curlCommand);
+        navigator.clipboard.writeText(curlCommand);
+    }, []);
+
+    const handleSaveConfig = useCallback((data: Record<string, string>) => {
+        const locale = storeRef.current.currentLocale === 'zh' ? 'zh' : 'en';
+        saveConfig(
+            data,
+            'export',
+            translations[locale].configSaved
+        );
+    }, []);
+
+    const handleLoadConfig = useCallback(() => {
+        const locale = storeRef.current.currentLocale === 'zh' ? 'zh' : 'en';
+        loadConfig(
+            (config) => {
+                // Update local state
+                setFormState(prev => ({
+                    ...prev,
+                    ...config
+                }));
+
+                // Update store state
+                useAppStore.getState().updateExportFormData?.(config);
+            },
+            translations[locale].configLoaded
+        );
+    }, []);
+
+    const handleCheckStatus = useCallback(async () => {
         const jobId = localStorage.getItem('lastExportJobId');
         if (!jobId) {
             alert('No recent export job found');
             return;
         }
-        
+
+        if (!isMounted.current) return;
+
         try {
             setIsLoading(true);
-            
-            // Call the API to get export status using exportService
             const result = await exportService.getExportStatus(jobId);
-            
-            // Show status to the user
-            alert(`Export status for job ${jobId}: ${result.status}`);
-        } catch (error) {
-            console.error('Failed to get export status:', error);
-            alert('Failed to retrieve export status. Please try again later.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
-    // Define button actions
-    const handlePreviewCurl = (data: Record<string, string>) => {
-        // Prepare the data in the format expected by the exportService
-        const exportData = {
-            model_name_or_path: data.modelNameOrPath,
-            adapter_name_or_path: data.adapterNameOrPath,
-            export_dir: data.exportDir,
-            // export_format: data.exportFormat,
-        };
-        
-        // Get the curl command from exportService
-        const curlCommand = exportService.getPreviewCurlCommand(exportData);
-        
-        alert(curlCommand);
-        // Copy to clipboard
-        navigator.clipboard.writeText(curlCommand);
-    };
-    
-    const handleSaveConfig = (data: Record<string, string>) => {
-        // Save config to localStorage or download as JSON
-        const configJson = JSON.stringify(data, null, 2);
-        localStorage.setItem('exportConfig', configJson);
-        
-        // Trigger download
-        const blob = new Blob([configJson], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'export-config.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        const locale = (currentLocale === 'zh') ? 'zh' : 'en';
-        alert(translations[locale].configSaved);
-    };
-    
-    const handleLoadConfig = () => {
-        // Create a file input and trigger it
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'application/json';
-        input.onchange = (e: any) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const config = JSON.parse(event.target?.result as string);
-                        // Update form data with loaded config
-                        updateExportFormData(config);
-                        const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
-                        alert(translations[locale].configLoaded);
-                    } catch (error) {
-                        console.error('Failed to parse config file:', error);
-                    }
-                };
-                reader.readAsText(file);
+
+            // Format status message
+            let message = `Export status: ${result.status}\nJob ID: ${jobId}`;
+
+            if (result.export_results) {
+                message += '\n\nResults:';
+                if (result.export_results.merged_model) {
+                    message += `\n- Merged Model: ${result.export_results.merged_model}`;
+                }
+                if (result.export_results.adapter_only) {
+                    message += `\n- Adapter: ${result.export_results.adapter_only}`;
+                }
             }
-        };
-        input.click();
-    };
-    
-    // Form buttons
-    const formButtons: FormButton[] = [
+
+            if (result.export_path) {
+                message += `\n\nPath: ${result.export_path}`;
+            }
+
+            if (result.hub_model_id) {
+                message += `\n\nHub Model ID: ${result.hub_model_id}`;
+            }
+
+            if (result.adapter_hub_model_id) {
+                message += `\n\nAdapter Hub ID: ${result.adapter_hub_model_id}`;
+            }
+
+            alert(message);
+        } catch (error) {
+            console.error('Failed to check status:', error);
+            alert('Failed to retrieve export status');
+        } finally {
+            if (isMounted.current) {
+                setIsLoading(false);
+            }
+        }
+    }, []);
+
+    // Define form buttons with stable references
+    const formButtons = useMemo<FormButton[]>(() => [
         {
             key: 'preview-curl',
             text: 'previewCurlCommand',
@@ -551,34 +763,37 @@ const Export = () => {
             position: 'right',
             onClick: handleCheckStatus
         }
-    ];
-    
-    // Use useMemo to memoize the fields
-    const currentFields = useMemo(() => getFormFields(), [
-        showAdvanced, 
-        modelOptions, 
-        expandedSections,
-        searchQuery,
-        currentLocale
-    ]);
-    
+    ], [handlePreviewCurl, handleLoadConfig, handleSaveConfig, handleCheckStatus]);
+
+    // Return the form with modified validation behavior
     return (
-        <ModelForm
-            title="exportModel"
-            submitButtonText="startExport"
-            buttons={formButtons}
-            fields={currentFields}
-            translations={translations}
-            onSubmit={handleSubmit}
-            formData={formData as unknown as Record<string, string>}
-            onChange={handleChange}
-        />
+        <>
+            {/* For debugging - you can uncomment if needed */}
+            {/* <div style={{ marginBottom: '10px' }}>
+                <div>Advanced Mode from Context: {showAdvanced ? 'ON' : 'OFF'}</div>
+                <div>Advanced Mode in UI State: {uiState.showAdvanced ? 'ON' : 'OFF'}</div>
+            </div> */}
+            <ModelForm
+                title="exportModel"
+                submitButtonText="startExport"
+                buttons={formButtons}
+                fields={formFields}
+                translations={translations}
+                onSubmit={handleSubmit}
+                formData={formState}
+                onChange={handleChange}
+                isLoading={isLoading}
+                showAdvanced={showAdvanced}
+                // Ensure we're properly handling the validation mode flag
+                validateVisibleFieldsOnly={showAdvanced && !hasSubmittedInAdvancedMode}
+            />
+        </>
     );
 };
 
 // Create a wrapper component that includes the shared layout
 const ExportWithLayout = () => (
-    <ModelConfigLayout 
+    <ModelConfigLayout
         title="Export Model"
         translations={translations}>
         <Export />

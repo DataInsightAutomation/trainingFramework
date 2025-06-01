@@ -456,12 +456,21 @@
       }
     }
     
-    .chevron-icon i {
+    .section-toggle-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.3s ease;
+      
+      i {
+        font-size: 18px;
+      }
     }
     
-    &.expanded .chevron-icon i {
-      transform: rotate(180deg);
+    &.expanded {
+      .section-toggle-icon {
+        transform: rotate(180deg);
+      }
     }
   }
   

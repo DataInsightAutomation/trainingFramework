@@ -60,7 +60,6 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         
         # Use extended data arguments to control saving behavior
         data_args = ExtendedDataArguments(**vars(data_args), _should_save=True)
-        
         # Load tokenizer and template
         tokenizer_module = load_tokenizer(model_args)
         tokenizer = tokenizer_module["tokenizer"]
