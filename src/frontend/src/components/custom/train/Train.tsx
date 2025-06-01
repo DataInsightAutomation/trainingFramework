@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { TrainFormData } from '../../../utils/context';
 import { useAppStore } from '../../../store/appStore';
-import ModelForm, { FormField, FormButton } from '../../shared/ModelForm/ModelForm';
-import { resourceService } from '../../../services/resourceService';
+import ModelForm from '../../shared/ModelForm/ModelForm';
 import { EndPoints } from '#constants/endpoint';
 import { trainingService } from '#services/trainingService';
 import ModelConfigLayout, { ModelConfigContext } from '../../shared/ModelConfigLayout/ModelConfigLayout';
 import './Train.scss';
 import { translations } from './TrainTranslation';
-import { saveConfig, loadConfig } from '../../../utils/configUtils';
+import ErrorBanner from '../../shared/ErrorBanner/ErrorBanner';
+import { useModelForm, processFormFields } from '../../../hooks/useModelForm';
+import { createFormButtons } from '../../../utils/buttonActions';
 
 // Advanced form field sections with custom header names
 const advancedFieldSections = {
@@ -92,10 +93,10 @@ const advancedFieldSections = {
       { name: 'overwrite_output_dir', type: 'toggle', defaultValue: 'true' },
     ]
   },
-} as const;
+};
 
 // Define the basic form fields structure
-const basicFields: FormField[] = [
+const basicFields = [
   {
     name: 'modelName',
     type: 'searchableSelect',
@@ -141,7 +142,7 @@ const basicFields: FormField[] = [
 ];
 
 // Add this debugging function to help identify field rendering issues
-const DebugComponent = ({ formFields }: { formFields: FormField[] }) => {
+const DebugComponent = ({ formFields }: { formFields: any[] }) => {
   useEffect(() => {
     console.log('Form fields to render:', formFields);
     const finetuningField = formFields.find(f => f.name === 'finetuning_type');
@@ -260,84 +261,77 @@ const getFinetuningTypeOptions = () => {
 };
 
 const Train = () => {
-  // Use the shared context for advanced mode and search
-  const { showAdvanced, searchQuery } = useContext(ModelConfigContext);
-
-  const { trainFormData, currentLocale, updateTrainFormData } = useAppStore();
-  const [modelOptions, setModelOptions] = useState<{ value: string, directLabel: string }[]>([]);
-  const [datasetOptions, setDatasetOptions] = useState<{ value: string, directLabel: string }[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Track expanded/collapsed state of each section
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    modelConfig: true,
-    finetuningConfig: true,
-    datasetConfig: true,
-    trainingConfig: true,
-    outputConfig: true
+  // Use our custom hook for form handling
+  const {
+    formData,
+    modelOptions,
+    datasetOptions,
+    isLoading,
+    error,
+    showErrorBanner,
+    expandedSections,
+    showAdvanced,
+    searchQuery,
+    currentLocale,
+    setRetryCount,
+    toggleSection,
+    handleChange,
+    setFormData,
+    setShowErrorBanner,
+    setError,
+    setIsLoading
+  } = useModelForm({
+    formType: 'train',
+    defaultValues: {
+      modelName: '',
+      modelPath: '',
+      dataset: '',
+      trainMethod: 'supervised',
+      finetuning_type: 'lora',
+      token: '',
+      trust_remote_code: 'true',
+      stage: 'sft',
+      lora_rank: '8',
+      lora_target: 'all',
+      template: 'llama3',
+      cutoff_len: '2048',
+      max_samples: '',
+      overwrite_cache: 'false',
+      preprocessing_num_workers: '4',
+      per_device_train_batch_size: '1',
+      gradient_accumulation_steps: '8',
+      learning_rate: '0.0001',
+      num_train_epochs: '1.0',
+      lr_scheduler_type: 'cosine',
+      warmup_ratio: '0.1',
+      bf16: 'true',
+      output_dir: '',
+      logging_steps: '10',
+      save_steps: '500',
+      plot_loss: 'true',
+      overwrite_output_dir: 'true',
+    },
+    updateStoreCallback: useAppStore.getState().updateTrainFormData,
+    getStoreData: () => useAppStore.getState().trainFormData,
+    initialSections: {
+      modelConfig: true,
+      finetuningConfig: true,
+      datasetConfig: true,
+      trainingConfig: true,
+      outputConfig: true
+    }
   });
 
   // Add state to track the current training method
   const [currentTrainMethod, setCurrentTrainMethod] = useState<string>('supervised');
 
-  // Add state to track API retry attempts
-  const [retryCount, setRetryCount] = useState<number>(0);
-  const [showErrorBanner, setShowErrorBanner] = useState<boolean>(false);
-
-  // Toggle section expanded/collapsed state
-  const toggleSection = (sectionKey: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionKey]: !prev[sectionKey]
-    }));
-  };
-
-  // Initialize form data with defaults for advanced options
-  const defaultAdvancedData = {
-    modelName: '',
-    modelPath: '',
-    dataset: '',
-    trainMethod: 'supervised', // Default to supervised
-    finetuning_type: 'lora', // Default to LoRA
-    token: '', // Add default empty value for token
-
-    // Advanced options with defaults
-    trust_remote_code: 'true',
-    stage: 'sft',
-    lora_rank: '8',
-    lora_target: 'all',
-    template: 'llama3',
-    cutoff_len: '2048',
-    max_samples: '',
-    overwrite_cache: 'false',
-    preprocessing_num_workers: '4',
-    per_device_train_batch_size: '1',
-    gradient_accumulation_steps: '8',
-    learning_rate: '0.0001',
-    num_train_epochs: '1.0',
-    lr_scheduler_type: 'cosine',
-    warmup_ratio: '0.1',
-    bf16: 'true',
-    output_dir: '',
-    logging_steps: '10',
-    save_steps: '500',
-    plot_loss: 'true',
-    overwrite_output_dir: 'true',
-  };
-
-  // Merge with existing form data or use defaults
-  const formData = trainFormData
-    ? { ...defaultAdvancedData, ...trainFormData }
-    : defaultAdvancedData;
-
-  // Function to highlight text matches in field labels
-  const highlightMatch = (text: string, query: string) => {
-    if (!query.trim() || !text) return text;
-
-    const regex = new RegExp(`(${query.trim()})`, 'gi');
-    return text.replace(regex, '<span class="search-highlight">$1</span>');
-  };
+  // Update train method when form data changes
+  useEffect(() => {
+    if (formData && formData.trainMethod && formData.trainMethod !== currentTrainMethod) {
+      setCurrentTrainMethod(formData.trainMethod);
+      console.log('Training method changed to:', formData.trainMethod);
+    }
+  }, [formData?.trainMethod]); // Only depend on trainMethod, not the entire formData object
 
   // Updated function to get stage options based on training method
   const getStageOptions = (method: string) => {
@@ -356,8 +350,8 @@ const Train = () => {
     }
   };
 
-  // Dynamically build the form fields based on mode and search query
-  const getFormFields = () => {
+  // Get form fields using the shared processor
+  const currentFields = useMemo(() => {
     // Create a deep copy of basic fields to avoid modifying the original
     const fieldsWithOptions = JSON.parse(JSON.stringify(basicFields));
 
@@ -373,135 +367,7 @@ const Train = () => {
     // Get current train method for dynamic fields
     const method = currentTrainMethod || 'supervised';
 
-    // Filter and enhance fields if there's a search query
-    if (searchQuery.trim()) {
-      // Filter basic fields that match the search
-      const filteredBasicFields = fieldsWithOptions.filter((field: FormField) => {
-        const labelKey = `${field.name}Label`;
-        const locale = currentLocale === 'zh' ? 'zh' : 'en';
-        const localeTranslations = translations[locale];
-        // Use a type-safe access pattern to get the translation
-        const label = (labelKey in localeTranslations ?
-          localeTranslations[labelKey as keyof typeof localeTranslations] :
-          field.name);
-        return label.toLowerCase().includes(searchQuery.toLowerCase());
-      });
-
-      // Apply highlighting to basic fields (both matching and non-matching)
-      fieldsWithOptions.forEach((field: FormField) => {
-        const labelKey = `${field.name}Label`;
-        const locale = currentLocale === 'zh' ? 'zh' : 'en';
-        const localeTranslations = translations[locale];
-        // Use a type-safe access pattern to get the translation
-        const label = (labelKey in localeTranslations ?
-          localeTranslations[labelKey as keyof typeof localeTranslations] :
-          field.name);
-
-        // Only highlight if it's a match
-        if (label.toLowerCase().includes(searchQuery.toLowerCase())) {
-          field.searchHighlight = highlightMatch(label, searchQuery);
-        }
-      });
-
-      // Show all basic fields when we're in basic mode
-      if (!showAdvanced) {
-        // In basic mode, show all basic fields but highlight matches
-        return fieldsWithOptions;
-      }
-
-      // Handle advanced mode with search
-      let allFields: FormField[] = [...fieldsWithOptions];
-
-      // Identify which sections have any matching fields or section title matches
-      const sectionsWithMatches = new Set<string>();
-
-      Object.entries(advancedFieldSections).forEach(([sectionKey, section]) => {
-        // Check if the section title matches
-        const sectionTitleKey = section.title;
-        const sectionTitle = translations[currentLocale === 'zh' ? 'zh' : 'en'][sectionTitleKey] || '';
-
-        // Check if section title matches search query
-        const titleMatches = sectionTitle.toLowerCase().includes(searchQuery.toLowerCase());
-
-        // Check if any field in this section matches
-        const hasMatchingField = section.fields.some(field => {
-          const labelKey = `${field.name}Label`;
-          const locale = currentLocale === 'zh' ? 'zh' : 'en';
-          const localeTranslations = translations[locale];
-          const label = (labelKey in localeTranslations ?
-            localeTranslations[labelKey as keyof typeof localeTranslations] :
-            field.name);
-          return label.toLowerCase().includes(searchQuery.toLowerCase());
-        });
-
-        // Add to matches if either title or any field matches
-        if (titleMatches || hasMatchingField) {
-          sectionsWithMatches.add(sectionKey);
-        }
-      });
-
-      // Add advanced field sections, keeping entire sections intact for matches
-      Object.entries(advancedFieldSections).forEach(([sectionKey, section]) => {
-        // Only add sections that have a matching title or fields
-        if (sectionsWithMatches.has(sectionKey)) {
-          // Get the section title
-          const sectionTitleKey = section.title;
-          const sectionTitle = translations[currentLocale === 'zh' ? 'zh' : 'en'][sectionTitleKey] || '';
-
-          // Check if section title matches search query
-          const titleMatches = sectionTitle.toLowerCase().includes(searchQuery.toLowerCase());
-
-          // Create section header with highlighted title if it matches
-          const sectionHeader: FormField = {
-            name: `${sectionKey}Header`,
-            type: 'sectionHeader',
-            colSpan: 12,
-            collapsible: true,
-            expanded: true, // Always expand sections with matches
-            onToggle: () => toggleSection(sectionKey),
-            customTitle: section.title
-          };
-
-          // Add highlighting to section title if it matches
-          if (titleMatches) {
-            sectionHeader.searchHighlight = highlightMatch(sectionTitle, searchQuery);
-          }
-
-          // Add the section header
-          allFields.push(sectionHeader);
-
-          // Add ALL fields in this section, not just matches
-          section.fields.forEach(field => {
-            const labelKey = `${field.name}Label`;
-            const locale = currentLocale === 'zh' ? 'zh' : 'en';
-            const localeTranslations = translations[locale];
-
-            // Get translated label, safely
-            let label = field.name;
-            if (labelKey in localeTranslations) {
-              // @ts-ignore - We know this key exists from the check above
-              label = localeTranslations[labelKey];
-            }
-
-            // Create a clean copy of the field
-            const enhancedField: FormField = {
-              ...field, // Copy all properties directly
-            };
-
-            // Only add highlight if it matches
-            if (label.toLowerCase().includes(searchQuery.toLowerCase())) {
-              enhancedField.searchHighlight = highlightMatch(label, searchQuery);
-            }
-
-            allFields.push(enhancedField);
-          });
-        }
-      });
-
-      return allFields;
-    }
-
-    // Regular non-search behavior
+    // Handle basic mode special fields
     if (!showAdvanced) {
       // Find index of trainMethod field to position stage field after it
       const trainMethodIndex = fieldsWithOptions.findIndex(f => f.name === 'trainMethod');
@@ -541,156 +407,37 @@ const Train = () => {
         }
       }
 
-      return fieldsWithOptions;
+      // If not in search mode, return the basic fields with our custom additions
+      if (!searchQuery.trim()) {
+        return fieldsWithOptions;
+      }
     }
 
-    // Regular advanced mode without search
-    let allFields = [...fieldsWithOptions];
-
-    // Add all advanced field sections
-    Object.entries(advancedFieldSections).forEach(([sectionKey, section]) => {
-      // Add collapsible section header with custom title
-      allFields.push({
-        name: `${sectionKey}Header`,
-        type: 'sectionHeader',
-        colSpan: 12,
-        collapsible: true,
-        expanded: expandedSections[sectionKey],
-        onToggle: () => toggleSection(sectionKey),
-        customTitle: section.title
-      });
-
-      // Only add fields if section is expanded
-      if (expandedSections[sectionKey]) {
-        if (sectionKey === 'modelConfig') {
-          // Add all fields except stage
-          const nonStageFields = section.fields.filter(f => (f.name as string) !== 'stage');
-          allFields.push(...nonStageFields);
-
-          // Add stage with options based on training method
-          allFields.push({
-            name: 'stage',
-            type: 'select',
-            options: getStageOptions(method),
-            defaultValue: method === 'rlhf' ? 'rm' : 'sft'
-          });
-        } else {
-          allFields.push(...section.fields);
-        }
-      }
+    // Use the shared processor for search filtering and advanced mode
+    return processFormFields({
+      basicFields: fieldsWithOptions,
+      advancedSections: advancedFieldSections,
+      expandedSections,
+      toggleSection,
+      formData,
+      showAdvanced,
+      searchQuery,
+      currentLocale,
+      translations
     });
-
-    return allFields;
-  };
-
-  // Enhanced resource fetching with retry logic and better error handling
-  useEffect(() => {
-    const fetchResources = async () => {
-      setIsLoading(true);
-      setError(null);
-      setShowErrorBanner(false);
-
-      try {
-        // Try to fetch models with retry logic
-        let modelsList = [];
-        try {
-          console.log('Fetching models from resource service...');
-          const modelsResponse = await resourceService.getModels();
-          console.log(modelsResponse, 'modelsResponse');
-          console.log(modelsResponse.models, 'modelsResponse.models');
-          if (modelsResponse && modelsResponse.models) {
-            modelsList = modelsResponse.models.map((model: any) => ({
-              value: model.id,
-              directLabel: model.name
-            }));
-            setModelOptions(modelsList);
-          }
-        } catch (modelError) {
-          console.error('Error fetching models:', modelError);
-          // Use fallback model data
-          modelsList = [
-            { value: 'llama3-8b', directLabel: 'Llama 3 (8B)' },
-            { value: 'llama3-70b', directLabel: 'Llama 3 (70B)' },
-            { value: 'mistral-7b', directLabel: 'Mistral (7B)' },
-            { value: 'mixtral-8x7b', directLabel: 'Mixtral (8x7B)' }
-          ];
-          setModelOptions(modelsList);
-          // Show error notification but continue with fallback data
-          setError('Using default model options due to API error.');
-          setShowErrorBanner(true);
-        }
-
-        // Try to fetch datasets with separate try/catch to handle independently
-        let datasetsList = [];
-        try {
-          console.log('Fetching datasets from resource service...');
-          const datasetsResponse = await resourceService.getDatasets();
-          if (datasetsResponse && datasetsResponse.datasets) {
-            datasetsList = datasetsResponse.datasets.map((dataset: any) => ({
-              value: dataset.id,
-              directLabel: dataset.name
-            }));
-            setDatasetOptions(datasetsList);
-          }
-        } catch (datasetError) {
-          console.error('Error fetching datasets:', datasetError);
-          // Use fallback dataset data
-          datasetsList = [
-            { value: 'alpaca-cleaned', directLabel: 'Alpaca (Cleaned)' },
-            { value: 'dolly-15k', directLabel: 'Dolly 15k' },
-            { value: 'oasst1', directLabel: 'Open Assistant' },
-            { value: 'platypus', directLabel: 'Platypus' }
-          ];
-          setDatasetOptions(datasetsList);
-          // Show error notification but continue with fallback data
-          setError((prev) => prev ? prev : 'Using default dataset options due to API error.');
-          setShowErrorBanner(true);
-        }
-      } catch (error) {
-        console.error('Failed to fetch resources:', error);
-        setError('Failed to load resources. Using default options.');
-        setShowErrorBanner(true);
-
-        // Fallback to default models and datasets if all else fails
-        setModelOptions([
-          { value: 'llama3-8b', directLabel: 'Llama 3 (8B)' },
-          { value: 'mistral-7b', directLabel: 'Mistral (7B)' },
-          { value: 'gpt4', directLabel: 'GPT-4' }
-        ]);
-
-        setDatasetOptions([
-          { value: 'alpaca-cleaned', directLabel: 'Alpaca (Cleaned)' },
-          { value: 'dolly-15k', directLabel: 'Dolly 15k' },
-          { value: 'oasst1', directLabel: 'Open Assistant' }
-        ]);
-
-        // Auto-retry logic (max 2 retries with increasing delay)
-        if (retryCount < 2) {
-          const retryDelay = (retryCount + 1) * 2000; // 2s, then 4s
-          console.log(`Scheduling retry ${retryCount + 1} in ${retryDelay}ms`);
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-          }, retryDelay);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Call the function
-    fetchResources();
-  }, [retryCount]); // Add retryCount as dependency to trigger retries
-
-  // Watch for changes in trainMethod and update UI accordingly
-  useEffect(() => {
-    if (trainFormData && trainFormData.trainMethod) {
-      setCurrentTrainMethod(trainFormData.trainMethod);
-      console.log('Training method changed to:', trainFormData.trainMethod);
-    }
-  }, [trainFormData]);
+  }, [
+    modelOptions,
+    datasetOptions,
+    expandedSections,
+    searchQuery,
+    currentLocale,
+    currentTrainMethod,
+    showAdvanced,
+    formData
+  ]);
 
   // Handle form submission via the API
-  const handleSubmit = async (data: Record<string, string>) => {
+  const handleSubmit = async (data: Record<string, string>): Promise<string> => {
     try {
       console.log('Train form data before submission:', data);
 
@@ -840,43 +587,27 @@ const Train = () => {
     }
   };
 
-  const handleChange = (name: string, value: string) => {
-    // If the training method changes, update the current method state
+  // Add custom handler for field changes to manage train method changes
+  const handleFormChange = (name: string, value: string) => {
+    // Special case for train method to update stage as well
     if (name === 'trainMethod') {
       setCurrentTrainMethod(value);
-      console.log('Training method changed to:', value);
-
-      // If changing to RLHF, ensure stage is set to 'rm' (default)
-      // If changing to other methods, set stage to 'sft'
       const newStage = value === 'rlhf' ? 'rm' : 'sft';
-
-      // Update form data with new method and appropriate stage
-      updateTrainFormData({
+      
+      // Update both values at once
+      setFormData(prev => ({
+        ...prev,
         trainMethod: value,
-        stage: newStage,
-        finetuning_type: trainFormData?.finetuning_type || 'lora'
-      });
+        stage: newStage
+      }));
       return;
     }
-
-    // If the finetuning_type changes, we may need to show/hide lora_rank
-    if (name === 'finetuning_type') {
-      // Force refresh of the UI to show/hide lora_rank field
-      setCurrentTrainMethod(prev => prev === 'supervised' ? 'supervised' : prev);
-    }
-
-    // If finetuning_type changes, update the form immediately
-    if (name === 'finetuning_type') {
-      // Force re-render to show/hide lora_rank field and update labels
-      setCurrentTrainMethod(prev => {
-        // Trigger re-render by "changing" to the same value
-        setTimeout(() => updateTrainFormData({ finetuning_type: value } as Partial<TrainFormData>), 0);
-        return prev;
-      });
-    }
-
-    // Update form data in the store
-    updateTrainFormData({ [name]: value });
+    
+    // For ALL field types, directly update form data to prevent infinite loops
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   // Define button actions
@@ -891,28 +622,8 @@ const Train = () => {
     navigator.clipboard.writeText(curlCommand);
   };
 
-  const handleSaveConfig = (data: Record<string, string>) => {
-    const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
-    saveConfig(
-        data, 
-        'train', 
-        translations[locale].configSaved
-    );
-};
-
-const handleLoadConfig = () => {
-    const locale: 'en' | 'zh' = currentLocale === 'zh' ? 'zh' : 'en';
-    loadConfig(
-        (config) => {
-            // Update form data with loaded config
-            updateTrainFormData(config);
-        },
-        translations[locale].configLoaded
-    );
-};
-
-// Check status handler
-const handleCheckStatus = async () => {
+  // Check status handler
+  const handleCheckStatus = async () => {
     const jobId = localStorage.getItem('lastTrainingJobId');
     if (!jobId) {
       alert('No recent training job found');
@@ -936,91 +647,25 @@ const handleCheckStatus = async () => {
     }
   };
 
-  // Update form buttons to include advanced toggle
-  const formButtons: FormButton[] = [
-    {
-      key: 'preview-curl',
-      text: 'previewCurlCommand',
-      variant: 'outline-secondary',
-      position: 'left',
-      onClick: handlePreviewCurl
-    },
-    {
-      key: 'load-config',
-      text: 'loadConfig',
-      variant: 'outline-info',
-      position: 'left',
-      onClick: handleLoadConfig
-    },
-    {
-      key: 'save-config',
-      text: 'saveConfig',
-      variant: 'outline-success',
-      position: 'right',
-      onClick: handleSaveConfig
-    },
-    {
-      key: 'check-status',
-      text: 'checkStatus',
-      variant: 'outline-primary',
-      position: 'right',
-      onClick: handleCheckStatus
-    }
-  ];
-
-  // Use useMemo to memoize the fields so they only regenerate when needed
-  const currentFields = useMemo(() => getFormFields(), [
-    showAdvanced,
-    modelOptions,
-    datasetOptions,
-    expandedSections,
-    searchQuery,
+  // Create form buttons using the shared utility
+  const formButtons = useMemo(() => createFormButtons({
+    formType: 'train',
+    previewCommand: handlePreviewCurl,
+    checkStatus: handleCheckStatus,
+    translations,
     currentLocale,
-    currentTrainMethod
-  ]);
+    updateFormData: useAppStore.getState().updateTrainFormData
+  }), [currentLocale]);
 
   return (
     <>
       {/* Error banner */}
-      {showErrorBanner && (
-        <div style={{
-          backgroundColor: '#fff3cd',
-          color: '#856404',
-          padding: '12px',
-          borderRadius: '4px',
-          marginBottom: '20px',
-          borderLeft: '5px solid #ffeeba'
-        }}>
-          <strong>Note:</strong> {error} You can still proceed with training using these options.
-          {retryCount < 2 && (
-            <button
-              onClick={() => setRetryCount(prev => prev + 1)}
-              style={{
-                marginLeft: '10px',
-                backgroundColor: '#856404',
-                color: 'white',
-                border: 'none',
-                padding: '5px 10px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Retry
-            </button>
-          )}
-        </div>
-      )}
+      <ErrorBanner 
+        message={error}
+        retryCount={showErrorBanner ? 2 : 0}
+        onRetry={() => setRetryCount(prev => prev + 1)}
+      />
 
-      {/* This is the standalone TrainingOptionsHelp component that should be used */}
-      {/* <div className="training-help-container" style={{ 
-        marginBottom: '20px',
-        padding: '0',  // Ensure no additional padding
-        border: 'none'  // Ensure no border is added
-      }}>
-        <TrainingOptionsHelp />
-      </div> */}
-
-      <DebugComponent formFields={currentFields} />
       <ModelForm
         title="trainNewModel"
         submitButtonText="startTraining"
@@ -1028,8 +673,9 @@ const handleCheckStatus = async () => {
         fields={currentFields}
         translations={translations}
         onSubmit={handleSubmit}
-        formData={formData as unknown as Record<string, string>}
-        onChange={handleChange}
+        formData={formData}
+        onChange={handleFormChange}
+        isLoading={isLoading}
       />
     </>
   );
@@ -1039,8 +685,6 @@ const handleCheckStatus = async () => {
 const TrainWithLayout = () => (
   <ModelConfigLayout
     title="Configure Training Options"
-    description="Set up the parameters for training your model. Choose a base model, dataset, and training configuration."
-    breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Train', to: '/train' }]}
     translations={translations}
   >
     <Train />

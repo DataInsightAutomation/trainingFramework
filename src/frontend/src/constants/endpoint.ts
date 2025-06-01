@@ -39,7 +39,7 @@ export const EndPoints = {
   
   // Training endpoints
   startTraining: `${BASE_URL}/v1/train`,
-  getTrainingStatus: (jobId: string) => `${BASE_URL}/v1/jobs/${jobId}/status`,
+  getTrainingStatus: `${BASE_URL}/v1/train/:jobId/status`,
   
   // Export endpoints
   startExport: '/v1/export',

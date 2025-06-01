@@ -22,3 +22,16 @@ async def get_job_status(job_id: str):
         "job_id": job_id,
         **status_info
     }
+@router.get("/v1/export/{job_id}/status",
+    response_model=StatusResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_job_status(job_id: str):
+    if job_id not in job_status:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+    status_info = job_status[job_id]
+    return {
+        "job_id": job_id,
+        **status_info
+    }

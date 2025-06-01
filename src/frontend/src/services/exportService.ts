@@ -106,8 +106,8 @@ export const exportService = {
       }
 
       // Fix getData is not defined error - use api.get instead
-      const response = await getData(`${EndPoints.getExportStatus}/${storedJobId}`);
-      return response.data;
+      const response = await getData(`${EndPoints.getExportStatus}`.replace(':jobId', storedJobId), false);
+      return response;
     } catch (error) {
       console.error(`Export service error getting status for job:`, error);
       throw error;
