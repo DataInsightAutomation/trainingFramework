@@ -15,7 +15,7 @@ if is_ray_available():
     import ray
     from ray.train.huggingface.transformers import RayTrainReportCallback
 
-from .dataset_adapters import get_dataset
+from llamafactory.data.loader import enhanced_get_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         if dataset_name_json:
             data_args.dataset = dataset_name_json
             # Pre-process dataset
-            get_dataset(template, model_args, data_args, training_args, stage="sft", **tokenizer_module)
+            enhanced_get_dataset(template, model_args, data_args, training_args, stage="sft", **tokenizer_module)
         
         # Run the training
         logger.info(f"Starting training job {job_id}")
