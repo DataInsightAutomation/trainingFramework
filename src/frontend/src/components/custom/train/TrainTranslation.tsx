@@ -1,7 +1,7 @@
 // Translations for the Train component
 export const translations = {
   en: {
-    trainNewModel: 'Train New Model',
+    trainNewModel: 'Model Configuration',
     modelNameLabel: 'Model Name',
     modelNamePlaceholder: 'Enter model name',
     modelNameError: 'Please provide a model name.',
@@ -49,7 +49,7 @@ export const translations = {
     // Field labels
     trust_remote_codeLabel: 'Trust Remote Code',
     stageLabel: 'Training Stage',
-    finetuning_typeLabel: 'Fine-tuning Type',
+    finetuning_typeLabel: 'Finetuning Type',
     lora_rankLabel: 'LoRA Rank',
     lora_targetLabel: 'LoRA Target',
     templateLabel: 'Template',
@@ -104,12 +104,26 @@ export const translations = {
     tokenLabel: 'API Token',
     tokenPlaceholder: 'Enter your API token',
     tokenDescription: 'Optional: Provide an API token for authentication with model providers',
+
+    // Add translations for new fields
+    finetuningTypeDescription: 'Select the method to use for finetuning the model',
+    loraRankDescription: 'The rank of the LoRA matrices (higher = more parameters)',
+    trainingMethodSectionTitle: 'Training Method',
+    trainingMethodSectionDescription: 'Configure how the model will be trained',
+    rlhfStageDescription: 'Select which stage of RLHF to perform',
+
+    // Training method labels
+    supervisedFineTuning: 'Supervised Fine-Tuning (SFT)',
+    rlhfTraining: 'Reinforcement Learning from Human Feedback (RLHF)',
+    loraFinetuning: 'LoRA Fine-tuning',
+    qloraFinetuning: 'QLoRA Fine-tuning',
+    fullFinetuning: 'Full Fine-tuning',
   },
   zh: {
     addCustomModel: '添加自定义模型: "{input}"',
     enterCustomModelName: '输入自定义模型名称或路径',
     modelNameDescription: '选择模型或输入自定义模型名称/路径（例如，本地路径或 HuggingFace 模型 ID）',
-    trainNewModel: '训练新模型',
+    trainNewModel: '模型配置',
     modelNameLabel: '模型名称',
     modelNamePlaceholder: '输入模型名称',
     modelNameError: '请提供模型名称。',
@@ -209,5 +223,19 @@ export const translations = {
     tokenLabel: 'API 令牌',
     tokenPlaceholder: '输入您的 API 令牌',
     tokenDescription: '可选：提供 API 令牌用于模型提供商的身份验证',
+
+    // Add translations for new fields
+    finetuningTypeDescription: '选择用于微调模型的方法',
+    loraRankDescription: 'LoRA矩阵的秩（越高=参数越多）',
+    trainingMethodSectionTitle: '训练方法',
+    trainingMethodSectionDescription: '配置模型的训练方式',
+    rlhfStageDescription: '选择要执行的RLHF阶段',
+
+    // Training method labels
+    supervisedFineTuning: '监督式微调 (SFT)',
+    rlhfTraining: '人类反馈强化学习 (RLHF)',
+    loraFinetuning: 'LoRA微调',
+    qloraFinetuning: 'QLoRA微调',
+    fullFinetuning: '完全微调',
   }
 };

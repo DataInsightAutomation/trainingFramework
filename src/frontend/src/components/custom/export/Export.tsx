@@ -151,7 +151,8 @@ const basicFields: FormField[] = [
         createMessage: 'addCustomModel',
         createPlaceholder: 'enterCustomModelName',
         customOptionPrefix: 'custom',
-        description: 'modelNameOrPathDescription'
+        description: 'modelNameOrPathDescription',
+        required: true,
     },
     {
         name: 'adapterNameOrPath',

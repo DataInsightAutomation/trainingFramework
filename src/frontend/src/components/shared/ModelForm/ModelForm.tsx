@@ -10,8 +10,9 @@ import CheckboxField from '../../core/field/checkbox/CheckboxField'; // Import t
 import './ModelForm.scss'; // Import the SCSS file
 
 export interface FormField {
+    hideLabel?: any;
     name: string;
-    type: 'text' | 'select' | 'searchableSelect' | 'multiSelect' | 'sectionHeader' | 'number' | 'range' | 'toggle' | 'checkbox';
+    type: 'text' | 'select' | 'searchableSelect' | 'multiSelect' | 'sectionHeader' | 'number' | 'range' | 'toggle' | 'checkbox' | 'empty';
     colSpan?: number;
     options?: ReadonlyArray<{
         readonly value: string;
@@ -43,26 +44,26 @@ export interface FormField {
 
 // Add a button configuration interface
 export interface FormButton {
-  key: string;
-  text: string;
-  variant?: string;
-  type?: 'submit' | 'button';
-  position?: 'left' | 'right';
-  onClick?: (formData: Record<string, string>) => void;
+    key: string;
+    text: string;
+    variant?: string;
+    type?: 'submit' | 'button';
+    position?: 'left' | 'right';
+    onClick?: (formData: Record<string, string>) => void;
 }
 
 export interface FormConfig {
-  // ...existing properties...
-  submitButtonText: string;
-  buttons?: FormButton[]; // Add optional array of buttons
-  fields: FormField[]; // Add fields property
-  translations: Record<string, any>; // Add translations property if not already present
-  onSubmit: (formData: Record<string, string>) => Promise<string>;
-  formData: Record<string, string>;
-  onChange: (name: string, value: string) => void;
-  formType?: string;
-  title?: string;
-  // ...other existing properties...
+    // ...existing properties...
+    submitButtonText: string;
+    buttons?: FormButton[]; // Add optional array of buttons
+    fields: FormField[]; // Add fields property
+    translations: Record<string, any>; // Add translations property if not already present
+    onSubmit: (formData: Record<string, string>) => Promise<string>;
+    formData: Record<string, string>;
+    onChange: (name: string, value: string) => void;
+    formType?: string;
+    title?: string;
+    // ...other existing properties...
 }
 
 const ModelForm: React.FC<FormConfig> = ({
@@ -96,21 +97,21 @@ const ModelForm: React.FC<FormConfig> = ({
         const form = e.currentTarget;
 
         if (form.checkValidity() === false) {
-            
+
             // Log which fields failed validation
             const invalidFields = Array.from(form.elements)
                 .filter((element: any) => !element.checkValidity() && element.name)
                 .map((element: any) => element.name);
-            
+
             e.stopPropagation();
             setValidated(true);
-            
+
             // Show a generic error message
             setResultMessage({
                 type: 'danger',
                 text: 'Please check the form for errors and try again.'
             });
-            
+
             return;
         }
 
@@ -179,22 +180,22 @@ const ModelForm: React.FC<FormConfig> = ({
                 {row.map(field => {
                     const fieldKey = `field-${field.name}`;
                     const colSpan = field.colSpan || 6;
-                    
+
                     // Handle section headers
                     if (field.type === 'sectionHeader') {
                         // If collapsible, render with toggle controls
                         if (field.collapsible) {
                             // Use custom title if provided, otherwise generate from section name
                             const titleKey = field.customTitle || `${field.name.replace('Header', '')}Configuration`;
-                            
+
                             // Get the title text, possibly with highlighting
-                            const titleText = field.searchHighlight 
+                            const titleText = field.searchHighlight
                                 ? <span dangerouslySetInnerHTML={{ __html: field.searchHighlight }} />
                                 : t[titleKey] || field.name;
-                            
+
                             return (
                                 <Col md={colSpan} key={fieldKey}>
-                                    <div 
+                                    <div
                                         className={`collapsible-section-header d-flex align-items-center justify-content-between ${field.expanded ? 'expanded' : ''} ${theme.name}-theme`}
                                         onClick={field.onToggle}
                                     >
@@ -208,7 +209,7 @@ const ModelForm: React.FC<FormConfig> = ({
                                 </Col>
                             );
                         }
-                        
+
                         // Regular non-collapsible section header
                         const titleKey = field.customTitle || `${field.name.replace('Header', '')}Configuration`;
                         return (
@@ -219,24 +220,27 @@ const ModelForm: React.FC<FormConfig> = ({
                             </Col>
                         );
                     }
-                    
+
                     const placeholderKey = `select${field.name.charAt(0).toUpperCase() + field.name.slice(1)}`;
                     const placeholderText = t[placeholderKey] || `Select ${field.name}`;
-                    const fieldLabel = field.searchHighlight 
-    ? <span dangerouslySetInnerHTML={{ __html: field.searchHighlight }} />
-    : t[`${field.name}Label`];
+                    const fieldLabel = field.searchHighlight
+                        ? <span dangerouslySetInnerHTML={{ __html: field.searchHighlight }} />
+                        : t[`${field.name}Label`];
 
                     return (
                         <Form.Group as={Col} md={colSpan} controlId={field.type === 'checkbox' ? undefined : field.name} key={fieldKey}>
-                            {/* Only show label at Form.Group level if not checkbox */}
-                            {field.type !== 'checkbox' && (
+                            {/* Only show label at Form.Group level if not checkbox and not hidden */}
+                            {field.type !== 'checkbox' && !field.hideLabel && (
                                 <Form.Label>
                                     {fieldLabel}
                                     {field.required && <span className="text-danger"> *</span>}
                                 </Form.Label>
                             )}
 
-                            {field.type === 'checkbox' ? (
+                            {field.type === 'empty' ? (
+                                // Empty field - just a placeholder div with no content
+                                <div className="empty-field" style={{ height: field.customTitle ? field.customTitle : '38px' }}></div>
+                            ) : field.type === 'checkbox' ? (
                                 <CheckboxField
                                     name={field.name}
                                     label={t[`${field.name}Label`] || field.name}
@@ -309,19 +313,19 @@ const ModelForm: React.FC<FormConfig> = ({
                                             value: option.value,
                                             label: option.directLabel || t[option.label!]
                                         })) || [])
-                                    ]} 
-                                    placeholder={t[`${field.name}Placeholder`]} 
-                                    theme={theme} 
-                                    formData={formData} 
-                                    field={{ 
-                                        ...field, 
+                                    ]}
+                                    placeholder={t[`${field.name}Placeholder`]}
+                                    theme={theme}
+                                    formData={formData}
+                                    field={{
+                                        ...field,
                                         options: field.options ? [...field.options].map(opt => ({
                                             value: opt.value,
                                             label: opt.label,
                                             directLabel: opt.directLabel
-                                        })) : [] 
-                                    }} 
-                                    handleChange={handleChange} 
+                                        })) : []
+                                    }}
+                                    handleChange={handleChange}
                                     t={t}
                                     validated={validated} // Pass validation state to dropdown
                                 />
@@ -339,14 +343,14 @@ const ModelForm: React.FC<FormConfig> = ({
                                         required={field.required !== false}
                                     />
                                     <Form.Text className="text-muted">
-                                        {field.min !== undefined && field.max !== undefined ? 
+                                        {field.min !== undefined && field.max !== undefined ?
                                             `Valid range: ${field.min} - ${field.max}` : ''}
                                     </Form.Text>
                                     <Form.Control.Feedback type="invalid">
-                                        {t[`${field.name}Error`] || 
-                                          `Please enter a valid value ${field.min !== undefined ? 
-                                            `(minimum: ${field.min}${field.max !== undefined ? `, maximum: ${field.max}` : ''})` : 
-                                            field.max !== undefined ? `(maximum: ${field.max})` : ''}`}
+                                        {t[`${field.name}Error`] ||
+                                            `Please enter a valid value ${field.min !== undefined ?
+                                                `(minimum: ${field.min}${field.max !== undefined ? `, maximum: ${field.max}` : ''})` :
+                                                field.max !== undefined ? `(maximum: ${field.max})` : ''}`}
                                     </Form.Control.Feedback>
                                 </>
                             ) : field.type === 'range' ? (
@@ -388,6 +392,9 @@ const ModelForm: React.FC<FormConfig> = ({
         ));
     };
 
+    // In the component's render function, add this debugging code
+    console.log('ModelFfdsfsorm rendering with fields:', fields.map(f => f.name));
+
     return (
         <main className={`model-form-container ${theme.name}-theme`}>
             <Card className={`model-form-card ${theme.name}-theme`}>
@@ -400,53 +407,53 @@ const ModelForm: React.FC<FormConfig> = ({
                             {resultMessage.text}
                         </Alert>
                     )}
-                    
+
                     <Form noValidate validated={validated} onSubmit={handleSubmit}>
                         {renderFields()}
 
                         <div className="model-form-buttons">
-                          <div className="left-buttons">
-                            {buttons.filter(btn => btn.position === 'left').map(button => (
-                              <Button
-                                key={button.key}
-                                variant={button.variant || 'secondary'}
-                                type={button.type || 'button'}
-                                className={`me-2 ${theme.name}-theme ${hoveredButtons[button.key] ? 'hovered' : ''} ${button.variant || 'secondary'}`}
-                                onClick={() => handleButtonClick(button)}
-                                onMouseEnter={() => handleButtonMouseEnter(button.key)}
-                                onMouseLeave={() => handleButtonMouseLeave(button.key)}
-                              >
-                                {t[button.text] || button.text}
-                              </Button>
-                            ))}
-                          </div>
-                          
-                          <div className="right-buttons">
-                            {buttons.filter(btn => btn.position !== 'left').map(button => (
-                              <Button
-                                key={button.key}
-                                variant={button.variant || 'secondary'}
-                                type={button.type || 'button'}
-                                className={`me-2 ${theme.name}-theme ${hoveredButtons[button.key] ? 'hovered' : ''} ${button.variant || 'secondary'}`}
-                                onClick={() => handleButtonClick(button)}
-                                onMouseEnter={() => handleButtonMouseEnter(button.key)}
-                                onMouseLeave={() => handleButtonMouseLeave(button.key)}
-                              >
-                                {t[button.text] || button.text}
-                              </Button>
-                            ))}
-                            
-                            <Button 
-                              type="submit" 
-                              variant="primary" 
-                              disabled={isSubmitting}
-                              className={`submit-button ${theme.name}-theme ${hoveredButtons['submit'] ? 'hovered' : ''}`}
-                              onMouseEnter={() => handleButtonMouseEnter('submit')}
-                              onMouseLeave={() => handleButtonMouseLeave('submit')}
-                            >
-                              {isSubmitting ? t.submitting : t[submitButtonText]}
-                            </Button>
-                          </div>
+                            <div className="left-buttons">
+                                {buttons.filter(btn => btn.position === 'left').map(button => (
+                                    <Button
+                                        key={button.key}
+                                        variant={button.variant || 'secondary'}
+                                        type={button.type || 'button'}
+                                        className={`me-2 ${theme.name}-theme ${hoveredButtons[button.key] ? 'hovered' : ''} ${button.variant || 'secondary'}`}
+                                        onClick={() => handleButtonClick(button)}
+                                        onMouseEnter={() => handleButtonMouseEnter(button.key)}
+                                        onMouseLeave={() => handleButtonMouseLeave(button.key)}
+                                    >
+                                        {t[button.text] || button.text}
+                                    </Button>
+                                ))}
+                            </div>
+
+                            <div className="right-buttons">
+                                {buttons.filter(btn => btn.position !== 'left').map(button => (
+                                    <Button
+                                        key={button.key}
+                                        variant={button.variant || 'secondary'}
+                                        type={button.type || 'button'}
+                                        className={`me-2 ${theme.name}-theme ${hoveredButtons[button.key] ? 'hovered' : ''} ${button.variant || 'secondary'}`}
+                                        onClick={() => handleButtonClick(button)}
+                                        onMouseEnter={() => handleButtonMouseEnter(button.key)}
+                                        onMouseLeave={() => handleButtonMouseLeave(button.key)}
+                                    >
+                                        {t[button.text] || button.text}
+                                    </Button>
+                                ))}
+
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    disabled={isSubmitting}
+                                    className={`submit-button ${theme.name}-theme ${hoveredButtons['submit'] ? 'hovered' : ''}`}
+                                    onMouseEnter={() => handleButtonMouseEnter('submit')}
+                                    onMouseLeave={() => handleButtonMouseLeave('submit')}
+                                >
+                                    {isSubmitting ? t.submitting : t[submitButtonText]}
+                                </Button>
+                            </div>
                         </div>
                     </Form>
                 </Card.Body>

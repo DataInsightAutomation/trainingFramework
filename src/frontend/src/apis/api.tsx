@@ -63,7 +63,7 @@ export const loaderState = {
 // Create a centralized API instance 
 export const instance = axios.create({
   baseURL: URL, // Point to your backend API
-  timeout: 30000, // Reduce timeout to 30 seconds (instead of ~2.8 hours)
+  timeout: 1000 * 60 * 5, // Reduce timeout to 5 minutes (instead of ~2.8 hours)
   headers: {},
 });
 
@@ -138,12 +138,29 @@ export const getData = function (
   const userToken = getTokenService();
   globalInstance.loader = loader;
   return globalInstance.instance
-    .get(url, {
-      headers: {
-        Authorization: "Bearer " + userToken,
-      },
-    })
-    .then((res) => res.data);
+    .get(url, 
+    //   {
+    //   headers: {
+    //     Authorization: "Bearer " + userToken,
+    //   },
+    // }
+  )
+    .then((res) => 
+    {
+      console.log("get data response:", res)
+      return res.data;
+    }
+  ).catch((error) => {
+      console.error("Error fetching data:", error);
+      // Handle specific error cases if needed
+      if (error.response) {
+        console.error("Response error:", error.response.data);
+      } else {
+        console.error("Network error or timeout:", error.message);
+      }
+      throw error; // Re-throw the error for further handling
+    }
+    );
 };
 export const postData = function (
   url: string,
@@ -315,7 +332,7 @@ export const trainAPI = {
 
   getModels: async () => {
     try {
-      return getData(`${EndPoints.getAllModels}`, false);
+      return getData(`${EndPoints.getModels}`, false);
     } catch (error) {
       console.error("Error fetching models:", error);
       throw error;

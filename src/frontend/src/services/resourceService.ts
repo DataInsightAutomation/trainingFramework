@@ -1,3 +1,4 @@
+import { EndPoints } from '#constants/endpoint';
 import { getData } from '../apis/api';
 
 // Define model and dataset interfaces
@@ -23,7 +24,7 @@ export const resourceService = {
    */
   getModels: async (): Promise<{ models: Model[] }> => {
     try {
-      const response = await getData('v1/resources/models', false);
+      const response = await getData(EndPoints.getModels, false);
       return response;
     } catch (error) {
       console.error('Resource service error fetching models:', error);

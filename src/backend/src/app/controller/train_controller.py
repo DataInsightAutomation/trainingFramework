@@ -25,6 +25,13 @@ def map_train_method_from_input(train_method: str) -> str:
         return "sft"
     elif train_method == "rlhf":
         return "rlhf"
+    # should be not using
+    elif train_method in ["lora", "qlora", "finetuning"]:
+        # These are transformed into 'supervised' with appropriate finetuning_type
+        # but the stage should still be 'sft'
+        return "sft"
+    elif train_method == "distillation":
+        return "distillation"
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported train method: {train_method}")
 
@@ -135,18 +142,37 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
         # Get provided fields (excluding None values)
         request_dict = request.dict(exclude_none=True)
         
+        # Map training method and finetuning type based on frontend selections
+        train_method = request.train_method
+        finetuning_type = request_dict.get("finetuning_type", None)
+        
+        # Handle special case for lora/qlora/finetuning as primary methods
+        if train_method in ["lora", "qlora", "finetuning"]:
+            if train_method == "lora":
+                finetuning_type = "lora"
+            elif train_method == "qlora":
+                finetuning_type = "qlora"
+            elif train_method == "finetuning":
+                finetuning_type = "full"
+            # Set the actual method to supervised
+            train_method = "supervised"
+            
         # Start with basic parameters
         full_params = {
             "model_name_or_path": request.model_name,
             "model_path": request.model_path,
             "dataset": ','.join(processed_datasets) if processed_datasets else None,
             "has_custom_datasets": custom_datasets_found,
-            "stage": map_train_method_from_input(request.train_method), 
+            "stage": map_train_method_from_input(train_method), 
             "do_train": True,
             # Add Intel-specific options
             # "use_ipex": True,
         }
         
+        # Add finetuning_type if it was set
+        if finetuning_type:
+            full_params["finetuning_type"] = finetuning_type
+            
         # Add token if provided
         if hasattr(request, 'token') and request.token:
             full_params["hub_token"] = request.token  # Add to params for functions that accept it directly

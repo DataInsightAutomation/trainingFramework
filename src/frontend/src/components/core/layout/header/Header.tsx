@@ -50,7 +50,7 @@ const Header = () => {
         
         <Nav className="d-flex align-items-center">
           <Nav.Link href="/" className="text-white px-3">{t.home}</Nav.Link>
-          <Nav.Link href="/webui" className="text-white px-3">{t.train}</Nav.Link>
+          {/* <Nav.Link href="/webui" className="text-white px-3">{t.train}</Nav.Link> */}
           {/* <Nav.Link href="/evaluate" className="text-white px-3">{t.evaluate}</Nav.Link> */}
           
           {/* Theme Toggle Button */}
