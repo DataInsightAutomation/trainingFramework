@@ -1,3 +1,4 @@
+import ExportWithLayout from "#components/custom/export/Export";
 import EvaluateWithLayout from "../../components/custom/evaluate/Evaluate";
 import TrainWithLayout from "../../components/custom/train/Train";
 
@@ -25,7 +26,7 @@ export const tabConfig: TabItem[] = [
     key: "export",
     label: "Export",
     icon: "bi bi-box-arrow-up", // More appropriate icon
-    component: () => <div>Export</div> // Placeholder component
+    component: ExportWithLayout // Placeholder component
   },
   {
     key: "inference",

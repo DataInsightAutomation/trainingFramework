@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Theme, lightTheme, darkTheme } from "../themes/theme";
 import { TrainFormData, EvaluateFormData } from '../utils/context';
 
@@ -16,8 +17,9 @@ interface AppState {
     showHeader: boolean;
     showLeftPanel: boolean;
     showFooter: boolean;
-    trainFormData: TrainFormData;
+    trainFormData: Record<string, any> | null;
     evaluateFormData: EvaluateFormData;
+    exportFormData: Record<string, any> | null;
     activeKeyLeftPanel: string;
 
     // Locale-specific settings
@@ -38,6 +40,7 @@ interface AppState {
     resetTrainFormData: () => void;
     updateEvaluateFormData: (data: Partial<EvaluateFormData>) => void;
     resetEvaluateFormData: () => void;
+    updateExportFormData: (data: Partial<Record<string, any>>) => void;
     toggleTheme: () => void;
     setLocale: (locale: Locale) => void;
     setActiveTab: (key: string) => void;
@@ -51,12 +54,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     showHeader: true,
     showLeftPanel: true,
     showFooter: true,
-    trainFormData: {
-        modelName: '',
-        modelPath: '',
-        dataset: '',
-        trainMethod: ''
-    },
+    trainFormData: null,
     evaluateFormData: {
         modelName: '',
         modelPath: '',
@@ -64,6 +62,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         dataset: '',
         evaluateMethod: ''
     },
+    exportFormData: null,
     activeKeyLeftPanel: "train",
     en: {
         theme: "light",
@@ -92,16 +91,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     toggleFooter: () => set(state => ({ showFooter: !state.showFooter })),
 
     updateTrainFormData: (data) => set(state => ({
-        trainFormData: { ...state.trainFormData, ...data }
+        trainFormData: state.trainFormData ? { ...state.trainFormData, ...data } : data
+    })),
+
+    updateExportFormData: (data) => set(state => ({
+        exportFormData: state.exportFormData ? { ...state.exportFormData, ...data } : data
     })),
 
     resetTrainFormData: () => set(() => ({
-        trainFormData: {
-            modelName: '',
-            modelPath: '',
-            dataset: '',
-            trainMethod: ''
-        }
+        trainFormData: null
     })),
 
     updateEvaluateFormData: (data) => set(state => ({
