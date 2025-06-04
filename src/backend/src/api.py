@@ -61,14 +61,32 @@ def create_app() -> FastAPI:
     security = HTTPBearer(auto_error=False)
 
     async def verify_api_key(auth: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)]):
+        """Verify the API key from the Authorization header.
+        
+        Args:
+            auth: The HTTP Authorization credentials.
+            
+        Raises:
+            HTTPException: If the API key is invalid or missing.
+        """
         if api_key and (auth is None or auth.credentials != api_key):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key.")
 
     # Mock storage for job status
 
     # Simple root endpoint for testing
-    @app.get("/")
+    @app.get("/", tags=["Health Check"], summary="Root endpoint")
     async def root():
+        """Root endpoint to check if the API is running.
+        
+        Returns:
+            dict: A welcome message.
+        
+        Example:
+            ```
+            curl -X GET "http://localhost:8001/"
+            ```
+        """
         return {"message": "Welcome to the Training API"}
 
     @app.get("/v1/test_call")
