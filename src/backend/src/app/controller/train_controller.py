@@ -10,7 +10,7 @@ import logging as logger
 
 router = APIRouter(
     prefix="",
-    tags=["Project"],
+    tags=["Train"],
     responses={404: {"description": "Not found pipeline route"}},
 )
 

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from ..api.router import job_status
 router = APIRouter(
     prefix="",
-    tags=["Project"],
+    tags=["Status"],
     responses={404: {"description": "Not found pipeline route"}},
 )
 
