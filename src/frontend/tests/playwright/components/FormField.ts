@@ -114,6 +114,31 @@ export class DropdownField extends FormField {
    */
   private async selectSingleOption(optionValue: string): Promise<boolean> {
     try {
+      // Check if this is a native <select> element first and use selectOption directly if so
+      for (const selector of this.selectors) {
+        try {
+          const locator = typeof selector === 'string' 
+            ? this.page.locator(selector) 
+            : selector;
+          
+          if (await locator.isVisible({ timeout: 2000 })) {
+            // Check if this is a native <select> element
+            const isSelect = await locator.evaluate(el => 
+              el.tagName && el.tagName.toLowerCase() === 'select'
+            ).catch(() => false);
+            
+            if (isSelect) {
+              console.log(`Selecting option ${optionValue} using native select`);
+              await locator.selectOption(optionValue);
+              return true;
+            }
+          }
+        } catch (e) {
+          console.log(`Failed to check if selector is a <select>: ${e.message}`);
+        }
+      }
+      
+      // Continue with existing code for non-native dropdowns
       // First click to open the dropdown using one of our selectors
       let dropdownOpened = false;
       

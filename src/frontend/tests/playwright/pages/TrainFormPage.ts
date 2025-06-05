@@ -139,14 +139,14 @@ export class TrainFormPage extends BasePage {
   /**
    * Select a training method
    */
-  async selectTrainingMethod(method: string = 'supervised'): Promise<boolean> {
+  async selectTrainingMethod(method: string): Promise<boolean> {
     return this.trainMethodField.select(method);
   }
   
   /**
    * Select a finetuning type
    */
-  async selectFinetuningType(type: string = 'lora'): Promise<boolean> {
+  async selectFinetuningType(type: string): Promise<boolean> {
     return this.finetuningTypeField.select(type);
   }
   

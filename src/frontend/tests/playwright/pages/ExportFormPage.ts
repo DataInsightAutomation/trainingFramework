@@ -17,13 +17,10 @@ export class ExportFormPage extends BasePage {
      */
     constructor(page: Page, baseUrl: string = 'http://localhost') {
         super(page, baseUrl);
-
         // Initialize form field components with proper selectors based on actual HTML
         this.modelNameDropdown = new DropdownField(page, 'Base Model', [
-            page.getByText('Base Model', { exact: false }).first(),
             page.locator('select#modelNameOrPath'),
-            page.locator('select[name="modelNameOrPath"]'),
-            page.getByRole('combobox', { name: /Base Model/i })
+            page.locator('select[name="modelNameOrPath"]')
         ]);
 
         this.adapterPathField = new FormField(page, 'adapter path', [
@@ -56,9 +53,16 @@ export class ExportFormPage extends BasePage {
      * Fill the export form with the provided data
      */
     async fillExportForm(exportData: { modelPath: string, adapterPath: string, exportDirectory: string }) {
-        // Select the model from dropdown instead of filling a text field
-        console.log(exportData.modelPath,'exportData.modelPathexportData.modelPathexportData.modelPath')
+        // Use native selectOption for the <select> element instead of DropdownField
         await this.modelNameDropdown.select(exportData.modelPath);
+
+        // const selectLocator = this.page.locator('select#modelNameOrPath');
+        // if (await selectLocator.isVisible({ timeout: 2000 })) {
+        //     await selectLocator.selectOption(exportData.modelPath);
+        // } else {
+        //     // Only use DropdownField as fallback
+        //     await this.modelNameDropdown.select(exportData.modelPath);
+        // }
         
         // Fill text fields
         await this.adapterPathField.fill(exportData.adapterPath);

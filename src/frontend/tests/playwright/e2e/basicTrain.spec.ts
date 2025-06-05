@@ -49,8 +49,9 @@ test.describe('Training form tests', () => {
     // Pass the dataset name from test data
     await trainForm.selectDataset(testData.dataset);
     
-    await trainForm.selectTrainingMethod();
-    
+    await trainForm.selectTrainingMethod(testData.trainMethod);
+    await trainForm.selectFinetuningType(testData.finetuning_type);
+
     // Log form data before submission
     console.log('Submitting form with test data:', JSON.stringify(testData, null, 2));
     
