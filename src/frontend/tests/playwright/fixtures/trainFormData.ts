@@ -8,7 +8,7 @@ export const trainFormTestData = {
     trainMethod: 'supervised',
     description: 'Basic training with minimal configuration',
     // Change dataset to array format to support multiSelect
-    dataset: ['Easydata Alpaca Public Easydata'],
+    dataset: ['Easydata Alpaca Public Easydata', 'Easydata Alpaca private Easydata'],
     // Add finetuning_type which is also required
     finetuning_type: 'lora',
     stage: 'sft'

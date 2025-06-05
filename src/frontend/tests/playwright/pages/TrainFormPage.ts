@@ -1,127 +1,113 @@
 import { Page } from '@playwright/test';
 import { getScreenshotPath, humanClick, humanType, humanPause } from '../utils/testHelpers';
+import { BasePage } from './BasePage';
+import { FormField, DropdownField } from '../components/FormField';
 
 /**
  * Page Object Model for the Training Form page
  * Encapsulates all interactions with the training form
  */
-export class TrainFormPage {
-  private page: Page;
-  private baseUrl: string;
+export class TrainFormPage extends BasePage {
+  // Form components
+  private modelNameField: FormField;
+  private datasetField: DropdownField;
+  private trainMethodField: DropdownField;
+  private finetuningTypeField: DropdownField;
   
   /**
    * Create a new TrainFormPage instance
    * @param page Playwright page object
-   * @param baseUrl Base URL for the application (defaults to localhost:1234)
+   * @param baseUrl Base URL for the application (defaults to localhost)
    */
   constructor(page: Page, baseUrl: string = 'http://localhost') {
-    this.page = page;
-    this.baseUrl = baseUrl;
+    super(page, baseUrl);
+    
+    // Initialize form field components
+    this.modelNameField = new FormField(page, 'model name', [
+      page.getByRole('textbox', { name: 'Model Name *' }),
+      page.locator('input#modelName'),
+      page.locator('input[name="modelName"]')
+    ]);
+    
+    this.datasetField = new DropdownField(page, 'dataset', [
+      page.getByText('Dataset', { exact: false }).first(),
+      page.locator('select[name="dataset"]'),
+      page.locator('.dataset-select'),
+    ]);
+    
+    this.trainMethodField = new DropdownField(page, 'training method', [
+      page.getByText('Training Method', { exact: false }).first(),
+      page.locator('select[name="trainMethod"]'),
+      page.locator('.train-method-select')
+    ]);
+    
+    this.finetuningTypeField = new DropdownField(page, 'finetuning type', [
+      page.getByText('Finetuning Type', { exact: false }).first(),
+      page.locator('select[name="finetuning_type"]'),
+      page.locator('.finetuning-type-select')
+    ]);
   }
   
   /**
    * Navigate to the training page
-   * @param useNavPanel Whether to use the nav panel instead of direct URL (more reliable for non-root pages)
+   * @param path Optional path parameter (maintains compatibility with BasePage)
    */
-  async goto(useNavPanel: boolean = true) {
+  async goto(path?: string): Promise<void> {
     try {
-      // First navigate to the main page if not already there
-      await this.page.goto(this.baseUrl);
-      console.log('Navigated to base URL');
+      // First navigate to the main page
+      await super.goto();
+      
+      // Determine navigation method (maintain previous functionality)
+      const useNavPanel = path !== '/train';
       
       if (useNavPanel) {
-        console.log('Navigating to Train page via navigation panel');
-        
-        // Take a screenshot of initial state
         await this.page.screenshot({ path: getScreenshotPath('before-navigation.png') });
         
-        // Updated selectors that correctly target the Train tab
-        const navSelectors = [
-          // Target the specific Train tab in the left panel using its ID
-          this.page.locator('#left-tabs-tab-train'),
-          // Target by role and name combination - FIXED to target train not export
-          this.page.getByRole('tab', { name: /train/i }),
-          // Target by class and text content - FIXED to target train not export
-          this.page.locator('.nav-link').filter({ hasText: /train/i }),
-          // Target by nav-item parent and specific icon (for Train tab)
-          this.page.locator('.nav-item a').filter({ has: this.page.locator('.bi-graph-up') }),
-          // Fallback to any clickable element with Train text - FIXED to target train not export
-          this.page.locator('.left-panel-container a').filter({ hasText: /train/i })
-        ];
-        
-        let navClicked = false;
-        for (const selector of navSelectors) {
-          try {
-            if (await selector.isVisible({ timeout: 3000 })) {
-              // Take a screenshot before clicking to help with debugging
-              await this.page.screenshot({ path: getScreenshotPath('before-nav-click.png') });
-              
-              // Click the navigation element
-              await selector.click({ force: true, timeout: 5000 });
-              console.log('Clicked Train tab in navigation panel');
-              
-              // Wait briefly to ensure navigation completes
-              await this.page.waitForTimeout(2000);
-              
-              // Take a screenshot after navigation
-              await this.page.screenshot({ path: getScreenshotPath('after-nav-click.png') });
-              
-              // Verify we're on the Train tab by checking for specific Train page elements
-              const trainFormVisible = await this.page.locator('form').isVisible({ timeout: 5000 });
-              const trainHeadingVisible = await this.page.getByText(/train new model/i).isVisible({ timeout: 5000 });
-              
-              if (trainFormVisible && trainHeadingVisible) {
-                console.log('Successfully navigated to Train tab - form and heading confirmed');
-                navClicked = true;
-                break;
-              } else {
-                console.log('Click seemed to succeed but Train form not found - will try another selector');
-              }
-            }
-          } catch (e) {
-            console.log(`Nav selector failed: ${e.message}`);
-          }
-        }
-        
-        if (!navClicked) {
-          console.log('WARNING: Could not navigate via left panel, falling back to direct URL');
-          await this.page.goto(`${this.baseUrl}/train`);
+        // Use the role-based selector to click the Train tab
+        const trainTab = this.page.getByRole('tab', { name: ' Train' });
+        if (await trainTab.isVisible({ timeout: 5000 })) {
+          await trainTab.click();
+        } else {
+          console.log('Train tab not visible, trying fallback navigation');
+          await super.goto('/train');
         }
       } else {
-        // Direct URL navigation as fallback
+        // Direct URL navigation
         console.log('Using direct URL navigation to train page');
-        await this.page.goto(`${this.baseUrl}/train`);
+        await super.goto('/train');
       }
       
-      // Wait for the form to load regardless of navigation method
-      await this.page.waitForSelector('form', { timeout: 30000 });
+      // Wait for the form to load
+      const formLoaded = await this.waitForElement('form', 30000);
+      if (!formLoaded) {
+        throw new Error('Form did not load within timeout period');
+      }
       
-      // Double-check we're on the Train page by looking for key elements
-      const trainElements = [
-        this.page.getByText(/model name/i),
-        this.page.getByText(/dataset/i),
-        this.page.getByText(/training method/i),
-        this.page.getByText(/start training/i)
+      // Verify we're on the right page
+      const pageIndicators = [
+        'input#modelName', 
+        'label[for="modelName"]',
+        'button[type="submit"]',
+        'form'
       ];
       
       let isTrainPage = false;
-      for (const element of trainElements) {
-        if (await element.isVisible({ timeout: 2000 })) {
+      for (const selector of pageIndicators) {
+        if (await this.isVisible(selector)) {
           isTrainPage = true;
           break;
         }
       }
       
       if (!isTrainPage) {
-        throw new Error('Failed to navigate to the Train page - key form elements not found');
+        throw new Error('Failed to navigate to the Train page - key elements not found');
       }
       
-      console.log('Form loaded successfully - confirmed Train page');
-      await this.page.screenshot({ path: getScreenshotPath('train-form-loaded.png') });
+      await this.takeScreenshot('train-form-loaded');
       
     } catch (error) {
       console.error('Navigation error:', error);
-      await this.page.screenshot({ path: getScreenshotPath('navigation-error.png') });
+      await this.takeScreenshot('navigation-error');
       throw new Error(`Failed to navigate to Train page: ${error.message}`);
     }
   }
@@ -129,235 +115,83 @@ export class TrainFormPage {
   /**
    * Fill the model name field
    */
-  async fillModelName(modelName: string) {
-    console.log('Selecting model name field');
-    
-    const modelNameSelectors = [
-      this.page.locator('input#modelName'),
-      this.page.locator('label[for="modelName"]'),
-      this.page.getByText('Model Name', { exact: false }).first(),
-      this.page.locator('.form-group', { hasText: 'Model Name' }).locator('input')
-    ];
-    
-    let modelNameFieldClicked = false;
-    for (const selector of modelNameSelectors) {
-      try {
-        if (await selector.isVisible({ timeout: 1000 })) {
-          await this.page.waitForTimeout(500);
-          await selector.click({ force: true });
-          console.log('Clicked model name field');
-          modelNameFieldClicked = true;
-          break;
-        }
-      } catch (e) {
-        console.log(`Selector failed: ${e.message}`);
-      }
-    }
-    
-    if (!modelNameFieldClicked) {
-      console.log('WARNING: Could not click model name field, trying direct keyboard focus');
-      await this.page.keyboard.press('Tab');
-      await this.page.waitForTimeout(500);
-    }
-    
-    await humanPause(this.page, 'thinking');
-    console.log(`Typing model name: ${modelName}`);
-    await humanType(this.page, modelName);
-    await humanPause(this.page, 'thinking');
-    await this.page.keyboard.press('Enter');
-    await humanPause(this.page, 'observation');
-    console.log('Filled model name');
+  async fillModelName(modelName: string): Promise<boolean> {
+    return this.modelNameField.fill(modelName);
   }
   
   /**
-   * Select datasets from the dropdown (supporting both single value and arrays)
-   * @param datasetNames Single dataset name or array of dataset names to select
+   * Select a dataset
    */
-  async selectDataset(datasetNames: string | string[] = 'easydata2022/public_alpaca_mini_slice') {
-    try {
-      // Normalize input to array format
-      const datasets = Array.isArray(datasetNames) ? datasetNames : [datasetNames];
-      console.log(`Selecting datasets: ${datasets.join(', ')}`);
-      
-      // First click to OPEN the dropdown
-      const datasetField = this.page.getByText('Dataset', { exact: false }).first();
-      await datasetField.click({ force: true, timeout: 5000 });
-      console.log('Clicked dataset field to open dropdown');
-      
-      // Take screenshot for debugging
-      await this.page.screenshot({ path: getScreenshotPath('after-dataset-field-click.png') });
-      await this.page.waitForTimeout(1000);
-      
-      // Get all dropdown items and their text
-      const dropdownItems = await this.page.locator('.dropdown-item, [role="option"], li').all();
-      console.log(`Found ${dropdownItems.length} potential dropdown items`);
-      
-      // Log all available options for debugging
-      const dropdownTexts: string[] = [];
-      for (let i = 0; i < dropdownItems.length; i++) {
-        const text = await dropdownItems[i].textContent() || '';
-        dropdownTexts.push(text.trim());
-        console.log(`Option ${i+1}: "${text.trim()}"`);
+  async selectDataset(datasetName: string | string[]): Promise<boolean> {
+    // Convert to array if string
+    const datasets = Array.isArray(datasetName) ? datasetName : [datasetName];
+    // For multiple datasets, select each one
+    for (const dataset of datasets) {
+      const result = await this.datasetField.select(dataset);
+      if (!result) {
+        console.log(`Failed to select dataset: ${dataset}`);
+        return false;
       }
-      
-      // Track if we managed to select at least one dataset
-      let selectedCount = 0;
-      
-      // Try to select each requested dataset - simpler approach focused on exact matches
-      for (const datasetName of datasets) {
-        console.log(`Looking for dataset: "${datasetName}"`);
-        let matched = false;
-        
-        // First try exact matches, then fallback to partial matches
-        for (let i = 0; i < dropdownItems.length; i++) {
-          const text = dropdownTexts[i];
-          const item = dropdownItems[i];
-          
-          // First priority: exact match
-          // Second priority: dropdown text contains the dataset name
-          if (text === datasetName || text.toLowerCase().includes(datasetName.toLowerCase())) {
-            console.log(`Found matching dataset option: "${text}"`);
-            
-            // Click the matching option
-            await item.click({ force: true, timeout: 5000 });
-            console.log(`Selected dataset: "${text}"`);
-            selectedCount++;
-            matched = true;
-            
-            // Wait a moment before trying to select another option
-            await this.page.waitForTimeout(500);
-            
-            // For multiselect, check if we need to reopen dropdown for next item
-            if (!await dropdownItems[0].isVisible() && datasets.length > 1 && 
-                datasets.indexOf(datasetName) < datasets.length - 1) {
-              await datasetField.click({ force: true });
-              await this.page.waitForTimeout(500);
-            }
-            
-            break;
-          }
-        }
-        
-        if (!matched) {
-          console.log(`Could not find a match for dataset: "${datasetName}"`);
-        }
-      }
-      
-      // If we didn't select any datasets, try to select the first available option as fallback
-      if (selectedCount === 0 && dropdownItems.length > 0) {
-        console.log('No matching datasets found, selecting first available option');
-        await dropdownItems[0].click({ force: true, timeout: 5000 });
-        console.log(`Selected fallback dataset: "${dropdownTexts[0]}"`);
-        selectedCount++;
-      }
-      
-      // Take a screenshot after selection
-      await this.page.screenshot({ path: getScreenshotPath('after-dataset-selection.png') });
-      
-      return selectedCount > 0;
-    } catch (error) {
-      console.error('Critical error in dataset selection:', error);
-      await this.page.screenshot({ path: getScreenshotPath('dataset-critical-error.png') });
-      return false;
     }
+    return true;
   }
   
   /**
    * Select a training method
    */
-  async selectTrainingMethod() {
-    try {
-      console.log('Selecting training method field');
-      const trainingMethodField = this.page.getByText('Training Method', { exact: false }).first();
-      await humanClick(trainingMethodField);
-      console.log('Clicked training method field');
-      
-      await humanPause(this.page, 'observation');
-      
-      const methodOptions = [
-        this.page.getByRole('button', { name: 'Supervised Fine-Tuning (SFT)' }),
-        this.page.getByRole('button', { name: /supervised/i }),
-        this.page.locator('button.list-group-item').filter({ hasText: /supervised/i }),
-        this.page.locator('.list-group-item-action').filter({ hasText: /supervised/i })
-      ];
-      
-      let methodSelected = false;
-      
-      for (const optionLocator of methodOptions) {
-        if (await optionLocator.isVisible()) {
-          await humanPause(this.page, 'thinking');
-          await humanClick(optionLocator);
-          console.log(`Selected training method using specific selector`);
-          methodSelected = true;
-          await humanPause(this.page, 'observation');
-          break;
-        }
-      }
-      
-      if (!methodSelected) {
-        console.log('WARNING: Could not select training method');
-      }
-    } catch (error) {
-      console.error('Error selecting training method:', error);
-      await this.page.screenshot({ path: getScreenshotPath('training-method-error.png') });
-    }
+  async selectTrainingMethod(method: string = 'supervised'): Promise<boolean> {
+    return this.trainMethodField.select(method);
+  }
+  
+  /**
+   * Select a finetuning type
+   */
+  async selectFinetuningType(type: string = 'lora'): Promise<boolean> {
+    return this.finetuningTypeField.select(type);
   }
   
   /**
    * Submit the form and verify the result with better error handling
+   * @returns An object containing success status and the submitted payload if available
    */
-  async submitForm() {
-    await this.page.screenshot({ path: getScreenshotPath('train-form-filled.png') });
-    await humanPause(this.page, 'navigation');
-    
+  async submitForm(): Promise<{success: boolean, payload?: any}> {
     try {
-      console.log('Looking for submit button');
+      // Safely take screenshot before submission
+      try {
+        await this.page.screenshot({ path: getScreenshotPath('before-submit.png') });
+      } catch (e) {
+        console.log(`Warning: Could not take screenshot: ${e.message}`);
+      }
       
-      // Take a screenshot of form before submission
-      await this.page.screenshot({ path: getScreenshotPath('before-submit.png') });
+      // Start monitoring network requests to capture the form submission
+      let submittedPayload: any = null;
+      const responsePromise = this.page.waitForResponse(
+        response => {
+          // Adjust this URL pattern to match your form submission endpoint
+          return response.url().includes('/api/train') || 
+                 response.url().includes('/train');
+        },
+        { timeout: 10000 }
+      );
       
-      // Improved validation error detection - only count visible errors
-      const errorSelectors = [
-        '.invalid-feedback:visible', 
-        '.text-danger:visible', 
-        '.error-message:visible',
-        '.alert-danger',
-        'div[role="alert"]'
-      ];
+      await humanPause(this.page, 'navigation');
       
-      let hasValidationErrors = false;
-      const errorDetails: string[] = [];
-      
-      // Check each error selector individually
-      for (const selector of errorSelectors) {
-        try {
-          const elements = await this.page.locator(selector).filter({ hasText: /./ }).all();
-          for (const element of elements) {
-            if (await element.isVisible()) {
-              const text = await element.textContent();
-              if (text && text.trim() && text.trim() !== '*') { // Skip if just an asterisk
-                errorDetails.push(text.trim());
-                hasValidationErrors = true;
-              }
-            }
-          }
-        } catch (e) {
-          // Ignore errors from selector evaluation
+      // Check for validation errors before submitting
+      const invalidFields = await this.page.locator('input:invalid, select:invalid, textarea:invalid').count();
+      if (invalidFields > 0) {
+        console.log(`Found ${invalidFields} invalid form fields before submission`);
+        
+        // Log which fields are invalid to help debugging
+        const allInvalidFields = await this.page.locator('input:invalid, select:invalid, textarea:invalid').all();
+        for (const field of allInvalidFields) {
+          const name = await field.getAttribute('name') || '(missing-name)';
+          const id = await field.getAttribute('id') || '(missing-id)';
+          const tagName = await field.evaluate(el => el.tagName.toLowerCase());
+          console.log(`Invalid field: name="${name}", id="${id}", type=${tagName}`);
         }
-      }
-      
-      // Also check for invalid fields which might indicate validation errors
-      const invalidFields = await this.page.locator('input:invalid, select:invalid, textarea:invalid').all();
-      if (invalidFields.length > 0) {
-        console.log(`Found ${invalidFields.length} invalid form fields`);
-        hasValidationErrors = true;
-      }
-      
-      if (hasValidationErrors) {
-        console.log('Form has validation issues:', errorDetails.length > 0 ? errorDetails : 'No error messages, but invalid fields detected');
-        await this.page.screenshot({ path: getScreenshotPath('validation-errors.png') });
+        
       } else {
-        console.log('No validation errors detected');
+        console.log('No validation errors detected, form appears valid');
       }
       
       // Try multiple ways to find the submit button
@@ -369,90 +203,96 @@ export class TrainFormPage {
       ];
       
       let buttonClicked = false;
-      
       for (const selector of buttonSelectors) {
-        if (await selector.isVisible() && await selector.isEnabled()) {
-          await humanPause(this.page, 'navigation');
-          console.log('Clicking submit button');
-          await selector.click({ force: true });
-          console.log('Clicked submit button');
-          buttonClicked = true;
-          break;
+        try {
+          if (await selector.isVisible({ timeout: 1000 }) && 
+              await selector.isEnabled({ timeout: 1000 })) {
+            await humanPause(this.page, 'navigation');
+            await selector.click({ force: true });
+            buttonClicked = true;
+            break;
+          }
+        } catch (e) {
+          console.log(`Button selector failed: ${e.message}`);
         }
       }
       
       if (!buttonClicked) {
         console.log('WARNING: Could not click submit button');
-        await this.page.screenshot({ path: getScreenshotPath('submit-button-not-found.png') });
-        return false;
+        return {success: false};
       } 
       
+      // Wait for the response and capture the payload
+      try {
+        const response = await responsePromise;
+        const request = response.request();
+        try {
+          // Try to get the POST data
+          submittedPayload = request.postDataJSON();
+        } catch (e) {
+          console.log(`Could not parse payload as JSON: ${e.message}`);
+          // Try to get raw data
+          submittedPayload = request.postData();
+        }
+      } catch (e) {
+        console.log(`Could not capture form submission: ${e.message}`);
+      }
+      
       await humanPause(this.page, 'observation');
-      await this.page.screenshot({ path: getScreenshotPath('train-form-submitted.png') });
       
-      // Check for both success and error messages
-      const result = await this.verifySubmissionResult();
+      // Check for success or error message with better logging
+      const successPatterns = [/training started/i, /job id/i, /success/i, /submitted/i];
+      const errorPatterns = [/error/i, /failed/i, /invalid/i, /check.*form/i];
       
-      // If not successful, log additional form details to help debug
-      if (!result) {
-        console.log('Form submission failed. Checking form state...');
-        
-        // Check all required fields
-        const requiredFields = ['modelName', 'dataset', 'trainMethod', 'finetuning_type'];
-        for (const field of requiredFields) {
-          const fieldElement = this.page.locator(`[name="${field}"]`);
-          if (await fieldElement.count() > 0) {
-            const value = await fieldElement.inputValue().catch(() => 'N/A');
-            console.log(`Field ${field} value: "${value}"`);
-          } else {
-            console.log(`Field ${field} not found in DOM`);
+      let resultFound = false;
+      
+      for (const pattern of successPatterns) {
+        try {
+          const successText = this.page.getByText(pattern);
+          if (await successText.isVisible({ timeout: 5000 })) {
+            const message = await successText.textContent() || 'Unknown success message';
+            resultFound = true;
+            return {success: true, payload: submittedPayload};
+          }
+        } catch (e) {
+          console.log(`Error checking success pattern: ${e.message}`);
+        }
+      }
+      
+      if (!resultFound) {
+        for (const pattern of errorPatterns) {
+          try {
+            const errorText = this.page.getByText(pattern);
+            if (await errorText.isVisible({ timeout: 2000 })) {
+              const message = await errorText.textContent() || 'Unknown error message';
+              console.log('❌ Error message found:', message);
+              resultFound = true;
+              return {success: false};
+            }
+          } catch (e) {
+            console.log(`Error checking error pattern: ${e.message}`);
           }
         }
       }
       
-      return result;
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      await this.page.screenshot({ path: getScreenshotPath('form-submission-error.png') });
-      return false;
-    }
-  }
-  
-  /**
-   * Verify the submission result by looking for success or error messages
-   */
-  private async verifySubmissionResult(): Promise<boolean> {
-    const successTexts = [/training started/i, /job id/i, /success/i, /submitted/i];
-    const errorTexts = [/error/i, /failed/i, /invalid/i];
-    
-    let resultFound = false;
-    let isSuccess = false;
-    
-    for (const pattern of successTexts) {
-      const element = this.page.getByText(pattern);
-      if (await element.isVisible()) {
-        console.log('Success message found:', await element.textContent());
-        resultFound = true;
-        isSuccess = true;
-        break;
-      }
-    }
-    
-    if (!resultFound) {
-      for (const pattern of errorTexts) {
-        const element = this.page.getByText(pattern);
-        if (await element.isVisible()) {
-          console.log('Error message found:', await element.textContent());
-          resultFound = true;
-          break;
+      // If no specific message found, try to determine if we're on a success page
+      try {
+        const currentUrl = this.page.url();
+        console.log('Current URL:', currentUrl);
+        if (currentUrl.includes('success') || currentUrl.includes('training-status')) {
+          console.log('Redirected to success/status page:', currentUrl);
+          return {success: true, payload: submittedPayload};
         }
+      } catch (e) {
+        console.log(`Error checking URL: ${e.message}`);
       }
+      
+      console.log('No success or error message found, defaulting to success=false');
+      return {success: false, payload: submittedPayload};
+      
+    } catch (error) {
+      console.error(`Error submitting form: ${error.message}`);
+      return {success: false};
     }
-    
-    if (!resultFound) {
-      console.log('No success or error message found');
-    }
-    
-    return isSuccess;
   }
 }

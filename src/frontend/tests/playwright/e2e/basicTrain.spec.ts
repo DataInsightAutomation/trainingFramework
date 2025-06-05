@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test';
 import { TrainFormPage } from '../pages/TrainFormPage';
 import { config, logTestConfiguration, getScreenshotPath } from '../utils/testHelpers';
 import { trainFormTestData } from '../fixtures/trainFormData';
-import * as path from 'path';
 
 /**
  * IMPORTANT: Running tests with browser UI (non-headless mode)
@@ -54,13 +53,20 @@ test.describe('Training form tests', () => {
     // Log form data before submission
     console.log('Submitting form with test data:', JSON.stringify(testData, null, 2));
     
-    const isSuccessful = await trainForm.submitForm();
+    const result = await trainForm.submitForm();
+    
+    // Log the captured submission payload
+    if (result.payload) {
+      console.log('Form submission payload:', JSON.stringify(result.payload, null, 2));
+    } else {
+      console.log('No submission payload was captured');
+    }
     
     // Take final screenshot regardless of result - now using the imported helper
     await page.screenshot({ path: getScreenshotPath('final-state.png') });
     
     // Verify the submission was successful
-    expect(isSuccessful).toBeTruthy();
+    expect(result.success).toBeTruthy();
   });
   
   // // Example of how to add more tests easily with the modular structure
