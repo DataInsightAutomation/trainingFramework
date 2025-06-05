@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { TrainFormPage } from '../pages/TrainFormPage';
+import { ExportFormPage } from '../pages/ExportFormPage';
 import { config, logTestConfiguration, getScreenshotPath } from '../utils/testHelpers';
 import { trainFormTestData } from '../fixtures/trainFormData';
-
+import { exportFormData } from '../fixtures/exportFormData';
 /**
  * IMPORTANT: Running tests with browser UI (non-headless mode)
  * 
@@ -68,30 +69,4 @@ test.describe('Training form tests', () => {
     // Verify the submission was successful
     expect(result.success).toBeTruthy();
   });
-  
-  // // Example of how to add more tests easily with the modular structure
-  // test.skip('should be able to train with LoRA fine-tuning', async ({ page }) => {
-  //   const trainForm = new TrainFormPage(page);
-    
-  //   await trainForm.goto();
-  //   await trainForm.fillModelName(trainFormTestData.loraTraining.modelName);
-  //   await trainForm.selectDataset();
-  //   await trainForm.selectTrainingMethod();
-  //   // Additional LoRA-specific steps would go here
-  //   const isSuccessful = await trainForm.submitForm();
-    
-  //   expect(isSuccessful).toBeTruthy();
-  // });
-  
-  // test.skip('should be able to train with a custom dataset', async ({ page }) => {
-  //   const trainForm = new TrainFormPage(page);
-    
-  //   await trainForm.goto();
-  //   await trainForm.fillModelName(trainFormTestData.customDatasetTraining.modelName);
-  //   // Custom dataset selection would use a different method or parameter
-  //   await trainForm.selectTrainingMethod();
-  //   const isSuccessful = await trainForm.submitForm();
-    
-  //   expect(isSuccessful).toBeTruthy();
-  // });
 });
