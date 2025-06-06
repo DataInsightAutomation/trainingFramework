@@ -1,11 +1,11 @@
 import { Locator, Page } from '@playwright/test';
-import { BasePage } from './BasePage';
+import { BaseFormPage } from './BasePage';
 import { DropdownField, FormField } from '../components/FormField';
 
 /**
  * Page Object Model for the Export Form
  */
-export class ExportFormPage extends BasePage {
+export class ExportFormPage extends BaseFormPage {
     private modelNameDropdown: DropdownField;
     private adapterPathField: FormField;
     private exportDirField: FormField;
@@ -52,14 +52,6 @@ export class ExportFormPage extends BasePage {
     async fillExportForm(exportData: { modelPath: string, adapterPath: string, exportDirectory: string }) {
         // Use native selectOption for the <select> element instead of DropdownField
         await this.modelNameDropdown.select(exportData.modelPath);
-
-        // const selectLocator = this.page.locator('select#modelNameOrPath');
-        // if (await selectLocator.isVisible({ timeout: 2000 })) {
-        //     await selectLocator.selectOption(exportData.modelPath);
-        // } else {
-        //     // Only use DropdownField as fallback
-        //     await this.modelNameDropdown.select(exportData.modelPath);
-        // }
         
         // Fill text fields
         await this.adapterPathField.fill(exportData.adapterPath);
@@ -69,51 +61,81 @@ export class ExportFormPage extends BasePage {
     /**
      * Submit the export form and return the result
      */
-    async submitExportForm() {
-        // Set up listener to capture network requests
-        let payload = null;
-        this.page.on('request', request => {
-            if (request.url().includes('/api/export')) {
-                payload = request.postDataJSON();
+    async submitExportForm(): Promise<{ success: boolean, payload?: any }> {
+        try {
+            // Check for validation errors before submitting
+            const invalidFields = await this.page.locator('input:invalid, select:invalid, textarea:invalid').count();
+            if (invalidFields > 0) {
+                console.log(`Found ${invalidFields} invalid form fields before submission`);
+                
+                // Log which fields are invalid to help debugging
+                const allInvalidFields = await this.page.locator('input:invalid, select:invalid, textarea:invalid').all();
+                for (const field of allInvalidFields) {
+                    const name = await field.getAttribute('name') || '(missing-name)';
+                    const id = await field.getAttribute('id') || '(missing-id)';
+                    const tagName = await field.evaluate(el => el.tagName.toLowerCase());
+                    console.log(`Invalid field: name="${name}", id="${id}", type=${tagName}`);
+                }
+                
+                return { success: false };
             }
-        });
 
-        // Updated button selectors based on the actual HTML
-        const exportButtonSelectors = [
-            this.page.getByRole('button', { name: /Start Export/i }),
-            this.page.locator('button[type="submit"]'),
-            this.page.locator('button.submit-button'),
-            this.page.locator('button.btn-primary').last()
-        ];
-
-        for (const selector of exportButtonSelectors) {
-            if (await selector.isVisible({ timeout: 2000 })) {
-                await selector.click();
-                break;
-            }
-        }
-
-        // Wait for success message or completion indicator
-        const successSelectors = [
-            this.page.locator('.export-success-message'),
-            this.page.locator('.alert-success'),
-            this.page.getByText(/export successful/i),
-            this.page.getByText(/successfully exported/i)
-        ];
-
-        let successElement: Locator | null = null;
-        for (const selector of successSelectors) {
-            successElement = await selector.isVisible({ timeout: 30000 })
-                .then(() => selector)
-                .catch(() => null);
+            // Take screenshot before submission
+            await this.takeScreenshot('export-form-before-submit');
             
-            if (successElement) break;
+            // Button selectors for the export form
+            const buttonSelectors = [
+                this.page.getByRole('button', { name: 'Start Export' }),
+                this.page.getByRole('button', { name: 'Export' }),
+                this.page.locator('button.submit-button'),
+                this.page.locator('button[type="submit"]')
+            ];
+            
+            // Define patterns to detect success/errors
+            const successPatterns = [
+                /Export job started/i, 
+                /successfully exported/i, 
+                /completed/i,
+                /success/i
+            ];
+            
+            const errorPatterns = [
+                /export failed/i, 
+                /error/i, 
+                /failed/i,
+                /invalid/i
+            ];
+            
+            // URL patterns to monitor for network requests
+            const urlPatterns = [
+                '/api/export',
+                '/v1/export',
+                '/export'
+            ];
+            
+            // Use the enhanced base submitForm method
+            const result = await super.submitForm(
+                buttonSelectors,
+                successPatterns,
+                errorPatterns,
+                urlPatterns
+            );
+            
+            // Additional validation and checks if needed
+            if (!result.success) {
+                console.log('Export submission was not successful');
+                await this.takeScreenshot('export-failure');
+            } else {
+                console.log('Export submission was successful');
+                await this.takeScreenshot('export-success');
+            }
+            
+            return result;
+            
+        } catch (error) {
+            console.error(`Error submitting export form: ${error.message}`);
+            await this.takeScreenshot('export-submit-error');
+            return { success: false };
         }
-
-        return {
-            success: !!successElement,
-            payload: payload
-        };
     }
-
 }
