@@ -6,13 +6,17 @@ import { testConfig } from './tests/playwright/utils/testConfig';
 // Get current date in YYYY-MM-DD format for organizing test results
 const currentDate = format(new Date(), 'yyyy-MM-dd');
 
+// Determine headless mode based on the environment variable
+const isHeadless = process.env.HEADLESS_MODE === 'true';
+
 export default defineConfig({
   testDir: './tests/playwright/e2e',
   timeout: testConfig.timeout, // Use the dynamic timeout from testConfig
-  fullyParallel: true,
+  // fullyParallel: true,
+  // fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 1 : 1,
 
   // Configure output directories
   outputDir: path.join('tests', 'results', currentDate, 'test-artifacts'),
@@ -23,19 +27,18 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: testConfig.BACKEND_SERVER, // Use the server URL from testConfig
+    baseURL: testConfig?.BACKEND_SERVER || 'http://localhost:1234',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
 
-    // Configure headless mode based on testConfig
-    headless: testConfig.HEADLESS_MODE,
+    // Configure headless mode based on environment variable
+    headless: isHeadless,
 
-    // Enable video recording based on testConfig
-    video: testConfig.RECORDING_MODE ? {
-      mode: 'on',
-      size: { width: 1280, height: 720 },
-    } : {
-      mode: 'on-first-retry',
+    // Optimize video recording to reduce flickering
+    video: {
+      mode: 'on', // Only keep videos when tests fail
+      // Record only the last 5 seconds for successful tests
+      // This significantly reduces flickering by only capturing the end result
       size: { width: 1280, height: 720 },
     }
   },
