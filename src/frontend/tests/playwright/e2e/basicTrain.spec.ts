@@ -39,7 +39,7 @@ test.describe('Training form tests', () => {
     console.log(`Test timeout set to ${config.timeout/1000} seconds`);
     
     // Use the Page Object Model
-    const trainForm = new TrainFormPage(page, "http://localhost:1234");
+    const trainForm = new TrainFormPage(page, `${config.BACKEND_SERVER}`);
     const testData = trainFormTestData.basicTraining;
     
     // Test steps using the POM methods

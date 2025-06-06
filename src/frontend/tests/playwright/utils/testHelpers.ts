@@ -1,7 +1,8 @@
-import { Page } from '@playwright/test';
-import * as path from 'path';
-import * as fs from 'fs';
-import { format } from 'date-fns';
+import { Page, Locator } from '@playwright/test';
+import path from 'path';
+import fs from 'fs';  // Add missing fs import
+import { format } from 'date-fns';  // Add missing format import
+import { testConfig } from './testConfig';
 
 // Current date for organizing test results
 export const currentDate = format(new Date(), 'yyyy-MM-dd');
@@ -17,7 +18,8 @@ export const config = {
     navigation: { min: 1000, max: 1100 },
     observation: { min: 1000, max: 1100 }
   },
-  timeout: process.env.HUMAN_MODE === 'true' ? 1200000 : 30000
+  timeout: process.env.HUMAN_MODE === 'true' ? 1200000 : 30000,
+  BACKEND_SERVER: process.env.BACKEND_SERVER ? process.env.BACKEND_SERVER : "http://localhost:1234",
 };
 
 /**
@@ -43,7 +45,7 @@ export function getMediaPath(type: 'screenshots' | 'videos', filename: string, t
 /**
  * Get the path for storing screenshots
  */
-export function getScreenshotPath(filename: string, testName: string = 'train-form-test'): string {
+export function getScreenshotPath(filename: string, testName: string = 'defaultTestName'): string {
   return getMediaPath('screenshots', filename, testName);
 }
 
@@ -97,18 +99,12 @@ export async function humanClick(locator: any): Promise<void> {
 /**
  * Pause with human-like delay
  */
-export async function humanPause(page: Page, type: 'thinking' | 'navigation' | 'observation' = 'thinking'): Promise<void> {
-  if (!config.HUMAN_MODE) {
-    await page.waitForTimeout(100);
-    return;
+export async function humanPause(page: Page, type: 'thinking' | 'navigation' | 'observation'): Promise<void> {
+  if (testConfig.HUMAN_MODE) {
+    const { min, max } = testConfig.delays[type];
+    const delay = Math.floor(Math.random() * (max - min + 1) + min);
+    await page.waitForTimeout(delay);
   }
-
-  const delayRange = config.delays[type];
-  const delay = Math.floor(Math.random() * 
-    (delayRange.max - delayRange.min) + 
-    delayRange.min);
-  
-  await page.waitForTimeout(delay);
 }
 
 /**

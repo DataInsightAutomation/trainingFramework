@@ -1,16 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
 import { format } from 'date-fns';
+import { testConfig } from './tests/playwright/utils/testConfig';
 
 // Get current date in YYYY-MM-DD format for organizing test results
 const currentDate = format(new Date(), 'yyyy-MM-dd');
 
-// Check for headless mode from environment variable
-const isHeadless = process.env.HEADLESS_MODE !== 'false';
-
 export default defineConfig({
   testDir: './tests/playwright/e2e',
-  timeout: 30000,
+  timeout: testConfig.timeout, // Use the dynamic timeout from testConfig
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -25,15 +23,19 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: 'http://localhost:1234',
+    baseURL: testConfig.BACKEND_SERVER, // Use the server URL from testConfig
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
 
-    // Configure headless mode based on environment variable
-    headless: isHeadless,
+    // Configure headless mode based on testConfig
+    headless: testConfig.HEADLESS_MODE,
 
-    video: {
-      mode: 'on', // Record videos for all test runs
+    // Enable video recording based on testConfig
+    video: testConfig.RECORDING_MODE ? {
+      mode: 'on',
+      size: { width: 1280, height: 720 },
+    } : {
+      mode: 'on-first-retry',
       size: { width: 1280, height: 720 },
     }
   },
@@ -46,9 +48,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:1234',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    command: 'npm run dev',        // Command to start your application
+    url: 'http://localhost:1234',  // URL to wait for before starting tests
+    reuseExistingServer: !process.env.CI,  // Reuse running server in dev mode
+    timeout: 120000,               // Time to wait for server to start (2 minutes)
   },
 });
