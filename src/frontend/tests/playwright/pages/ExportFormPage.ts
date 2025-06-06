@@ -9,14 +9,15 @@ export class ExportFormPage extends BasePage {
     private modelNameDropdown: DropdownField;
     private adapterPathField: FormField;
     private exportDirField: FormField;
-
+    private path:string;
     /**
      * Create a new ExportFormPage instance
      * @param page Playwright page object
      * @param baseUrl Base URL for the application (defaults to localhost)
      */
-    constructor(page: Page, baseUrl: string = 'http://localhost') {
+    constructor(page: Page, baseUrl: string = 'http://localhost', path:string) {
         super(page, baseUrl);
+        this.path = path;
         // Initialize form field components with proper selectors based on actual HTML
         this.modelNameDropdown = new DropdownField(page, 'Base Model', [
             page.locator('select#modelNameOrPath'),
@@ -41,12 +42,8 @@ export class ExportFormPage extends BasePage {
      */
     async goto() {
         await this.page.goto(`${this.baseUrl}`);
-        const ExportTab = this.page.getByRole('tab', { name: ' Export' });
-        if (await ExportTab.isVisible({ timeout: 5000 })) {
-            await ExportTab.click();
-        }
+        await this.navigateLeftPanelTab(this.path);
         const formLoaded = await this.waitForElement('form', 30000);
-
     }
 
     /**

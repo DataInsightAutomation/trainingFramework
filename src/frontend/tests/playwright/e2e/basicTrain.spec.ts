@@ -45,17 +45,13 @@ test.describe('Training form tests', () => {
     // Test steps using the POM methods
     await trainForm.goto();
     await trainForm.fillModelName(testData.modelName);
-    
-    // Pass the dataset name from test data
     await trainForm.selectDataset(testData.dataset);
-    
     await trainForm.selectTrainingMethod(testData.trainMethod);
     await trainForm.selectFinetuningType(testData.finetuning_type);
-
     // Log form data before submission
     console.log('Submitting form with test data:', JSON.stringify(testData, null, 2));
     
-    const result = await trainForm.submitForm();
+    const result = await trainForm.submitTrainingForm();
     
     // Log the captured submission payload
     if (result.payload) {
