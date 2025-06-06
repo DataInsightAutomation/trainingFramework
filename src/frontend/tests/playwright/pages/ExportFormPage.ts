@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './BasePage';
 import { DropdownField, FormField } from '../components/FormField';
+import { logger } from '../utils/logger';
 
 /**
  * Page Object Model for the Export Form
@@ -59,83 +60,51 @@ export class ExportFormPage extends BaseFormPage {
     }
 
     /**
-     * Submit the export form and return the result
+     * Submit the export form
+     * Using the parent BaseFormPage.submitForm method for consistency
      */
     async submitExportForm(): Promise<{ success: boolean, payload?: any }> {
-        try {
-            // Check for validation errors before submitting
-            const invalidFields = await this.page.locator('input:invalid, select:invalid, textarea:invalid').count();
-            if (invalidFields > 0) {
-                console.log(`Found ${invalidFields} invalid form fields before submission`);
-                
-                // Log which fields are invalid to help debugging
-                const allInvalidFields = await this.page.locator('input:invalid, select:invalid, textarea:invalid').all();
-                for (const field of allInvalidFields) {
-                    const name = await field.getAttribute('name') || '(missing-name)';
-                    const id = await field.getAttribute('id') || '(missing-id)';
-                    const tagName = await field.evaluate(el => el.tagName.toLowerCase());
-                    console.log(`Invalid field: name="${name}", id="${id}", type=${tagName}`);
-                }
-                
-                return { success: false };
-            }
+        // Define submit button selectors
+        const submitButtonSelectors = [
+            { type: 'role', selector: 'Export' },
+            this.page.getByText('Export', { exact: true }),
+            this.page.locator('button[type="submit"]'),
+            this.page.locator('.export-submit-button')
+        ];
 
-            // Take screenshot before submission
-            await this.takeScreenshot('export-form-before-submit');
-            
-            // Button selectors for the export form
-            const buttonSelectors = [
-                this.page.getByRole('button', { name: 'Start Export' }),
-                this.page.getByRole('button', { name: 'Export' }),
-                this.page.locator('button.submit-button'),
-                this.page.locator('button[type="submit"]')
-            ];
-            
-            // Define patterns to detect success/errors
-            const successPatterns = [
-                /Export job started/i, 
-                /successfully exported/i, 
-                /completed/i,
-                /success/i
-            ];
-            
-            const errorPatterns = [
-                /export failed/i, 
-                /error/i, 
-                /failed/i,
-                /invalid/i
-            ];
-            
-            // URL patterns to monitor for network requests
-            const urlPatterns = [
-                '/api/export',
-                '/v1/export',
-                '/export'
-            ];
-            
-            // Use the enhanced base submitForm method
-            const result = await super.submitForm(
-                buttonSelectors,
-                successPatterns,
-                errorPatterns,
-                urlPatterns
-            );
-            
-            // Additional validation and checks if needed
-            if (!result.success) {
-                console.log('Export submission was not successful');
-                await this.takeScreenshot('export-failure');
-            } else {
-                console.log('Export submission was successful');
-                await this.takeScreenshot('export-success');
-            }
-            
-            return result;
-            
-        } catch (error) {
-            console.error(`Error submitting export form: ${error.message}`);
-            await this.takeScreenshot('export-submit-error');
-            return { success: false };
+        // Define success patterns - adjust based on your UI's actual messages
+        const successPatterns = [
+            /Export job started/i,
+            /Successfully queued export/i,
+            /Export in progress/i
+        ];
+
+        // Define error patterns
+        const errorPatterns = [
+            /Error/i,
+            /Failed to export/i,
+            /Invalid export/i
+        ];
+
+        // Define URL patterns to monitor for the export API call
+        const urlPatterns = ['/export'];
+        
+        logger.debug('Submitting export form with configured patterns');
+
+        // Use the parent class's submitForm method
+        const result = await this.submitForm(
+            submitButtonSelectors,
+            successPatterns,
+            errorPatterns,
+            urlPatterns
+        );
+        
+        if (result.success) {
+            logger.info('Export submission was successful');
+        } else {
+            logger.warn('Export submission failed');
         }
+        
+        return result;
     }
 }

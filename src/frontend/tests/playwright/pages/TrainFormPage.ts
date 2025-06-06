@@ -2,19 +2,40 @@ import { Page } from '@playwright/test';
 import { getScreenshotPath, humanClick, humanType, humanPause } from '../utils/testHelpers';
 import { BaseFormPage, BasePage } from './BasePage';
 import { FormField, DropdownField } from '../components/FormField';
+import { logger } from '../utils/logger';  // Add logger import
 
 /**
  * Page Object Model for the Training Form page
  * Encapsulates all interactions with the training form
  */
 export class TrainFormPage extends BaseFormPage {
-  // Form components
+  // Basic form components
   private modelNameField: FormField;
   private datasetField: DropdownField;
   private trainMethodField: DropdownField;
   private finetuningTypeField: DropdownField;
   private mode: string;
   private path: string;
+
+  // Advanced form components
+  private bf16Field: FormField;
+  private cutoffLenField: FormField;
+  private gradientAccumulationStepsField: FormField;
+  private learningRateField: FormField;
+  private loggingStepsField: FormField;
+  private loraRankField: FormField;
+  private loraTargetField: FormField;
+  private lrSchedulerTypeField: DropdownField;
+  private numTrainEpochsField: FormField;
+  private overwriteCacheField: FormField;
+  private overwriteOutputDirField: FormField;
+  private perDeviceTrainBatchSizeField: FormField;
+  private plotLossField: FormField;
+  private preprocessingNumWorkersField: FormField;
+  private saveStepsField: FormField;
+  private templateField: DropdownField;
+  private trustRemoteCodeField: FormField;
+  private warmupRatioField: FormField;
 
   /**
    * Create a new TrainFormPage instance
@@ -27,7 +48,7 @@ export class TrainFormPage extends BaseFormPage {
     this.mode = mode;
     this.path = "train";
 
-    // Initialize form field components
+    // Initialize basic form field components
     this.modelNameField = new FormField(page, 'model name', [
       page.getByRole('textbox', { name: 'Model Name *' }),
       page.locator('input#modelName'),
@@ -50,6 +71,126 @@ export class TrainFormPage extends BaseFormPage {
       page.getByText('Finetuning Type', { exact: false }).first(),
       page.locator('select[name="finetuning_type"]'),
       page.locator('.finetuning-type-select')
+    ]);
+
+    // Initialize advanced form field components with better selectors
+    // For checkbox (has visible checkbox element)
+    this.bf16Field = new FormField(page, 'bf16', [
+      page.getByRole('checkbox', {name: "BF16 *"}),
+      page.locator('input#bf16'),
+      page.locator('input[name="bf16"]'),
+      // More specific selectors for the React Bootstrap component
+      page.locator('.form-check-input[name="bf16"]'),
+      page.locator('label:has-text("BF16") input'),
+    ]);
+
+    this.cutoffLenField = new FormField(page, 'cutoff_len', [
+      page.locator('input#cutoffLen'),
+      page.locator('input[name="cutoff_len"]'),
+      page.getByLabel('Cutoff Length')
+    ]);
+
+    this.gradientAccumulationStepsField = new FormField(page, 'gradient_accumulation_steps', [
+      page.locator('input#gradientAccumulationSteps'),
+      page.locator('input[name="gradient_accumulation_steps"]'),
+      page.getByLabel('Gradient Accumulation Steps')
+    ]);
+
+    this.learningRateField = new FormField(page, 'learning_rate', [
+      page.locator('input#learningRate'),
+      page.locator('input[name="learning_rate"]'),
+      page.getByLabel('Learning Rate')
+    ]);
+
+    this.loggingStepsField = new FormField(page, 'logging_steps', [
+      page.locator('input#loggingSteps'),
+      page.locator('input[name="logging_steps"]'),
+      page.getByLabel('Logging Steps')
+    ]);
+
+    this.loraRankField = new FormField(page, 'lora_rank', [
+      page.locator('input#loraRank'),
+      page.locator('input[name="lora_rank"]'),
+      page.getByLabel('LoRA Rank')
+    ]);
+
+    this.loraTargetField = new DropdownField(page, 'lora_target', [
+      page.locator('input#loraTarget'),
+      page.locator('input[name="lora_target"]'),
+      page.getByLabel('LoRA Target')
+    ]);
+
+    this.lrSchedulerTypeField = new DropdownField(page, 'lr_scheduler_type', [
+      page.locator('select#lrSchedulerType'),
+      page.locator('select[name="lr_scheduler_type"]'),
+      page.getByLabel('LR Scheduler Type')
+    ]);
+
+    this.numTrainEpochsField = new FormField(page, 'num_train_epochs', [
+      page.locator('input#numTrainEpochs'),
+      page.locator('input[name="num_train_epochs"]'),
+      page.getByLabel('Number of Training Epochs')
+    ]);
+
+    this.perDeviceTrainBatchSizeField = new FormField(page, 'per_device_train_batch_size', [
+      page.locator('input#perDeviceTrainBatchSize'),
+      page.locator('input[name="per_device_train_batch_size"]'),
+      page.getByLabel('Per Device Train Batch Size')
+    ]);
+
+    this.saveStepsField = new FormField(page, 'save_steps', [
+      page.locator('input#saveSteps'),
+      page.locator('input[name="save_steps"]'),
+      page.getByLabel('Save Steps')
+    ]);
+
+    this.templateField = new DropdownField(page, 'template', [
+      page.locator('select#template'),
+      page.locator('select[name="template"]'),
+      page.getByLabel('Template')
+    ]);
+
+    this.warmupRatioField = new FormField(page, 'warmup_ratio', [
+      page.locator('input#warmupRatio'),
+      page.locator('input[name="warmup_ratio"]'),
+      page.getByLabel('Warmup Ratio')
+    ]);
+
+    // Checkboxes
+    this.overwriteCacheField = new FormField(page, 'overwrite_cache', [
+      // Include input and its container
+      page.locator('.toggle-switch input[name="overwrite_cache"]'),
+      page.locator('.toggle-switch-container:has-text("Overwrite Cache")'),
+      page.locator('[data-testid="toggle-overwrite_cache"]'),
+      // Label often works better for toggles since the input might be hidden
+      page.getByText('Overwrite Cache').locator('..'), // Parent of text
+    ]);
+
+    this.overwriteOutputDirField = new FormField(page, 'overwrite_output_dir', [
+      page.locator('input#overwrite_output_dir'),
+      page.locator('input[name="overwrite_output_dir"]'),
+      page.getByLabel('Output Directory')
+    ]);
+
+    this.plotLossField = new FormField(page, 'plot_loss', [
+      page.locator('.toggle-switch input[name="plot_loss"]'),
+      page.locator('.toggle-switch-container:has-text("Plot Loss")'),
+      page.locator('[data-testid="toggle-plot_loss"]'),
+      page.getByText('Plot Loss').locator('..'),
+    ]);
+
+    this.trustRemoteCodeField = new FormField(page, 'trust_remote_code', [
+      page.locator('.toggle-switch input[name="trust_remote_code"]'),
+      page.locator('.toggle-switch-container:has-text("Trust Remote Code")'),
+      page.locator('[data-testid="toggle-trust_remote_code"]'),
+      page.getByText('Trust Remote Code').locator('..'),
+    ]);
+
+    // Initialize the missing field
+    this.preprocessingNumWorkersField = new FormField(page, 'preprocessing_num_workers', [
+      page.locator('input#preprocessingNumWorkers'),
+      page.locator('input[name="preprocessing_num_workers"]'),
+      page.getByLabel('Preprocessing Num Workers')
     ]);
   }
 
@@ -161,20 +302,19 @@ export class TrainFormPage extends BaseFormPage {
           const name = await field.getAttribute('name') || '(missing-name)';
           const id = await field.getAttribute('id') || '(missing-id)';
           const tagName = await field.evaluate(el => el.tagName.toLowerCase());
-          console.log(`Invalid field: name="${name}", id="${id}", type=${tagName}`);
+          logger.warn(`Invalid field: name="${name}", id="${id}", type=${tagName}`);
         }
-
       }
 
       // Define button selectors
       const buttonSelectors = [
         this.page.getByRole('button', { name: 'Start Training' }),
       ];
-      
+
       // Define patterns
       const successPatterns = [/training started/i, /job id/i, /success/i, /submitted/i];
       const errorPatterns = [/error/i, /failed/i, /invalid/i, /check.*form/i];
-      
+
       // Define URL patterns to monitor
       const urlPatterns = ['/v1/train'];
 
@@ -183,17 +323,163 @@ export class TrainFormPage extends BaseFormPage {
 
       // Use the enhanced base submitForm method with all parameters
       const result = await super.submitForm(
-        buttonSelectors, 
-        successPatterns, 
+        buttonSelectors,
+        successPatterns,
         errorPatterns,
         urlPatterns
       );
 
       return result;
     } catch (error) {
-      console.error(`Error submitting form: ${error.message}`);
+      logger.error(`Error submitting form: ${error.message}`);
       await this.takeScreenshot('submit-error');
       return { success: false };
+    }
+  }
+
+  /**
+   * Helper method to handle both checkbox and toggle fields
+   * @param field The FormField object
+   * @param value The desired value (true/false)
+   * @param fieldType The type of boolean field ('checkbox' or 'toggle')
+   */
+  private async handleBooleanField(field: FormField, value: boolean | string, fieldType: 'checkbox' | 'toggle'): Promise<void> {
+    if (value === undefined) return;
+
+    try {
+      // Use the setChecked method from FormField
+      await field.setChecked(value);
+    } catch (error) {
+      console.log(`Error handling ${fieldType} ${field.getName()}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Fill form with advanced parameters
+   * @param advancedParams The advanced parameters from trainFormData
+   */
+  async fillAdvancedParams(advancedParams: any): Promise<void> {
+    // Only proceed if we're in advanced mode
+
+    // Log the advanced parameters being used
+    logger.debug(`Filling advanced params: ${JSON.stringify(advancedParams, null, 2)}`);
+
+    // Fill numeric fields
+    if (advancedParams.cutoff_len) {
+      logger.debug(`Setting cutoff_len to ${advancedParams.cutoff_len}`);
+      await this.cutoffLenField.setRangeValue(advancedParams.cutoff_len.toString());
+    }
+
+    if (advancedParams.gradient_accumulation_steps) {
+      logger.debug(`Setting gradient_accumulation_steps to ${advancedParams.gradient_accumulation_steps}`);
+      await this.gradientAccumulationStepsField.setRangeValue(advancedParams.gradient_accumulation_steps.toString());
+    }
+
+    if (advancedParams.learning_rate) {
+      logger.debug(`Setting learning_rate to ${advancedParams.learning_rate}`);
+      await this.learningRateField.setRangeValue(advancedParams.learning_rate.toString());
+    }
+
+    if (advancedParams.logging_steps) {
+      logger.debug(`Setting logging_steps to ${advancedParams.logging_steps}`);
+      await this.loggingStepsField.setRangeValue(advancedParams.logging_steps.toString());
+    }
+
+    if (advancedParams.lora_rank) {
+      logger.debug(`Setting lora_rank to ${advancedParams.lora_rank}`);
+      await this.loraRankField.setRangeValue(advancedParams.lora_rank.toString());
+    }
+
+    if (advancedParams.num_train_epochs) {
+      logger.debug(`Setting num_train_epochs to ${advancedParams.num_train_epochs}`);
+      await this.numTrainEpochsField.setRangeValue(advancedParams.num_train_epochs.toString());
+    }
+
+    if (advancedParams.per_device_train_batch_size) {
+      logger.debug(`Setting per_device_train_batch_size to ${advancedParams.per_device_train_batch_size}`);
+      await this.perDeviceTrainBatchSizeField.setRangeValue(advancedParams.per_device_train_batch_size.toString());
+    }
+
+    if (advancedParams.preprocessing_num_workers) {
+      logger.debug(`Setting preprocessing_num_workers to ${advancedParams.preprocessing_num_workers}`);
+      await this.preprocessingNumWorkersField.setRangeValue(advancedParams.preprocessing_num_workers.toString());
+    }
+
+    if (advancedParams.save_steps) {
+      logger.debug(`Setting save_steps to ${advancedParams.save_steps}`);
+      await this.saveStepsField.setRangeValue(advancedParams.save_steps.toString());
+    }
+
+    // // Handle warmup_ratio as a range input
+    if (advancedParams.warmup_ratio) {
+      logger.debug(`Setting warmup_ratio to ${advancedParams.warmup_ratio}`);
+      await this.warmupRatioField.setRangeValue(advancedParams.warmup_ratio.toString());
+    }
+
+    // // Select dropdowns
+    if (advancedParams.lora_target) {
+      logger.debug(`Setting lora_target to ${advancedParams.lora_target}`);
+      await this.loraTargetField.setRangeValue(advancedParams.lora_target.toString());
+    }
+
+    if (advancedParams.lr_scheduler_type) {
+      logger.debug(`Setting lr_scheduler_type to ${advancedParams.lr_scheduler_type}`);
+      await this.lrSchedulerTypeField.select(advancedParams.lr_scheduler_type);
+    }
+
+    if (advancedParams.template) {
+      logger.debug(`Setting template to ${advancedParams.template}`);
+      await this.templateField.select(advancedParams.template);
+    }
+
+    // // Handle boolean fields - using specific type identification for each field
+    if (advancedParams.bf16 !== undefined) {
+      // bf16 is a checkbox type
+      logger.debug(`Setting bf16 to ${advancedParams.bf16}`);
+      await this.bf16Field.setChecked(advancedParams.bf16);
+    }
+
+    // These are toggle types
+    if (advancedParams.overwrite_cache !== undefined) {
+      logger.debug(`Setting toggle overwrite_cache to ${advancedParams.overwrite_cache}`);
+      await this.overwriteCacheField.setChecked(advancedParams.overwrite_cache);
+    }
+
+    if (advancedParams.overwrite_output_dir !== undefined) {
+      logger.debug(`Setting toggle overwrite_output_dir to ${advancedParams.overwrite_output_dir}`);
+      await this.overwriteOutputDirField.fill(advancedParams.overwrite_output_dir);
+    }
+
+    if (advancedParams.plot_loss !== undefined) {
+      logger.debug(`Setting toggle plot_loss to ${advancedParams.plot_loss}`);
+      await this.plotLossField.setChecked(advancedParams.plot_loss);
+    }
+
+    if (advancedParams.trust_remote_code !== undefined) {
+      logger.debug(`Setting toggle trust_remote_code to ${advancedParams.trust_remote_code}`);
+      await this.trustRemoteCodeField.setChecked(advancedParams.trust_remote_code);
+    }
+
+    // Allow time for form to update after setting all fields
+    logger.debug('Advanced parameters filled, waiting for form to update');
+    // await this.page.waitForTimeout(20000);
+  }
+
+  /**
+   * Fill form with all the data from the test fixtures
+   * @param formData The test data from trainFormData
+   */
+  async fillCompleteForm(formData: any): Promise<void> {
+    // Basic fields
+    await this.fillModelName(formData.modelName);
+    await this.selectDataset(formData.datasets || formData.datasets);
+    await this.selectTrainingMethod(formData.trainMethod || formData.train_method);
+    await this.selectFinetuningType(formData.finetuningType || formData.finetuning_type);
+
+    // Advanced fields
+    if (this.mode === 'advanced' || formData.learning_rate ||
+      formData.lora_rank || formData.num_train_epochs) {
+      await this.fillAdvancedParams(formData);
     }
   }
 }

@@ -1,5 +1,7 @@
 import { Page } from '@playwright/test';
-import { getScreenshotPath, humanClick, humanType, humanPause } from '../utils/testHelpers';
+import { getScreenshotPath, humanClick, humanType, humanPause, config } from '../utils/testHelpers';
+import { logger } from '../utils/logger';  // Import the logger
+// import config correctly from testConfig
 
 /**
  * Base page class with common functionality for all pages
@@ -30,9 +32,9 @@ export class BasePage {
   async navigateLeftPanelTab(tabName: string) {
     const tab = this.page.getByRole('tab', { name: ` ${this.capitalize(tabName)}` });
     if (await tab.isVisible({ timeout: 5000 })) {
-      await tab.click();
+      await humanClick(tab);
     } else {
-      console.log('navigate to leftpanel not success')
+      logger.warn('Navigate to leftpanel not successful');
     }
   }
 
@@ -53,7 +55,7 @@ export class BasePage {
       await this.page.waitForSelector(selector, { timeout });
       return true;
     } catch (error) {
-      console.error(`Timeout waiting for element: ${selector}`);
+      logger.error(`Timeout waiting for element: ${selector}`);
       await this.safeScreenshot('element-wait-timeout');
       return false;
     }
@@ -98,10 +100,10 @@ export class BasePage {
     try {
       // Ensure filename has a .png extension
       const filename = name.endsWith('.png') ? name : `${name}.png`;
-      await this.page.screenshot({ path: getScreenshotPath(filename) });
+      // await this.page.screenshot({ path: getScreenshotPath(filename) });
     } catch (error) {
       // Log error but don't fail the test
-      console.log(`Warning: Could not take screenshot "${name}": ${error.message}`);
+      logger.warn(`Could not take screenshot "${name}": ${error.message}`);
     }
   }
 }
@@ -128,13 +130,13 @@ export class BaseFormPage extends BasePage {
           break;
         }
       } catch (e) {
-        console.log(`Selector for ${name} failed: ${e.message}`);
+        logger.debug(`Selector for ${name} failed: ${e.message}`);
       }
     }
 
     // Fallback: Tab key navigation
     if (!fieldFilled) {
-      console.log(`WARNING: Could not fill ${name} field with selectors, trying keyboard`);
+      logger.warn(`Could not fill ${name} field with selectors, trying keyboard`);
       await this.page.keyboard.press('Tab');
       await this.page.waitForTimeout(300);
       await humanType(this.page, value);
@@ -194,6 +196,11 @@ export class BaseFormPage extends BasePage {
    * @private Helper method for submitForm
    */
   private setupNetworkMonitoring(urlPatterns: string[]): Promise<any> {
+    // Use config value for network timeouts instead of hardcoded value
+    const networkTimeout = config.networkTimeout || config.timeout || 30000;
+    
+    logger.debug(`Setting up network monitoring with timeout: ${networkTimeout}ms`);
+    
     return this.page.waitForResponse(
       response => {
         const url = response.url();
@@ -204,7 +211,7 @@ export class BaseFormPage extends BasePage {
         }
         return false;
       },
-      { timeout: 15000 }
+      { timeout: networkTimeout }
     );
   }
 
@@ -218,14 +225,14 @@ export class BaseFormPage extends BasePage {
       const request = response.request();
       try {
         const payload = request.postDataJSON();
-        console.log('Successfully captured JSON payload');
+        logger.debug('Successfully captured JSON payload');
         return payload;
       } catch (e) {
-        console.log(`Could not parse payload as JSON: ${e.message}`);
+        logger.warn(`Could not parse payload as JSON: ${e.message}`);
         return request.postData();
       }
     } catch (e) {
-      console.log(`Could not capture form submission: ${e.message}`);
+      logger.warn(`Could not capture form submission: ${e.message}`);
       return null;
     }
   }
@@ -257,12 +264,12 @@ export class BaseFormPage extends BasePage {
           return true; // Button clicked successfully
         }
       } catch (e) {
-        console.log(`Error with selector ${this.describeSelectorForLogging(selectorInfo)}: ${e.message}`);
+        logger.debug(`Error with selector ${this.describeSelectorForLogging(selectorInfo)}: ${e.message}`);
       }
     }
 
     // If we got here, no button was clicked
-    console.error('Could not find submit button');
+    logger.error('Could not find submit button');
     await this.safeScreenshot('submit-button-not-found');
     return false;
   }
@@ -328,7 +335,7 @@ export class BaseFormPage extends BasePage {
     }
 
     // If no specific message found, default to assuming success
-    console.log('No success/error patterns found, assuming success');
+    logger.info('No success/error patterns found, assuming success');
     return true;
   }
 
@@ -347,11 +354,11 @@ export class BaseFormPage extends BasePage {
         
         if (await textElement.isVisible({ timeout })) {
           const message = await textElement.textContent() || 'Unknown message';
-          console.log(`${isSuccess ? '✅ Success' : '❌ Error'} message found:`, message);
+          logger.info(`${isSuccess ? '✅ Success' : '❌ Error'} message found: ${message}`);
           return { found: true, message };
         }
       } catch (e) {
-        console.log(`Error checking pattern ${pattern}: ${e.message}`);
+        logger.debug(`Error checking pattern ${pattern}: ${e.message}`);
       }
     }
     return { found: false };
@@ -400,20 +407,21 @@ export class BaseFormPage extends BasePage {
         // Want Basic mode
         if (isBasicButtonVisible && !isAdvancedButtonVisible) {
           // Currently in Advanced mode, need to switch to Basic
-          await basicOptionsButton.click();
+          logger.debug('Currently in Advanced mode, switching to Basic Options');
+          await humanClick(basicOptionsButton);
           await this.page.waitForTimeout(500); // Wait for UI to update
         }
       } else {
         // Want Advanced mode
         if (isAdvancedButtonVisible && !isBasicButtonVisible) {
           // Currently in Basic mode, need to switch to Advanced
-          console.log('Currently in Basic mode, switching to Advanced Options');
-          await advancedOptionsButton.click();
+          logger.debug('Currently in Basic mode, switching to Advanced Options');
+          await humanClick(advancedOptionsButton);
           await this.page.waitForTimeout(500); // Wait for UI to update
         }
       }
     } catch (error) {
-      console.log(`Error handling options toggle: ${error.message}`);
+      logger.warn(`Error handling options toggle: ${error.message}`);
     }
   }
 }
