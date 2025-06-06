@@ -80,7 +80,7 @@ const advancedFieldSections = {
         ]
       },
       { name: 'warmup_ratio', type: 'range', min: 0, max: 0.5, step: 0.01 },
-      { name: 'bf16', type: 'checkbox', defaultValue: 'true' }, // Changed from toggle to checkbox
+      { name: 'bf16', type: 'checkbox', defaultValue: 'true', required: false }, // Changed from toggle to checkbox
     ]
   },
   outputConfig: {
@@ -370,7 +370,7 @@ const Train = () => {
     // Handle basic mode special fields
     if (!showAdvanced) {
       // Find index of trainMethod field to position stage field after it
-      const trainMethodIndex = fieldsWithOptions.findIndex(f => f.name === 'trainMethod');
+      const trainMethodIndex = fieldsWithOptions.findIndex((f: { name: string; }) => f.name === 'trainMethod');
 
       if (trainMethodIndex >= 0) {
         // Insert the stage field right after trainMethod
