@@ -47,7 +47,7 @@ const advancedFieldSections = {
         min: 1,
         max: 50,
         step: 1,
-        defaultValue: '5',
+        defaultValue: 5,
         description: 'exportSizeDescription',
         placeholder: 'exportSizePlaceholder'
       },
@@ -59,7 +59,7 @@ const advancedFieldSections = {
           { value: 'cpu', directLabel: 'CPU' },
           { value: 'auto', directLabel: 'Auto (GPU if available)' }
         ],
-        defaultValue: 'cpu',
+        defaultValue: 'auto',
         description: 'exportDeviceDescription'
       },
       {
@@ -201,6 +201,8 @@ const Export: React.FC = () => {
       exportQuantizationBit: '8',
       pushToHub: 'false',
       private: 'true',
+      exportDevice: 'cpu', // Add this line to set default value
+      // Add any other missing defaults here
     },
     updateStoreCallback: useAppStore.getState().updateExportFormData,
     getStoreData: () => useAppStore.getState().exportFormData,
@@ -359,7 +361,7 @@ const Export: React.FC = () => {
       if (data.pushToHub === 'true') {
         requestData.push_to_hub = true;
         requestData.private = data.private === 'true';
-        requestData.hf_token = data.hfHubToken;
+        requestData.hf_hub_token = data.hfHubToken;
         
         if (data.exportType === 'merged' || data.exportType === 'both') {
           requestData.hub_model_id = data.exportHubModelId;

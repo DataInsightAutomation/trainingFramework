@@ -59,6 +59,7 @@ const advancedFieldSections = {
         min: 100,
         max: 100000,
         step: 100,
+        defaultValue: 1000,
         required: false // Explicitly mark as not required
       },
       { name: 'overwrite_cache', type: 'toggle', defaultValue: 'false' },

@@ -394,7 +394,7 @@ const ModelForm = ({
                                 <DropDown
                                     required={field.required !== false}
                                     name={field.name}
-                                    value={formData[field.name] || ''}
+                                    value={formData[field.name] || field.defaultValue || ''}
                                     onChange={onChange}
                                     options={[
                                         { value: '', label: t[`select${field.name.charAt(0).toUpperCase() + field.name.slice(1)}`] },
@@ -423,7 +423,7 @@ const ModelForm = ({
                                     <Form.Control
                                         type="number"
                                         name={field.name}
-                                        value={formData[field.name] || ''}
+                                        value={formData[field.name] || field.defaultValue || ''}
                                         onChange={handleChange}
                                         placeholder={t[`${field.name}Placeholder`]}
                                         min={field.min}
