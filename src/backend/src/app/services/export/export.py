@@ -69,7 +69,7 @@ async def export_model(job_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
         
         # Remove keys that might cause conflicts
         keys_to_remove = ['dataloader_num_workers', 'export_format', 'merge_adapter', 
-                         'export_adapter', 'adapter_hub_model_id', 'private', 'push_to_hub', 'quantization', 'quantization_bits']
+                         'export_adapter', 'adapter_hub_model_id', 'private', 'push_to_hub', 'quantization', 'quantization_bits', 'hub_model_id', "hf_token"]
         for key in keys_to_remove:
             if key in params:
                 del params[key]
@@ -79,6 +79,7 @@ async def export_model(job_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
         
         # Handle merged model export if requested
             # Export merged model
+            # export_hub_model_id
         export_model_llama(params)
         logger.info(f"Merged model export completed successfully")
 

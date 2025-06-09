@@ -23,8 +23,11 @@ class ExportRequest(BaseModel):
     adapter_name_or_path: str
     export_dir: str
     export_hub_model_id: Optional[str] = None
+    # to be replace by export_hub_model_id
+    hub_model_id: Optional[str] = None
     hf_hub_token: Optional[str] = None
-    
+    hf_token: Optional[str] = Field(None, alias="hf_hub_token", description="Hugging Face Hub token for authentication")
+
     # Advanced options - remove default values
     quantization: Optional[bool] = None
     quantization_bits: Optional[int] = None
@@ -128,9 +131,8 @@ async def export_model(request: ExportRequest, background_tasks: BackgroundTasks
                 export_params[key] = value
                 
         # Handle hub model ID separately
-        if request.export_hub_model_id:
-            export_params["export_hub_model_id"] = request.export_hub_model_id
-        
+        if request.hub_model_id:
+            export_params["export_hub_model_id"] = request.hub_model_id
         # Generate a job ID
         job_id = f"export--{hash(request.model_name_or_path)}-{int(time.time())}"
         logger.info(f"Generated job ID: {job_id}")
