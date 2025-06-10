@@ -81,11 +81,12 @@ test.describe('Training form tests', () => {
     } else {
       logger.warn('No submission payload was captured');
     }
-    
+    // Verify the submission was successful
+    expect(result.payload).toBeTruthy();
+
     // Capture final state for recording
     await captureTestResult(page, 'basic-train');
     
-    // Verify the submission was successful
     expect(result.success).toBeTruthy();
     
     // Compare essential properties between testData and payload
@@ -130,33 +131,34 @@ test.describe('Training form tests', () => {
     } else {
       console.log('No submission payload was captured');
     }
+    expect(result.payload).toBeTruthy();
     
     // // Capture final state for recording
-    // await captureTestResult(page, 'advanced-train');
+    await captureTestResult(page, 'advanced-train');
     
-    // // Verify the submission was successful
-    // expect(result.success).toBeTruthy();
+    // Verify the submission was successful
+    expect(result.success).toBeTruthy();
     
-    // // Compare essential properties between testData and payload
-    // if (result.payload) {
-    //   const comparison = comparePayloadWithTestData(result.payload, testData);
+    // Compare essential properties between testData and payload
+    if (result.payload) {
+      const comparison = comparePayloadWithTestData(result.payload, testData);
       
-    //   // Log comparison results for debugging
-    //   if (!comparison.isMatch) {
-    //     console.log('Differences between test data and payload:', comparison.differences);
-    //   }
+      // Log comparison results for debugging
+      if (!comparison.isMatch) {
+        console.log('Differences between test data and payload:', comparison.differences);
+      }
       
-    //   // Assert that essential properties match
-    //   expect(comparison.isMatch, 
-    //     `Payload doesn't match test data. Differences: ${JSON.stringify(comparison.differences)}`
-    //   ).toBeTruthy();
+      // Assert that essential properties match
+      expect(comparison.isMatch, 
+        `Payload doesn't match test data. Differences: ${JSON.stringify(comparison.differences)}`
+      ).toBeTruthy();
       
-    //   // Check advanced parameters if they exist in the payload
-    //   // Replace 'advancedParams' with direct property checks, e.g., 'epochs', 'learning_rate', etc.
-    //   if ('epochs' in result.payload && 'epochs' in testData) {
-    //     // You can add specific assertions for advanced parameters here
-    //     // For example: expect(result.payload.epochs).toBe(testData.epochs);
-    //   }
-    // }
+      // Check advanced parameters if they exist in the payload
+      // Replace 'advancedParams' with direct property checks, e.g., 'epochs', 'learning_rate', etc.
+      if ('epochs' in result.payload && 'epochs' in testData) {
+        // You can add specific assertions for advanced parameters here
+        // For example: expect(result.payload.epochs).toBe(testData.epochs);
+      }
+    }
   });
 });
