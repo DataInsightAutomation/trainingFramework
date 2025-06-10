@@ -46,16 +46,16 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
             
         dataset_name = _extract_dataset_name(dataset_details)
         dataset_name_json = json.dumps(dataset_details) if dataset_details else None
-        
         # Remove keys that might cause conflicts
         _clean_training_args(train_args)
         
-        # Set up paths for tokenized dataset
+        # # Set up paths for tokenized dataset
         if dataset_name:
-            save_dir = os.path.join(os.getcwd(), '../data/processed_datasets', dataset_name.replace('/', '_'))
+            # save_dir = os.path.join(os.getcwd(), '../data/processed_datasets', dataset_name.replace('/', '_'))
+            save_dir = os.path.join(os.getcwd(), '../data/processed_datasets_eval3', dataset_name.replace('/', '_'))
             train_args['tokenized_path'] = save_dir
         
-        # Parse arguments and prepare for training
+        # # Parse arguments and prepare for training
         model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(train_args)
         
         # Use extended data arguments to control saving behavior
@@ -68,6 +68,8 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         if dataset_name_json:
             data_args.dataset = dataset_name_json
             # Pre-process dataset
+            if 'eval_dataset' in train_args:
+                data_args.eval_dataset = data_args.dataset
             enhanced_get_dataset(template, model_args, data_args, training_args, stage="sft", **tokenizer_module)
         
         # Run the training

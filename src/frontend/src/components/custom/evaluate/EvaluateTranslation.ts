@@ -35,10 +35,55 @@ export const translations = {
     commandCopied: 'Command copied to clipboard',
     advancedOptions: 'Advanced Options',
     basicOptions: 'Basic Options',
-    // Add section titles
+    
+    // Basic field translations
+    modelNameDescription: 'The model to evaluate',
+    adapterPathLabel: 'Adapter Path',
+    adapterPathPlaceholder: 'Enter path to fine-tuned adapter',
+    adapterPathDescription: 'Path to the fine-tuned adapter for this model',
+    adapterPathError: 'Please provide an adapter path',
+    stageLabel: 'Training Stage',
+    stagePlaceholder: 'Select training stage',
+    outputDirLabel: 'Output Directory',
+    outputDirPlaceholder: 'Path to save evaluation results',
+    outputDirDescription: 'Directory where evaluation results will be saved',
+    tokenLabel: 'Hugging Face Token',
+    tokenPlaceholder: 'Enter your HF token for private models',
+    tokenDescription: 'Required for accessing private models from Hugging Face',
+    datasetDescription: 'Dataset(s) to use for evaluation',
+    
+    // Section titles
+    modelConfigSection: 'Model Configuration',
+    datasetConfigSection: 'Dataset Configuration',
     evaluationConfigSection: 'Evaluation Configuration',
-    metric_typeLabel: 'Metric Type',
-    // Add more translations as needed
+    
+    // Model config fields
+    trust_remote_codeLabel: 'Trust Remote Code',
+    finetuning_typeLabel: 'Fine-tuning Type',
+    quantization_methodLabel: 'Quantization Method',
+    templateLabel: 'Prompt Template',
+    flash_attnLabel: 'Flash Attention',
+    
+    // Dataset config fields
+    dataset_dirLabel: 'Dataset Directory',
+    cutoff_lenLabel: 'Cutoff Length',
+    max_samplesLabel: 'Max Samples',
+    preprocessing_num_workersLabel: 'Preprocessing Workers',
+    
+    // Evaluation config fields
+    per_device_eval_batch_sizeLabel: 'Eval Batch Size',
+    predict_with_generateLabel: 'Predict with Generate',
+    max_new_tokensLabel: 'Max New Tokens',
+    top_pLabel: 'Top P',
+    temperatureLabel: 'Temperature',
+    do_evalLabel: 'Do Evaluation',
+    
+    // Status-related
+    checkStatus: 'Check Status',
+    noRecentJob: 'No recent evaluation job found',
+    
+    // Command output
+    evaluationCommand: 'Evaluation command:',
   },
   zh: {
     evaluateModel: '评估模型',
@@ -75,8 +120,54 @@ export const translations = {
     commandCopied: '命令已复制到剪贴板',
     advancedOptions: '高级选项',
     basicOptions: '基本选项',
+    
+    // Basic field translations
+    modelNameDescription: '要评估的模型',
+    adapterPathLabel: '适配器路径',
+    adapterPathPlaceholder: '输入微调适配器的路径',
+    adapterPathDescription: '此模型的微调适配器路径',
+    adapterPathError: '请提供适配器路径',
+    stageLabel: '训练阶段',
+    stagePlaceholder: '选择训练阶段',
+    outputDirLabel: '输出目录',
+    outputDirPlaceholder: '保存评估结果的路径',
+    outputDirDescription: '评估结果将保存的目录',
+    tokenLabel: 'Hugging Face 令牌',
+    tokenPlaceholder: '输入您的 HF 令牌以访问私有模型',
+    tokenDescription: '访问 Hugging Face 私有模型所需',
+    datasetDescription: '用于评估的数据集',
+    
+    // Section titles
+    modelConfigSection: '模型配置',
+    datasetConfigSection: '数据集配置',
     evaluationConfigSection: '评估配置',
-    metric_typeLabel: '指标类型',
-    // Add more translations as needed
+    
+    // Model config fields
+    trust_remote_codeLabel: '信任远程代码',
+    finetuning_typeLabel: '微调类型',
+    quantization_methodLabel: '量化方法',
+    templateLabel: '提示模板',
+    flash_attnLabel: '闪速注意力',
+    
+    // Dataset config fields
+    dataset_dirLabel: '数据集目录',
+    cutoff_lenLabel: '截断长度',
+    max_samplesLabel: '最大样本数',
+    preprocessing_num_workersLabel: '预处理工作线程',
+    
+    // Evaluation config fields
+    per_device_eval_batch_sizeLabel: '评估批次大小',
+    predict_with_generateLabel: '使用生成预测',
+    max_new_tokensLabel: '最大新令牌数',
+    top_pLabel: 'Top P值',
+    temperatureLabel: '温度系数',
+    do_evalLabel: '执行评估',
+    
+    // Status-related
+    checkStatus: '检查状态',
+    noRecentJob: '未找到最近的评估任务',
+    
+    // Command output
+    evaluationCommand: '评估命令：',
   }
 } as const;

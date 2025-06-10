@@ -47,4 +47,5 @@ export const EndPoints = {
   
   // For the curl preview
   getPreviewCurlCommand: `${BASE_URL}/v1/train`,
+  evaluate: `${BASE_URL}/v1/evaluate`,
 };
