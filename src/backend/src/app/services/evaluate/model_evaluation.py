@@ -9,21 +9,10 @@ from ..train.supervised_fine_tuning.supervised_fine_tuning import _prepare_train
 # temporray, use the training style but adaption first.
 async def _run_evaluate(job_id: str, train_args: Dict[str, Any]):
 
-    train_args = {}
-    train_args['do_eval'] = True
-    train_args['eval_dataset'] = train_args.get('eval_dataset', 'custom_test_hugginface_alpaca_public_easydata')
-    train_args['stage'] = 'sft'
-    train_args['finetuning_type'] = 'lora'
-    train_args['model_name_or_path'] = train_args.get('model_name_or_path', 'meta-llama/Llama-3.2-1B-Instruct')
-    # data_args.dataset = data_args.dataset or dataset_name_json
-    # train_args['eval_dataset'] = train_args.dataset
-    train_args['dataset_details'] = [{'name': 'custom_test_hugginface_alpaca_public_easydata', 'type': 'named'}]
-    train_args['per_device_eval_batch_size'] = 4
-    # python src/train.py --stage sft   --model_name_or_path microsoft/phi-1_5   --finetuning_type lora   --eval_dataset custom_test_hugginface_alpaca_public_easydata   --per_device_eval_batch_size 4  --do_eval True
-                # if training_args.should_save:
-                # dataset_dict.save_to_disk(data_args.tokenized_path)
-    print(train_args,'train_args before reach run_training_job')
-    # train_args["dataset_details"] = dataset_details
+    # train_args['per_device_eval_batch_size'] = 64
+    # train_args["predict_with_generate"] = True
+    # # train_args["predict_with_generate"] = False
+
     return await run_training_job(job_id, train_args)
 
 

@@ -51,8 +51,7 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         
         # # Set up paths for tokenized dataset
         if dataset_name:
-            # save_dir = os.path.join(os.getcwd(), '../data/processed_datasets', dataset_name.replace('/', '_'))
-            save_dir = os.path.join(os.getcwd(), '../data/processed_datasets_eval3', dataset_name.replace('/', '_'))
+            save_dir = os.path.join(os.getcwd(), '..', 'data' , "processed_datasets" + get_task_category(train_args), dataset_name.replace('/', '_'))
             train_args['tokenized_path'] = save_dir
         
         # # Parse arguments and prepare for training
@@ -81,11 +80,46 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         return result
         
     except Exception as e:
-        logger.error(f"Error in training job {job_id}: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
         result["status"] = "error"
         result["message"] = str(e)
         return result
 
+def get_task_category(config: dict) -> str:
+    """
+    Get a standardized task category string based on the training configuration.
+    
+    Generates a consistent string representation of the training task combination
+    (train/eval/predict) for use in dataset organization.
+    """
+    # Define the tasks to check
+    tasks = ["train", "eval", "predict"]
+    
+    # Get active tasks
+    active_tasks = [task for task in tasks if config.get(f"do_{task}", False)]
+    
+    # Handle the case of no tasks
+    if not active_tasks:
+        return "no_task"
+    
+    # Sort to ensure consistent ordering
+    active_tasks.sort()
+    
+    # Create base task identifier
+    task_id = "_".join(active_tasks)
+    
+    # Add generation info to folder path if using predict_with_generate
+    if config.get("predict_with_generate", False):
+        task_id += "_gen"
+        
+        # If we know the padding side, add it to the path
+        padding_side = config.get("tokenizer_padding_side", "")
+        if padding_side:
+            task_id += f"_{padding_side}pad"
+    
+    return task_id
 
 def _prepare_training_arguments(train_args: Dict[str, Any]) -> Dict[str, Any]:
     """Prepare and enhance training arguments."""

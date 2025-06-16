@@ -2,20 +2,21 @@
 # model_name_or_path: /tmp/Meta-Llama-3.1-8B-Instruct
 # model_name_or_path: /home/dut7071/lun/LLaMA-Factory/Llama-3.2-1B-Instruct
 # model_name_or_path: /home/dut7071/lun/Llama-3.2-1B-Instruct
-model_name_or_path: llamafactory/tiny-random-Llama-3
+# model_name_or_path: llamafactory/tiny-random-Llama-3
+model_name_or_path: meta-llama/Llama-3.2-1B-Instruct
 trust_remote_code: true
 
 ### method
 stage: sft
 do_train: true
 finetuning_type: lora
-lora_rank: 8
+lora_rank: 4
 lora_target: all
-
+# lora_target: all
 ### dataset
 # dataset: identity,alpaca_en_demo
 # dataset: alpaca_en_demo
-dataset: custom_test_smaller_alpaca
+dataset: custom_test_hugginface_alpaca_public_easydata
 # dataset_dir: /home/dut7071/lun/LLaMA-Factory/data
 
 # dataset_dir: /home/sdp/lun/exploration/torchtune
