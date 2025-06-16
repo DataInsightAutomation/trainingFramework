@@ -17,9 +17,9 @@ router = APIRouter(
 # Define the evaluation request model
 class EvaluateRequest(BaseModel):
     model_name_or_path: str
-    adapter_name_or_path: str
     stage: str = "sft"
     eval_dataset: str
+    adapter_name_or_path: Optional[str] = None
     output_dir: Optional[str] = None
     hub_token: Optional[str] = None
     
@@ -38,7 +38,6 @@ class EvaluateRequest(BaseModel):
     max_new_tokens: Optional[int] = 512
     top_p: Optional[float] = 0.7
     temperature: Optional[float] = 0.95
-    do_eval: Optional[bool] = True
 
 # Define the evaluation response model
 class EvaluateResponse(BaseModel):

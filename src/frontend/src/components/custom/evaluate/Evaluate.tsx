@@ -23,7 +23,7 @@ const basicFields = [
     name: 'adapterPath', 
     type: 'text', 
     description: 'adapterPathDescription',
-    required: true
+    required: false
   },
   { 
     name: 'dataset', 
@@ -113,7 +113,6 @@ const advancedFieldSections = {
       { name: 'max_new_tokens', type: 'number', min: 1, max: 2048, step: 1, defaultValue: '512' },
       { name: 'top_p', type: 'range', min: 0.1, max: 1.0, step: 0.05, defaultValue: '0.7' },
       { name: 'temperature', type: 'range', min: 0.1, max: 2.0, step: 0.05, defaultValue: '0.95' },
-      { name: 'do_eval', type: 'toggle', defaultValue: 'true' },
     ]
   }
 };
@@ -159,7 +158,6 @@ const Evaluate = () => {
       max_new_tokens: '512',
       top_p: '0.7',
       temperature: '0.95',
-      do_eval: 'true'
     },
     updateStoreCallback: useAppStore.getState().updateEvaluateFormData,
     getStoreData: () => useAppStore.getState().evaluateFormData,
@@ -210,7 +208,7 @@ const Evaluate = () => {
     const issues = [];
     
     if (!data.modelName) issues.push("Model name is required");
-    if (!data.adapterPath) issues.push("Adapter path is required");
+    // if (!data.adapterPath) issues.push("Adapter path is required");
     if (!data.dataset) issues.push("Dataset is required");
     if (!data.stage) issues.push("Stage is required");
     
@@ -228,7 +226,6 @@ const Evaluate = () => {
       stage: data.stage,
       eval_dataset: datasets.join(','),
       output_dir: data.outputDir || generateOutputDir(data),
-      do_eval: true
     };
     
     // Add token if provided
