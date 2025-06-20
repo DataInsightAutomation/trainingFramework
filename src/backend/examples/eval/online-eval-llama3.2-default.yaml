@@ -1,0 +1,8 @@
+model_name_or_path: meta-llama/Llama-3.2-1B-Instruct
+task: mmlu-custom-small_test
+task_dir: easydata2022/mmlu-custom-small
+save_dir: mmlu_results1
+template: fewshot
+n_shot: 5
+lang: en
+trust_remote_code: True

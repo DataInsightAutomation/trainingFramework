@@ -1,0 +1,10 @@
+{
+  "mmlu_validation": {
+    "file_name": {
+      "test": "mmlu_validation/test.jsonl",
+      "validation": "mmlu_validation/validation.jsonl"
+    },
+    "category": "Average",
+    "name": "MMLU Demo Test"
+  }
+}
