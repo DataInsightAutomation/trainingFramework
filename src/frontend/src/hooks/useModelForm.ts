@@ -54,15 +54,23 @@ export function useModelForm({
   // Get current locale from store
   const currentLocale = useAppStore(state => state.currentLocale);
   
-  // Load data from store on mount
+  // Load data from store on mount only once
   useEffect(() => {
-    if (getStoreData) {
+    if (!getStoreData) return;
+    
+    try {
       const storeData = getStoreData();
+      console.log('Loading initial data from store:', storeData);
+      
       if (storeData) {
         setFormData(prev => ({ ...prev, ...storeData }));
       }
+    } catch (error) {
+      console.error('Error loading data from store:', error);
     }
-  }, [getStoreData]);
+    // Empty dependency array means "run only on mount"
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Toggle section expanded/collapsed state
   const toggleSection = useCallback((sectionKey: string) => {
