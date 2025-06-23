@@ -139,7 +139,7 @@ def _extract_dataset_name(dataset_details: Any) -> Optional[str]:
 def _clean_training_args(train_args: Dict[str, Any]) -> None:
     """Remove unnecessary or conflicting keys from training arguments."""
     keys_to_remove = ["dataset_from_huggingface", "dataset_details", 
-                       "has_custom_datasets", "dataset_name"]
+                       "has_custom_datasets", "dataset_name", "is_custom_model", "model_path"]
     for key in keys_to_remove:
         if key in train_args:
             del train_args[key]

@@ -44,35 +44,11 @@ async def simulate_evaluation(job_id: str, params: Dict[str, Any]) -> Dict[str, 
     
     # Simulate work with progress updates
     await _run_evaluate(job_id, params)
-    
-    # Generate simulated metrics
-    metrics = {}
-    for dataset in datasets:
-        dataset_name = dataset.strip()
-        if dataset_name:
-            # Simulate different metrics depending on the finetuning method
-            metrics[dataset_name] = {
-                "accuracy": round(random.uniform(0.7, 0.95), 4),
-                "f1": round(random.uniform(0.65, 0.9), 4),
-                "precision": round(random.uniform(0.6, 0.95), 4),
-                "recall": round(random.uniform(0.6, 0.95), 4),
-            }
-            
-            # Add BLEU score for text generation tasks
-            if params.get("predict_with_generate", False):
-                metrics[dataset_name]["bleu"] = round(random.uniform(20, 40), 2)
-    
-    # In a real implementation, we would save the results to a file
-    output_dir = params.get("output_dir", "")
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
-        logger.info(f"Results would be saved to {output_dir}")
-    
+ 
     # Return results
     return {
         "status": "COMPLETED",
         "message": f"Evaluation of {model_name} completed successfully",
-        "metrics": metrics,
         "job_id": job_id,
         "completion_time": time.time()
     }
