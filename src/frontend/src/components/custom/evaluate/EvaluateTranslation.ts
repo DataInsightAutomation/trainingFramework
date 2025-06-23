@@ -84,6 +84,42 @@ export const translations = {
     
     // Command output
     evaluationCommand: 'Evaluation command:',
+
+    // New tab navigation
+    trainingEvaluation: "Training Evaluation",
+    benchmarkEvaluation: "Benchmark Evaluation",
+    
+    // Benchmark form fields
+    taskLabel: "Benchmark Task",
+    taskDescription: "Select the benchmark task to evaluate the model against",
+    taskDirLabel: "Task Directory",
+    taskDirDescription: "Directory containing the evaluation datasets",
+    saveDirLabel: "Save Directory",
+    saveDirDescription: "Directory to save evaluation results",
+    templateDescription: "Prompt template to use for evaluation",
+    nShotLabel: "Number of Examples",
+    nShotDescription: "Number of few-shot examples to include (0 for zero-shot)",
+    langLabel: "Language",
+    langDescription: "Language for evaluation",
+    batchSizeLabel: "Batch Size",
+    batchSizeDescription: "Batch size for evaluation",
+    seedLabel: "Random Seed",
+    seedDescription: "Random seed for reproducibility",
+    trustRemoteCodeLabel: "Trust Remote Code",
+    trustRemoteCodeDescription: "Allow loading remote code from model repository",
+    
+    // Added proper mappings for the actual field names in the form
+    task_dirLabel: "Task Directory",
+    save_dirLabel: "Save Directory",
+    n_shotLabel: "Number of Examples",
+    batch_sizeLabel: "Batch Size",
+    
+    // Benchmark sections
+    benchmarkConfigSection: "Benchmark Configuration",
+    
+    // Button text
+    startBenchmark: "Start Benchmark Evaluation",
+    benchmarkModel: "Benchmark Model"
   },
   zh: {
     evaluateModel: '评估模型',
@@ -169,5 +205,41 @@ export const translations = {
     
     // Command output
     evaluationCommand: '评估命令：',
+
+    // New tab navigation
+    trainingEvaluation: "训练评估",
+    benchmarkEvaluation: "基准测试评估",
+    
+    // Benchmark form fields
+    taskLabel: "基准测试任务",
+    taskDescription: "选择用于评估模型的基准测试任务",
+    taskDirLabel: "任务目录",
+    taskDirDescription: "包含评估数据集的目录",
+    saveDirLabel: "保存目录",
+    saveDirDescription: "保存评估结果的目录",
+    templateDescription: "用于评估的提示模板",
+    nShotLabel: "示例数量",
+    nShotDescription: "上下文中包含的少样本学习示例数量（0表示零样本）",
+    langLabel: "语言",
+    langDescription: "评估使用的语言",
+    batchSizeLabel: "批处理大小",
+    batchSizeDescription: "评估的批处理大小",
+    seedLabel: "随机种子",
+    seedDescription: "用于再现性的随机种子",
+    trustRemoteCodeLabel: "信任远程代码",
+    trustRemoteCodeDescription: "允许从模型仓库加载远程代码",
+    
+    // Added proper mappings for the actual field names in the form
+    task_dirLabel: "任务目录",
+    save_dirLabel: "保存目录",
+    n_shotLabel: "示例数量",
+    batch_sizeLabel: "批处理大小",
+    
+    // Benchmark sections
+    benchmarkConfigSection: "基准测试配置",
+    
+    // Button text
+    startBenchmark: "开始基准测试评估",
+    benchmarkModel: "基准测试模型"
   }
 } as const;

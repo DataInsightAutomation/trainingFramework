@@ -34,9 +34,17 @@
     }
     
     &.dark-theme {
-      background-color: #0d6efd;
+      background-color: #2b3a63; // Darker blue that fits better with dark theme
       color: #ffffff;
+      border-bottom: 1px solid #1e2b4a; // Even darker blue border
     }
+  }
+  
+  // Fix for nested dark theme header to ensure consistent styling
+  .model-form-card.dark-theme .model-form-header {
+    background-color: #2b3a63; // Match the direct class styling
+    color: #ffffff;
+    border-bottom: 1px solid #1e2b4a;
   }
   
   // Form controls - base styles for all input types

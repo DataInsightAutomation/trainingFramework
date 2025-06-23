@@ -39,3 +39,79 @@
     }
   }
 }
+
+.evaluate-tabs {
+  margin-bottom: 20px;
+  margin-left: 20px;
+  display: flex;
+  gap: 5px;
+  border-bottom: 1px solid #ddd;
+  
+  &.dark-theme {
+    border-bottom-color: #444;
+  }
+
+  .evaluate-tab {
+    display: inline-block;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    user-select: none;
+
+    &.active {
+      background-color: #f0f0f0;
+      border-bottom: 2px solid var(--intel-blue, #0078d4);
+      color: #333;
+    }
+
+    &.inactive {
+      background-color: #f8f8f8;
+      color: #666;
+      border-bottom: 1px solid #ddd;
+
+      &:hover {
+        background-color: #e9e9e9;
+      }
+    }
+  }
+  
+  // Dark theme overrides directly in the class
+  &.dark-theme {
+    .evaluate-tab {
+      &.active {
+        background-color: #2b3a63;
+        color: #ffffff;
+        border-bottom-color: var(--intel-blue-light, #00a3e0);
+      }
+      
+      &.inactive {
+        background-color: #212529;
+        color: #adb5bd;
+        border-bottom-color: #495057;
+        
+        &:hover {
+          background-color: #343a40;
+          color: #e9ecef;
+        }
+      }
+    }
+  }
+}
+
+// Remove the :root and [data-theme="dark"] variables since we're now using direct class nesting
+
+// Add some consistency with Train.scss
+.model-form-card.dark-theme {
+  .model-form-header {
+    background-color: #212529;
+    color: #ffffff;
+    border-bottom: 1px solid #6c757d;
+  }
+  
+  .card-body {
+    background-color: #212529;
+    color: #e9ecef;
+  }
+}

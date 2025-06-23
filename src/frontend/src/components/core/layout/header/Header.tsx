@@ -38,9 +38,11 @@ const Header = () => {
   // Function to change the language
   const changeLanguage = (newLocale: string) => {
     setLocale(newLocale as 'en' | 'zh' | 'vi' | 'fr');
-    
-    // Also store in localStorage for persistence
-    localStorage.setItem('preferredLocale', newLocale);
+  };
+  
+  // Function to toggle theme with persistence
+  const handleToggleTheme = () => {
+    toggleTheme();
   };
 
   return (
@@ -58,7 +60,7 @@ const Header = () => {
             variant={currentTheme.name === 'light' ? 'outline-light' : 'light'} 
             size="sm" 
             className="ms-2 d-flex align-items-center"
-            onClick={toggleTheme}
+            onClick={handleToggleTheme}
           >
             <i className={`bi bi-${currentTheme.name === 'light' ? 'moon' : 'sun'} me-1`}></i>
             {currentTheme.name === 'light' ? t.darkTheme : t.lightTheme}

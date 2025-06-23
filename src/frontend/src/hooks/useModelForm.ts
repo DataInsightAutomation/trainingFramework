@@ -60,8 +60,6 @@ export function useModelForm({
     
     try {
       const storeData = getStoreData();
-      console.log('Loading initial data from store:', storeData);
-      
       if (storeData) {
         setFormData(prev => ({ ...prev, ...storeData }));
       }

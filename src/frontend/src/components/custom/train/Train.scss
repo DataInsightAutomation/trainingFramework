@@ -22,9 +22,9 @@
     position: sticky;
     top: 0;
     z-index: 1030; // Higher z-index to ensure it stays above other elements
-    border-radius: 0.375rem !important;
+    border-radius: 0.375rem ;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    margin-bottom: 1rem !important;
+    margin-bottom: 1rem ;
     
     &.light-theme {
       background-color: rgba(248, 249, 250, 0.98);
@@ -121,30 +121,30 @@
       color: var(--intel-blue);
       
       &:hover, &.hovered {
-        background-color: var(--btn-outline-primary-hover-bg) !important;
-        color: var(--btn-outline-primary-hover-color) !important;
-        border-color: var(--intel-blue) !important;
+        background-color: var(--btn-outline-primary-hover-bg) ;
+        color: var(--btn-outline-primary-hover-color) ;
+        border-color: var(--intel-blue) ;
       }
     }
     
     .btn-outline-secondary {
       &:hover, &.hovered {
-        background-color: var(--btn-outline-secondary-hover-bg) !important;
-        color: var(--btn-outline-secondary-hover-color) !important;
+        background-color: var(--btn-outline-secondary-hover-bg) ;
+        color: var(--btn-outline-secondary-hover-color) ;
       }
     }
     
     .btn-outline-success {
       &:hover, &.hovered {
-        background-color: var(--btn-outline-success-hover-bg) !important;
-        color: var(--btn-outline-success-hover-color) !important;
+        background-color: var(--btn-outline-success-hover-bg) ;
+        color: var(--btn-outline-success-hover-color) ;
       }
     }
     
     .btn-outline-info {
       &:hover, &.hovered {
-        background-color: var(--btn-outline-info-hover-bg) !important;
-        color: var(--btn-outline-info-hover-color) !important;
+        background-color: var(--btn-outline-info-hover-bg) ;
+        color: var(--btn-outline-info-hover-color) ;
       }
     }
   }
@@ -204,55 +204,55 @@
     .dropdown-toggle,
     .custom-select,
     .react-select__control {
-      background-color: #2b3035 !important;
-      color: #e9ecef !important;
-      border-color: #495057 !important;
+      background-color: #2b3035 ;
+      color: #e9ecef ;
+      border-color: #495057 ;
       
       &:focus {
-        background-color: #2b3035 !important;
-        color: #e9ecef !important;
-        border-color: var(--intel-blue-light) !important;
-        box-shadow: 0 0 0 0.25rem rgba(0, 113, 197, 0.25) !important;
+        background-color: #2b3035 ;
+        color: #e9ecef ;
+        border-color: var(--intel-blue-light) ;
+        box-shadow: 0 0 0 0.25rem rgba(0, 113, 197, 0.25) ;
       }
       
       &::placeholder {
-        color: #6c757d !important;
+        color: #6c757d ;
       }
     }
     
     // Style dropdown menus in dark theme
     .dropdown-menu,
     .react-select__menu {
-      background-color: #2b3035 !important;
-      border-color: #495057 !important;
+      background-color: #2b3035 ;
+      border-color: #495057 ;
       
       .dropdown-item,
       .react-select__option {
-        color: #e9ecef !important;
+        color: #e9ecef ;
         
         &:hover, &:focus, &.active {
-          background-color: #343a40 !important;
+          background-color: #343a40 ;
         }
       }
     }
     
     // Form label styling
     .form-label {
-      color: #e9ecef !important;
+      color: #e9ecef ;
     }
     
     // Searched values in multiselect
     .multi-select-selected-value {
-      background-color: #343a40 !important;
-      color: #e9ecef !important;
-      border-color: #495057 !important;
+      background-color: #343a40 ;
+      color: #e9ecef ;
+      border-color: #495057 ;
     }
     
     // Input group styling
     .input-group-text {
-      background-color: #343a40 !important;
-      color: #e9ecef !important;
-      border-color: #495057 !important;
+      background-color: #343a40 ;
+      color: #e9ecef ;
+      border-color: #495057 ;
     }
   }
   
@@ -283,8 +283,8 @@
     border-color: var(--intel-blue);
     
     &:hover, &:focus, &:active {
-      background-color: var(--intel-blue-hover) !important;
-      border-color: var(--intel-blue-hover) !important;
+      background-color: var(--intel-blue-hover) ;
+      border-color: var(--intel-blue-hover) ;
     }
   }
   
@@ -293,8 +293,8 @@
     border-color: var(--intel-blue);
     
     &:hover, &:focus, &:active {
-      background-color: var(--intel-blue) !important;
-      border-color: var(--intel-blue) !important;
+      background-color: var(--intel-blue) ;
+      border-color: var(--intel-blue) ;
     }
   }
 }
@@ -314,30 +314,30 @@
 
 // Apply dark theme styles to model form components
 .model-form-card.dark-theme {
-  background-color: #212529 !important;
-  border-color: #343a40 !important;
+  background-color: #212529 ;
+  border-color: #343a40 ;
   
   .model-form-header {
-    background-color: #343a40 !important;
-    color: #e9ecef !important;
-    border-color: #495057 !important;
+    background-color: #343a40 ;
+    color: #e9ecef ;
+    border-color: #495057 ;
   }
   
   .card-body {
-    background-color: #212529 !important;
-    color: #e9ecef !important;
+    background-color: #212529 ;
+    color: #e9ecef ;
   }
 }
 
 // Add global styles for options toggle to ensure it works everywhere
 .options-toggle-section {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 1030 !important;
+  position: sticky ;
+  top: 0 ;
+  z-index: 1030 ;
   transition: box-shadow 0.3s ease;
   
   &.stuck {
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2) ;
   }
 }
 
