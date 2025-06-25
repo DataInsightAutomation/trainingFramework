@@ -5,7 +5,7 @@ import './TextField.scss';
 
 export interface TextFieldProps {
   name: string;
-  label: string;
+  label?: string;
   value: string;
   placeholder?: string;
   required?: boolean;

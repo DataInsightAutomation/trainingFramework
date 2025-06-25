@@ -11,6 +11,8 @@
     "@chatscope/chat-ui-kit-styles": "^1.4.0",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@mui/material": "^5.15.5",
     "@reduxjs/toolkit": "^1.8.3",
@@ -133,6 +135,8 @@
     "babel-loader": "^9.2.1",
     "babel-plugin-module-resolver": "^5.0.2",
     "css-loader": "^7.1.2",
+    "date-fns": "^2.29.3",
+    "glob": "^10.3.10",
     "jsdoc": "^3.6.7",
     "raw-loader": "^4.0.2",
     "react-app-rewired": "^2.2.1",
@@ -143,9 +147,7 @@
     "svg-react-loader": "^0.4.6",
     "svg-sprite-loader": "^6.0.11",
     "svgo-loader": "^4.0.0",
-    "tsconfig-paths": "^4.2.0",
-    "date-fns": "^2.29.3",
-    "glob": "^10.3.10"
+    "tsconfig-paths": "^4.2.0"
   },
   "imports": {
     "#*": "./src/*",

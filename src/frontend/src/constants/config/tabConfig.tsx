@@ -1,6 +1,7 @@
 import ExportWithLayout from "#components/custom/export/Export";
 import EvaluateWithLayout from "../../components/custom/evaluate/Evaluate";
 import TrainWithLayout from "../../components/custom/train/Train";
+import InferenceWithLayout from "../../components/custom/inference/Inference"
 
 export interface TabItem {
   key: string;
@@ -32,7 +33,7 @@ export const tabConfig: TabItem[] = [
     key: "inference",
     label: "Inference",
     icon: "bi bi-lightning", // More appropriate icon
-    component: () => <div>Inference</div> // Placeholder component
+    component: InferenceWithLayout // Placeholder component
   }
   // Add more tabs easily by adding to this array
 ];

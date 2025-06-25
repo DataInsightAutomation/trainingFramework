@@ -1,0 +1,44 @@
+.inference-tabs {
+  display: flex;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #ddd;
+
+  &.dark-theme {
+    border-bottom: 1px solid #444;
+  }
+}
+
+.inference-tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-weight: 500;
+
+  &.active {
+    color: #0078d4;
+    border-bottom: 2px solid #0078d4;
+  }
+
+  &.inactive {
+    color: #666;
+    &:hover {
+      color: #0078d4;
+      background-color: rgba(0, 120, 212, 0.05);
+    }
+  }
+
+  .dark-theme &.active {
+    color: #4cc2ff;
+    border-bottom: 2px solid #4cc2ff;
+  }
+
+  .dark-theme &.inactive {
+    color: #aaa;
+    &:hover {
+      color: #4cc2ff;
+      background-color: rgba(76, 194, 255, 0.1);
+    }
+  }
+}
+
+// Add necessary imports for font-awesome in your main entry file or index.html

@@ -56,7 +56,7 @@ const ModelConfigLayout: React.FC<ModelConfigLayoutProps> = ({
   };
   
   return (
-    <div className="model-config-container">
+    <div className="model-config-container" style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <OptionsToggle
         showAdvanced={showAdvanced}
         onToggleAdvanced={handleToggleAdvanced}
@@ -76,7 +76,9 @@ const ModelConfigLayout: React.FC<ModelConfigLayoutProps> = ({
         searchQuery, 
         setSearchQuery 
       }}>
-        {children}
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </div>
       </ModelConfigContext.Provider>
     </div>
   );
