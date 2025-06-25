@@ -2,7 +2,7 @@
 
 // Get the API base URL from environment or use a default
 // const API_BASE_URL = 'http://localhost:8000';
-const API_BASE_URL = 'http://localhost:8001';
+export const API_BASE_URL = 'http://localhost:8001';
 
 // Ensure API base URL is properly formatted
 // const getFormattedBaseUrl = () => {
@@ -48,4 +48,6 @@ export const EndPoints = {
   // For the curl preview
   getPreviewCurlCommand: `${BASE_URL}/v1/train`,
   evaluate: `${BASE_URL}/v1/evaluate`,
+
+  chat: `${BASE_URL}/chat`
 };

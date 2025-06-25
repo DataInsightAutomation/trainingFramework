@@ -6,6 +6,8 @@ import { DropDown } from '#components/core/field/dropdown/Dropdown';
 import { translations } from './inference';
 import './Chat.scss';
 
+import {API_BASE_URL} from "#constants/endpoint"
+
 // Define template options
 const TEMPLATES = [
   { value: 'llama3', label: 'templateLlama3' },
@@ -359,8 +361,8 @@ const Chat = () => {
   
   // Model configuration
   const [modelConfig, setModelConfig] = useState({
-    model_name_or_path: 'meta-llama/Meta-Llama-3-8B-Instruct',
-    adapter_name_or_path: 'saves/llama3-8b/lora/sft',
+    model_name_or_path: 'meta-llama/Llama-3.2-1B-Instruct',
+    adapter_name_or_path: 'saves/Llama-3.2-1B-Instruct/supervised/lora/sft',
     template: 'llama3',
     finetuning_type: 'lora',
     infer_backend: 'huggingface',
@@ -371,6 +373,11 @@ const Chat = () => {
     vllm_config: ''
   });
   
+  // Add sessionId state
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const handleNewSession = (() => {
+    setSessionId("")
+  })
   // Handle feedback on messages
   const handleMessageFeedback = useCallback((messageId, feedbackType) => {
     console.log(`Feedback for message ${messageId}: ${feedbackType}`);
@@ -565,20 +572,110 @@ const Chat = () => {
     }
   }, []);
   
+  // Send payload to backend /chat endpoint (supports streaming response)
+  const sendToBackend = useCallback(async (payload: any) => {
+    try {
+      // Attach session_id if present
+      const payloadWithSession = sessionId ? { ...payload, session_id: sessionId } : payload;
+
+      const resp = await fetch(`${API_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadWithSession)
+      });
+
+      // --- Get session_id from response header if present ---
+      // With Access-Control-Expose-Headers set, this will work in all browsers:
+      const sessionHeader = resp.headers.get('x-session-id');
+      if (sessionHeader && sessionHeader !== sessionId) {
+        setSessionId(sessionHeader);
+      }
+      // ------------------------------------------------------
+
+      if (!resp.body) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.isStreaming
+              ? {
+                  ...m,
+                  content: 'Error: No streaming response from backend.',
+                  isStreaming: false,
+                  containsMarkdown: false
+                }
+              : m
+          )
+        );
+        setIsStreaming(false);
+        return;
+      }
+
+      // Read the stream and update the assistant message as chunks arrive
+      const reader = resp.body.getReader();
+      let result = '';
+      setIsStreaming(true);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = new TextDecoder().decode(value);
+        result += chunk;
+        setMessages(prev =>
+          prev.map(m =>
+            m.isStreaming
+              ? {
+                  ...m,
+                  content: result,
+                  containsMarkdown: containsMarkdown(result)
+                }
+              : m
+          )
+        );
+      }
+
+      setMessages(prev =>
+        prev.map(m =>
+          m.isStreaming
+            ? {
+                ...m,
+                content: result,
+                isStreaming: false,
+                containsMarkdown: containsMarkdown(result)
+              }
+            : m
+        )
+      );
+      setIsStreaming(false);
+    } catch (err) {
+      console.error('Backend error:', err);
+      setIsStreaming(false);
+      setMessages(prev =>
+        prev.map(m =>
+          m.isStreaming
+            ? {
+                ...m,
+                content: 'Error: Unable to get response from backend.',
+                isStreaming: false,
+                containsMarkdown: false
+              }
+            : m
+        )
+      );
+    }
+  }, [sessionId]);
+
   // Send a message with example response - simplify to remove conversation management
   const sendMessage = useCallback(() => {
     if (!inputText.trim() || isStreaming) return;
-    
-    // Reset the scroll state when user sends a message
+
     setUserHasScrolled(false);
-    
+
     const userMessage: Message = {
       id: generateId(),
       content: inputText,
       role: 'user',
       timestamp: new Date()
     };
-    
+
     const assistantMessage: Message = {
       id: generateId(),
       content: '',
@@ -587,10 +684,41 @@ const Chat = () => {
       isStreaming: true,
       containsMarkdown: true
     };
-    
+
     setMessages(prev => [...prev, userMessage, assistantMessage]);
     setInputText('');
-    
+
+    // --- Prepare payload for backend ---
+    const {
+      vllm_maxlen,
+      vllm_gpu_util,
+      vllm_enforce_eager,
+      vllm_max_lora_rank,
+      vllm_config,
+      infer_backend,
+      ...baseConfig
+    } = modelConfig;
+
+    let payload: Record<string, any> = {
+      ...baseConfig,
+      infer_backend,
+      input: inputText
+    };
+
+    if (infer_backend === 'vllm') {
+      if (vllm_maxlen && vllm_maxlen.trim() !== '') payload.vllm_maxlen = vllm_maxlen;
+      if (vllm_gpu_util && vllm_gpu_util.trim() !== '') payload.vllm_gpu_util = vllm_gpu_util;
+      if (vllm_max_lora_rank && vllm_max_lora_rank.trim() !== '') payload.vllm_max_lora_rank = vllm_max_lora_rank;
+      if (vllm_enforce_eager) payload.vllm_enforce_eager = vllm_enforce_eager;
+      if (vllm_config && vllm_config.trim() !== '') payload.vllm_config = vllm_config;
+    }
+    // For now, just log it
+    console.log('Prepared payload:', payload);
+
+    // --- Send to backend (async, non-blocking) ---
+    sendToBackend(payload);
+    // ---------------------------------------------
+
     // Example responses with markdown for demonstration
     const markdownResponses = [
       // Response with basic formatting
@@ -628,10 +756,10 @@ def process_data(input_text, model_config):
     print(f"Processing with {model_path} using {template} template")
     
     # Process the input (simplified example)
-    results['output'] = f"Processed: {input_text[:50]}..."
-    results['model_used'] = model_path
+    results['output'] = f"Processed: {input_text[:50]}...";
+    results['model_used'] = model_path;
     
-    return results
+    return results;
 
 # Example usage
 config = {
@@ -700,10 +828,9 @@ The ${modelConfig.model_name_or_path} model shows significant improvements acros
     
     // Pick a random example
     const responseText = markdownResponses[Math.floor(Math.random() * markdownResponses.length)];
-    
     // Start streaming simulation
-    simulateStreamingResponse(responseText, 30);
-  }, [inputText, isStreaming, generateId, simulateStreamingResponse, messages]);
+    // simulateStreamingResponse(responseText, 30);
+  }, [inputText, isStreaming, generateId, simulateStreamingResponse, messages, modelConfig, sendToBackend]);
   
   // Handle enter key press - memoize
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -948,10 +1075,20 @@ The ${modelConfig.model_name_or_path} model shows significant improvements acros
       >
         <i className="bi bi-gear"></i>
       </Button>
-      
+
+      {/* New Session Button */}
+      <Button
+        className="new-session-button"
+        variant="outline-primary"
+        onClick={handleNewSession}
+        style={{ position: 'absolute', top: 10, right: 60, zIndex: 2 }}
+      >
+        <i className="bi bi-plus-circle"></i> New Chat
+      </Button>
+
       {/* Model Configuration Sidebar - now memoized */}
       {configSidebar}
-      
+
       {/* Main Chat Container with simplified layout */}
       <div className="chat-main-container">
         <div className={`chat-container ${showConfig ? 'with-sidebar' : ''}`}>
