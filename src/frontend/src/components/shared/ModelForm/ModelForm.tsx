@@ -320,9 +320,26 @@ const ModelForm = ({
                         <Form.Group as={Col} md={colSpan} controlId={field.type === 'checkbox' ? undefined : field.name} key={fieldKey}>
                             {/* Only show label at Form.Group level if not checkbox and not hidden */}
                             {field.type !== 'checkbox' && !field.hideLabel && (
-                                <Form.Label>
-                                    {fieldLabel}
+                                <Form.Label className="d-flex align-items-center">
+                                    <span>{fieldLabel}</span>
                                     {field.required && <span className="text-danger"> *</span>}
+                                    
+                                    {/* Add tooltip icon if description exists */}
+                                    {field.description && (
+                                        <div className={`ms-2 description-tooltip position-relative ${
+                                            field.required && (!formData[field.name] || formData[field.name] === '') 
+                                            ? 'required-missing' : ''}`}>
+                                            <i className={`bi ${!t[field.description] ? 'bi-exclamation-triangle text-warning' : 'bi-info-circle text-muted'}`}
+                                               style={{ fontSize: '0.9rem', cursor: 'help' }}></i>
+                                            <div className="tooltip-content">
+                                                {t[field.description] || 
+                                                  <div className="missing-translation">
+                                                    <span className="text-warning">Missing translation:</span> {field.description}
+                                                  </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    )}
                                 </Form.Label>
                             )}
 
@@ -334,18 +351,19 @@ const ModelForm = ({
                                     name={field.name}
                                     label={t[`${field.name}Label`] || field.name}
                                     value={formData[field.name] || field.defaultValue || 'false'}
-                                    onChange={onChange}
+                                    onChange={onChange ?? (() => {})}
                                     required={field.required !== false}
                                     validated={validated}
                                     error={t[`${field.name}Error`]}
                                     theme={theme}
                                     disabled={field.disabled}
+                                    descriptionText={field.description ? t[field.description] : undefined}
                                 />
                             ) : field.type === 'toggle' ? (
                                 <ToggleField
                                     name={field.name}
                                     value={formData[field.name] || field.defaultValue || 'false'}
-                                    onChange={onChange}
+                                    onChange={onChange ?? (() => {})}
                                     required={field.required !== false}
                                     validated={validated}
                                     error={t[`${field.name}Error`]}
@@ -361,7 +379,7 @@ const ModelForm = ({
                                         value: option.value,
                                         label: option.directLabel || (option.label ? t[option.label] : option.value)
                                     })) || []}
-                                    onChange={onChange}
+                                    onChange={onChange ?? (() => {})}
                                     required={field.required !== false}
                                     validated={validated}
                                     error={t[`${field.name}Error`]}
@@ -377,7 +395,7 @@ const ModelForm = ({
                                         value: option.value,
                                         label: option.directLabel || (option.label ? t[option.label] : option.value)
                                     })) || []}
-                                    onChange={onChange}
+                                    onChange={onChange ?? (() => {})}
                                     required={field.required !== false}
                                     validated={validated}
                                     error={t[`${field.name}Error`]}
@@ -388,14 +406,14 @@ const ModelForm = ({
                                     createMessage={field.createMessage ? t[field.createMessage] : field.createMessage}
                                     createPlaceholder={field.createPlaceholder ? t[field.createPlaceholder] : field.createPlaceholder}
                                     customOptionPrefix={field.customOptionPrefix}
-                                    description={field.description ? t[field.description] : field.description}
+                                    description={field.description ? t[field.description] : ""}  // Use the translated description
                                 />
                             ) : field.type === 'select' ? (
                                 <DropDown
                                     required={field.required !== false}
                                     name={field.name}
                                     value={formData[field.name] || field.defaultValue || ''}
-                                    onChange={onChange}
+                                    onChange={onChange ?? (() => {})}
                                     options={[
                                         { value: '', label: t[`select${field.name.charAt(0).toUpperCase() + field.name.slice(1)}`] },
                                         ...(field.options?.map(option => ({
@@ -432,6 +450,7 @@ const ModelForm = ({
                                         required={field.required !== false}
                                     />
                                     <Form.Text className="text-muted">
+                                        {/* Only show range info, not the description */}
                                         {field.min !== undefined && field.max !== undefined ?
                                             `Valid range: ${field.min} - ${field.max}` : ''}
                                     </Form.Text>
@@ -460,7 +479,7 @@ const ModelForm = ({
                                     </div>
                                 </div>
                             ) : (
-                                // Text field without label (since we handle it above)
+                                // Text field
                                 <TextField
                                     name={field.name}
                                     label="" // Empty label since we show it in the Form.Group
@@ -470,8 +489,9 @@ const ModelForm = ({
                                     validated={validated}
                                     error={t[`${field.name}Error`]}
                                     theme={theme}
-                                    onChange={onChange}
+                                    onChange={onChange ?? (() => {})}
                                     noLabel={true} // Add a prop to hide the label in the TextField component
+                                    description="" // Don't show description text in the component
                                 />
                             )}
                         </Form.Group>

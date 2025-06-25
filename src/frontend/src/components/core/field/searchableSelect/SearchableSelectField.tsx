@@ -203,12 +203,6 @@ const SearchableSelectField: React.FC<SearchableSelectProps> = ({
         )}
       </InputGroup>
       
-      {description && (
-        <Form.Text className="text-muted">
-          {description}
-        </Form.Text>
-      )}
-      
       {validated && required && !value && (
         <div className="invalid-feedback d-block">
           {error || `Please select a ${name}`}
@@ -244,7 +238,6 @@ const SearchableSelectField: React.FC<SearchableSelectProps> = ({
               >
                 <i className="bi bi-plus-circle me-2"></i>
                 <strong>{createMessage.replace('{input}', searchTerm)}</strong>
-                <div className="text-muted small mt-1">Press Enter to confirm</div>
               </ListGroup.Item>
             )}
           </ListGroup>

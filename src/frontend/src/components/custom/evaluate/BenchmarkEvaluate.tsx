@@ -20,35 +20,34 @@ const benchmarkEvalFields = [
     customOptionPrefix: 'custom',
     description: 'modelNameDescription',
     required: true,
-    label: 'modelNameLabel'
   },
   {
     name: 'task',
-    type: 'select',
-    options: [
-      { value: 'mmlu_test', directLabel: 'MMLU (Massive Multitask Language Understanding)' },
-      { value: 'ceval_validation', directLabel: 'CEval (Chinese Evaluation)' },
-      { value: 'cmmlu_test', directLabel: 'CMMLU (Chinese MMLU)' },
-      { value: 'mmlu-custom-small_test', directLabel: 'MMLU Custom Small (Testing)' }
-    ],
-    defaultValue: 'mmlu_test',
+    type: 'text',
     required: true,
     description: 'taskDescription',
-    label: 'taskLabel'
+    placeholder: 'e.g., mmlu, ceval, or custom dataset name',
+  },
+  {
+    name: 'datasetSubset',
+    type: 'text',
+    required: true,
+    description: 'datasetSubsetDescription',
+    placeholder: 'dataset module, value, default:default',
   },
   {
     name: 'task_dir',
     type: 'text',
+    required: true,
+    placeholder: 'e.g., evaluation or huggingface/repo',
     defaultValue: 'evaluation',
     description: 'taskDirDescription',
-    label: 'taskDirLabel'
   },
   {
     name: 'save_dir',
     type: 'text',
     description: 'saveDirDescription',
     placeholder: 'e.g., mmlu_results',
-    label: 'saveDirLabel'
   },
   {
     name: 'template',
@@ -61,7 +60,14 @@ const benchmarkEvalFields = [
     ],
     defaultValue: 'fewshot',
     description: 'templateDescription',
-    label: 'templateLabel'
+  },
+  {
+    name: 'token',
+    type: 'text',
+    description: 'tokenDescription',
+    required: false,
+    colSpan: 6,
+    label: 'tokenLabel'
   }
 ];
 
@@ -209,13 +215,16 @@ const BenchmarkEvaluate = () => {
   };
 
   const prepareRequestData = (data: Record<string, string>, isAdvanced: boolean) => {
+    // Combine dataset name and split to create the task parameter
+    
     const requestData: any = {
       evaluation_type: 'benchmark',
       model_name_or_path: data.modelName,
-      task: data.task,
+      task: data.task + data.datasetSubset || 'default', // Ensure task is formatted correctly
       task_dir: data.task_dir,
       save_dir: data.save_dir || generateBenchmarkSaveDir(data),
-      template: data.template
+      template: data.template,
+      hub_token: data.token,
     };
 
     // Add other benchmark-specific fields if in advanced mode
@@ -232,10 +241,10 @@ const BenchmarkEvaluate = () => {
 
   const generateBenchmarkSaveDir = (data: Record<string, string>) => {
     const modelShortName = data.modelName.split('/').pop() || 'model';
-    const task = data.task || 'benchmark';
+    const dataset = data.task || 'benchmark';
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
     
-    return `${task}_results_${modelShortName}_${timestamp}`;
+    return `${dataset}_results_${modelShortName}_${timestamp}`;
   };
 
   // Form submission handler
@@ -264,7 +273,17 @@ const BenchmarkEvaluate = () => {
         }
         return requestData;
       };
+      
+      // Format the task value correctly for the backend
+      // The backend expects task to be in format: dataset_split
+      // For example: mmlu_test, mmlu-custom-small_test
       let requestData = prepareRequestData(data, showAdvanced);
+      
+      // Make sure the task name is formatted correctly with _test suffix
+      if (!requestData.task.includes('_')) {
+        requestData.task = `${requestData.task}_test`;
+      }
+      
       requestData = processModelInfo(data, requestData);
 
       console.log('Sending benchmark request with data:', requestData);

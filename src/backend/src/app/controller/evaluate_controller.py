@@ -169,6 +169,9 @@ async def _run_benchmark_task(job_id: str, params: dict):
         logger.info(f"Benchmark job {job_id} completed successfully")
         
     except Exception as e:
+        import traceback
+
+        traceback.print_exc()
         logger.error(f"Error in benchmark job {job_id}: {str(e)}")
         job_status[job_id]["status"] = "FAILED"
         job_status[job_id]["message"] = f"Error: {str(e)}"
@@ -186,6 +189,7 @@ async def evaluate_model(request: Union[TrainingEvaluateRequest, BenchmarkEvalua
         # Convert Pydantic model to dict for consistency with existing code
         request_dict = request.dict()
         evaluation_type = request.evaluation_type
+        del request_dict["evaluation_type"]  # Remove evaluation_type from params
         model_name = request.model_name_or_path
         
         logger.info(f"Received {evaluation_type} evaluation request for model: {model_name}")
@@ -223,7 +227,6 @@ async def handle_training_evaluation(request: dict, background_tasks: Background
         "dataset": ','.join(processed_datasets),
         "has_custom_datasets": custom_datasets_found,
         "do_eval": True,
-        "evaluation_type": "training"
     }
     
     # Add output directory if specified, otherwise generate one
@@ -288,7 +291,7 @@ async def handle_benchmark_evaluation(request: dict, background_tasks: Backgroun
         "task": task,
         "task_dir": request.get("task_dir", "evaluation"),
         "template": request.get("template", "fewshot"),
-        "evaluation_type": "benchmark"
+        # "evaluation_type": "benchmark"
     }
     
     # Add save directory if specified, otherwise generate one
@@ -301,7 +304,6 @@ async def handle_benchmark_evaluation(request: dict, background_tasks: Backgroun
     
     # Add token if provided
     if request.get("hub_token"):
-        full_params["hub_token"] = request["hub_token"]
         os.environ["HF_TOKEN"] = request["hub_token"]
         os.environ["HUGGING_FACE_HUB_TOKEN"] = request["hub_token"]
         logger.info("Token provided for benchmark (set in environment variables)")

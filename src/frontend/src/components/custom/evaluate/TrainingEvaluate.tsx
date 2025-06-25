@@ -123,20 +123,20 @@ const trainingAdvancedSections = {
   datasetConfig: {
     title: 'datasetConfigSection',
     fields: [
-      { name: 'dataset_dir', type: 'text', defaultValue: 'data', label: 'dataset_dirLabel' },
-      { name: 'cutoff_len', type: 'number', min: 128, max: 8192, step: 32, defaultValue: '1024', label: 'cutoff_lenLabel' },
-      { name: 'max_samples', type: 'number', min: 100, max: 100000, step: 100, defaultValue: '10000', label: 'max_samplesLabel' },
-      { name: 'preprocessing_num_workers', type: 'number', min: 1, max: 32, step: 1, defaultValue: '16', label: 'preprocessing_num_workersLabel' },
+      { name: 'dataset_dir', type: 'text', defaultValue: 'data'},
+      { name: 'cutoff_len', type: 'number', min: 128, max: 8192, step: 32, defaultValue: '1024'},
+      { name: 'max_samples', type: 'number', min: 100, max: 100000, step: 100, defaultValue: '10000'},
+      { name: 'preprocessing_num_workers', type: 'number', min: 1, max: 32, step: 1, defaultValue: '16'},
     ]
   },
   evaluationConfig: {
     title: 'evaluationConfigSection',
     fields: [
-      { name: 'per_device_eval_batch_size', type: 'number', min: 1, max: 128, step: 1, defaultValue: '8', label: 'per_device_eval_batch_sizeLabel' },
-      { name: 'predict_with_generate', type: 'toggle', defaultValue: 'true', label: 'predict_with_generateLabel' },
-      { name: 'max_new_tokens', type: 'number', min: 1, max: 2048, step: 1, defaultValue: '512', label: 'max_new_tokensLabel' },
-      { name: 'top_p', type: 'range', min: 0.1, max: 1.0, step: 0.05, defaultValue: '0.7', label: 'top_pLabel' },
-      { name: 'temperature', type: 'range', min: 0.1, max: 2.0, step: 0.05, defaultValue: '0.95', label: 'temperatureLabel' },
+      { name: 'per_device_eval_batch_size', type: 'number', min: 1, max: 128, step: 1, defaultValue: '8', description: 'per_device_eval_batch_sizeDescription' },
+      { name: 'predict_with_generate', type: 'toggle', defaultValue: 'true', description: 'predict_with_generateDescription' },
+      { name: 'max_new_tokens', type: 'number', min: 1, max: 2048, step: 1, defaultValue: '512'},
+      { name: 'top_p', type: 'range', min: 0.1, max: 1.0, step: 0.05, defaultValue: '0.7'},
+      { name: 'temperature', type: 'range', min: 0.1, max: 2.0, step: 0.05, defaultValue: '0.95'},
     ]
   }
 };

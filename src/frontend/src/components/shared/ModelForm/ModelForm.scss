@@ -604,4 +604,106 @@
     background-color: #ffc107;
     color: #212529;
   }
+  
+  // Refined tooltip styles
+  .description-tooltip {
+    display: inline-block;
+    
+    .tooltip-content {
+      display: none;
+      position: absolute;
+      top: -5px;
+      left: 20px;
+      transform: translateY(-100%);
+      background-color: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      width: 250px;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: opacity 0.15s ease-in-out;
+      opacity: 0;
+      
+      &:after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 10px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+      }
+      
+      .tooltip-warning {
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        background-color: rgba(220, 53, 69, 0.2);
+        border-left: 3px solid #dc3545;
+        color: #fff;
+        font-weight: 500;
+      }
+      
+      .missing-translation {
+        padding: 4px 8px;
+        background-color: rgba(255, 193, 7, 0.2);
+        border-left: 3px solid #ffc107;
+        font-style: italic;
+        margin-top: 5px;
+        
+        .text-warning {
+          color: #ffc107;
+          font-weight: bold;
+        }
+      }
+    }
+    
+    &:hover .tooltip-content {
+      display: block;
+      opacity: 1;
+    }
+    
+    // Required field with missing value
+    &.required-missing {
+      i {
+        animation: pulse-red 2s infinite;
+      }
+    }
+  }
+  
+  @keyframes pulse-red {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+    70% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+  }
+  
+  // Dark theme adjustments
+  .dark-theme {
+    .description-tooltip {
+      .tooltip-content {
+        background-color: #1a1a1a;
+        color: #f8f9fa;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        
+        &:after {
+          border-color: #1a1a1a transparent transparent transparent;
+        }
+        
+        .tooltip-warning {
+          background-color: rgba(220, 53, 69, 0.2);
+          color: #f8f9fa;
+        }
+      }
+    }
+  }
 }

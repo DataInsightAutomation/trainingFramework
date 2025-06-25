@@ -14,6 +14,7 @@ export interface TextFieldProps {
   theme: Theme;
   onChange: (name: string, value: string) => void;
   noLabel?: boolean;
+  description?: string; // Add description prop
 }
 
 const TextField: React.FC<TextFieldProps> = ({
@@ -27,6 +28,7 @@ const TextField: React.FC<TextFieldProps> = ({
   theme,
   onChange,
   noLabel = false,
+  description, // Include description in destructuring
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(name, e.target.value);

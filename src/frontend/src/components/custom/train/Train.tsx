@@ -34,12 +34,12 @@ const advancedFieldSections = {
           { value: 'full', directLabel: 'Full Fine-tuning - Uses more resources' },
           { value: 'freeze', directLabel: 'Freeze - Only train specific layers' }
         ],
-        description: 'Choose how model parameters will be updated. LoRA is usually the best choice.',
+        description: 'finetuningTypeDescription',  // Changed to translation key
         defaultValue: 'lora'
       },
       // Add lora_rank back to advanced settings
-      { name: 'lora_rank', type: 'number', min: 1, max: 64, step: 1, defaultValue: '8', description: 'Higher rank = more parameters = better quality but slower training' },
-      { name: 'lora_target', type: 'text', defaultValue: 'all', description: 'Which model components to apply LoRA to (default: all)' },
+      { name: 'lora_rank', type: 'number', min: 1, max: 64, step: 1, defaultValue: '8', description: 'loraRankDescription' },  // Changed to translation key
+      { name: 'lora_target', type: 'text', defaultValue: 'all', description: 'loraTargetDescription' },  // Changed to translation key
       {
         name: 'template', type: 'select', options: [
           { value: 'llama3', directLabel: 'Llama 3' },
@@ -112,13 +112,15 @@ const basicFields = [
   {
     name: 'modelPath',
     type: 'text',
-    required: false // Make this field optional
+    required: false, // Make this field optional
+    description: 'modelPathDescription', // Add a description explaining custom model input
   },
   {
     name: 'dataset',
     type: 'multiSelect',
     options: [], // Will be populated from API
-    required: true
+    required: true,
+    description: 'datasetDescription', // Add a description explaining dataset input
   },
   // Training method and stage will be positioned right after dataset
   {
@@ -130,9 +132,8 @@ const basicFields = [
       { value: 'distillation', label: 'distillation', directLabel: 'Knowledge Distillation' }
     ],
     colSpan: 6, // Half width
-    description: 'trainMethodDescription', // Add a description field
+    description: 'trainMethodDescription', 
     required: true, // Make this field required
-
   },
   {
     name: 'token',
@@ -379,7 +380,7 @@ const Train = () => {
           name: 'stage',
           type: 'select',
           options: getStageOptions(method),
-          description: 'Select which training stage to perform.',
+          description: 'stageDescription',  // Changed to translation key
           required: true, // Mark as required to show asterisk
           defaultValue: method === 'rlhf' ? 'rm' : 'sft',
           colSpan: 6 // Half width to align with trainMethod
@@ -390,12 +391,12 @@ const Train = () => {
           name: 'finetuning_type',
           type: 'select',
           options: getFinetuningTypeOptions(),
-          description: 'Choose how model parameters will be updated.',
+          description: 'finetuningTypeDescription',  // Changed to translation key
           defaultValue: formData.finetuning_type || 'lora',
           colSpan: 6,
           required: true // Make this field required
         });
-
+        
         // Find token field and move it after finetuning_type if needed
         interface FormFieldOption {
           value: string;

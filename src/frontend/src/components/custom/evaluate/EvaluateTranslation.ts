@@ -72,7 +72,9 @@ export const translations = {
     
     // Evaluation config fields
     per_device_eval_batch_sizeLabel: 'Eval Batch Size',
+    per_device_eval_batch_sizeDescription: 'Batch size for evaluation per device',
     predict_with_generateLabel: 'Predict with Generate',
+    predict_with_generateDescription: 'Whether to use generate for prediction, will use more memory, if set to false, relate with eval batch size',
     max_new_tokensLabel: 'Max New Tokens',
     top_pLabel: 'Top P',
     temperatureLabel: 'Temperature',
@@ -90,10 +92,9 @@ export const translations = {
     benchmarkEvaluation: "Benchmark Evaluation",
     
     // Benchmark form fields
-    taskLabel: "Benchmark Task",
-    taskDescription: "Select the benchmark task to evaluate the model against",
+    taskLabel: "Dataset folder Name",
+    taskDescription: "Dataset folder name to use for model evaluation",
     taskDirLabel: "Task Directory",
-    taskDirDescription: "Directory containing the evaluation datasets",
     saveDirLabel: "Save Directory",
     saveDirDescription: "Directory to save evaluation results",
     templateDescription: "Prompt template to use for evaluation",
@@ -119,7 +120,18 @@ export const translations = {
     
     // Button text
     startBenchmark: "Start Benchmark Evaluation",
-    benchmarkModel: "Benchmark Model"
+    benchmarkModel: "Benchmark Model",
+    
+    // Benchmark form fields with updated terminology
+    datasetFolderLabel: "Dataset Name",
+    datasetFolderDescription: "Name of the benchmark dataset folder to use",
+    repositoryPathLabel: "Repository Path",
+    taskDirDescription: "Path to dataset repository or local directory",
+    
+    // Dataset subset field translations
+
+    datasetSubsetLabel: "Dataset Module Subset Name",
+    datasetSubsetDescription: "Which portion of the dataset to use (e.g., test, validation, default)",
   },
   zh: {
     evaluateModel: '评估模型',
@@ -214,7 +226,6 @@ export const translations = {
     taskLabel: "基准测试任务",
     taskDescription: "选择用于评估模型的基准测试任务",
     taskDirLabel: "任务目录",
-    taskDirDescription: "包含评估数据集的目录",
     saveDirLabel: "保存目录",
     saveDirDescription: "保存评估结果的目录",
     templateDescription: "用于评估的提示模板",
@@ -240,6 +251,18 @@ export const translations = {
     
     // Button text
     startBenchmark: "开始基准测试评估",
-    benchmarkModel: "基准测试模型"
+    benchmarkModel: "基准测试模型",
+    
+    // Benchmark form fields with updated terminology
+    datasetFolderLabel: "数据集名称",
+    datasetFolderDescription: "要使用的基准测试数据集文件夹名称",
+    datasetSplitLabel: "数据集分割",
+    datasetSplitDescription: "要使用的数据集部分（默认：test）",
+    repositoryPathLabel: "仓库路径",
+    taskDirDescription: "数据集仓库或本地目录的路径",
+    
+    // Dataset subset field translations
+    datasetSubsetLabel: "数据集分割",
+    datasetSubsetDescription: "要使用的数据集部分（例如：test, validation, default）",
   }
 } as const;
