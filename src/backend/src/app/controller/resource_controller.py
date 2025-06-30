@@ -30,8 +30,8 @@ AVAILABLE_MODELS = [
 # Mock data for datasets - in production, this would come from a database or file system
 AVAILABLE_DATASETS = [
     # Dataset(id="alpaca-cleaned", name="Alpaca (Cleaned)", description="Cleaned version of the Stanford Alpaca dataset", category="Instruction"),
-    Dataset(id="custom_test_hugginface_alpaca_private_easydata", name="Easydata Alpaca private Easydata", description="Custom test dataset based on Huggingface Alpaca mini", category="Instruction"),
-    Dataset(id="custom_test_hugginface_alpaca_public_easydata", name="Easydata Alpaca Public Easydata", description="Custom test dataset based on a smaller version of Alpaca", category="Instruction"),
+    Dataset(id="easydata2022/private_alpaca_mini_slice", name="Easydata Alpaca private Easydata", description="Custom test dataset based on Huggingface Alpaca mini", category="Instruction"),
+    Dataset(id="easydata2022/public_alpaca_mini_slice", name="Easydata Alpaca Public Easydata", description="Custom test dataset based on a smaller version of Alpaca", category="Instruction"),
     # Dataset(id="alpaca-gpt4", name="Alpaca-GPT4", description="GPT-4 generated Alpaca dataset", category="Instruction"),
     # Dataset(id="dolly-15k", name="Dolly 15k", description="Databricks' Dolly 15k instruction dataset", category="Instruction"),
     # Dataset(id="oasst1", name="Open Assistant", description="Open Assistant dataset", category="Conversation"),

@@ -8,6 +8,7 @@ from ..api.router import job_status
 import logging as logger
 from app.services.evaluate.model_evaluation import simulate_evaluation as run_evaluation_job
 from app.services.evaluate.benchmark_evaluation import simulate_benchmark as run_benchmark_job
+from app.util.util import process_datasets
 
 router = APIRouter(
     prefix="",
@@ -63,61 +64,6 @@ class BenchmarkEvaluateRequest(EvaluateBaseRequest):
 class EvaluateResponse(BaseModel):
     job_id: str
     status: str
-
-def process_datasets(datasets: list[str]) -> tuple[list[str], bool, list[dict]]:
-    """
-    Process dataset string to handle custom datasets and create dataset details.
-    
-    Args:
-        dataset: Dataset name, possibly with 'custom:' prefix
-        
-    Returns:
-        processed_datasets: List of cleaned dataset names
-        custom_datasets_found: Boolean indicating if custom datasets were found
-        dataset_details: List of dictionaries with detailed dataset information
-    """
-    processed_datasets = []
-    custom_datasets_found = False
-    dataset_details = []
-    
-    if not datasets:
-        return processed_datasets, custom_datasets_found, dataset_details
-    
-    for dataset in datasets:
-        # Handle custom dataset prefix
-        if dataset.startswith('custom:'):
-            custom_dataset = dataset[7:]  # Remove 'custom:' prefix
-            custom_datasets_found = True
-            logger.info(f"Detected custom dataset: {custom_dataset}")
-            processed_datasets.append(custom_dataset)
-        else:
-            processed_datasets.append(dataset)
-    
-    # Create detailed dataset information
-    for ds in processed_datasets:
-        ds_info = {"name": ds}
-        
-        # Check if it's a HuggingFace-style dataset path
-        if '/' in ds and not os.path.exists(ds):
-            ds_info["type"] = "huggingface"
-            ds_info["username"] = ds.split('/')[0]
-            ds_info["dataset_name"] = ds.split('/')[1] if len(ds.split('/')) > 1 else ""
-            logger.info(f"HuggingFace dataset: {ds} (user: {ds_info['username']})")
-        
-        # Check if it's a local file path
-        elif os.path.exists(ds):
-            ds_info["type"] = "local"
-            ds_info["path"] = os.path.abspath(ds)
-            logger.info(f"Local dataset: {ds}")
-        
-        # Otherwise treat as a named dataset
-        else:
-            ds_info["type"] = "named"
-            logger.info(f"Named dataset: {ds}")
-        
-        dataset_details.append(ds_info)
-    
-    return processed_datasets, custom_datasets_found, dataset_details
 
 async def _run_evaluation_task(job_id: str, params: dict):
     """Background task to run evaluation and update job status."""

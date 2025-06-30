@@ -32,7 +32,7 @@ class ChatRequest(BaseModel):
     adapter_name_or_path: Optional[str] = None
     template: Optional[str] = None
     finetuning_type: Optional[str] = None
-    infer_backend: Literal["huggingface"]  # extend as needed
+    infer_backend: Literal["huggingface", "vllm"]  # extend as needed
     input: str
     session_id: Optional[str] = None  # <-- add session_id for tracking
 
@@ -88,10 +88,6 @@ async def chat_stream_endpoint(request: ChatRequest):
         "finetuning_type": request.finetuning_type,
         "infer_backend": request.infer_backend
     })
-    print(history,'historyhistoryhistoryhistory')
-    print(history,'historyhistoryhistoryhistory')
-    print(history,'historyhistoryhistoryhistory')
-    print(history,'historyhistoryhistoryhistory')
     async def token_generator():
         async for chunk in obj_chat_model.astream_chat(
             messages=history,

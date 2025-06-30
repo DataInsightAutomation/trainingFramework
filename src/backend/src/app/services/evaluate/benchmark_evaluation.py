@@ -1,10 +1,12 @@
 import asyncio
+from pathlib import Path
 import time
 import logging as logger
 import os
 import random
 from typing import Dict, Any
 from llamafactory.eval.evaluator import run_eval, Evaluator
+from app import EVAL_DIR
 
 
 async def simulate_benchmark(job_id: str, params: Dict[str, Any]):
@@ -23,7 +25,6 @@ async def simulate_benchmark(job_id: str, params: Dict[str, Any]):
     # Extract key parameters
     model_name = params.get('model_name_or_path')
     task = params.get('task')
-    
     
     obj_eval = Evaluator(params)
     obj_eval.eval()

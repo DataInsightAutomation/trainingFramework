@@ -6,6 +6,8 @@ from app.response.response import TrainRequest, TrainResponse
 from app.services.train.supervised_fine_tuning.supervised_fine_tuning import simulate_training as run_training_job
 from ..api.router import job_status
 from app.config.training_defaults import get_default_config
+from app.util.util import process_datasets
+
 import logging as logger
 
 router = APIRouter(
@@ -34,60 +36,6 @@ def map_train_method_from_input(train_method: str) -> str:
         raise HTTPException(status_code=400, detail=f"Unsupported train method: {train_method}")
 
 
-def process_datasets(datasets: list[str]) -> tuple[list[str], bool, list[dict]]:
-    """
-    Process dataset list to handle custom datasets and create dataset details.
-    
-    Args:
-        datasets: List of dataset names, possibly with 'custom:' prefix
-        
-    Returns:
-        processed_datasets: List of cleaned dataset names
-        custom_datasets_found: Boolean indicating if custom datasets were found
-        dataset_details: List of dictionaries with detailed dataset information
-    """
-    processed_datasets = []
-    custom_datasets_found = False
-    dataset_details = []
-    
-    if not datasets:
-        return processed_datasets, custom_datasets_found, dataset_details
-        
-    for dataset in datasets:
-        # Handle custom dataset prefix
-        if dataset.startswith('custom:'):
-            custom_dataset = dataset[7:]  # Remove 'custom:' prefix
-            custom_datasets_found = True
-            logger.info(f"Detected custom dataset: {custom_dataset}")
-            processed_datasets.append(custom_dataset)
-        else:
-            processed_datasets.append(dataset)
-    
-    # Create detailed dataset information
-    for ds in processed_datasets:
-        ds_info = {"name": ds}
-        
-        # Check if it's a HuggingFace-style dataset path
-        if '/' in ds and not os.path.exists(ds):
-            ds_info["type"] = "huggingface"
-            ds_info["username"] = ds.split('/')[0]
-            ds_info["dataset_name"] = ds.split('/')[1] if len(ds.split('/')) > 1 else ""
-            logger.info(f"HuggingFace dataset: {ds} (user: {ds_info['username']})")
-        
-        # Check if it's a local file path
-        elif os.path.exists(ds):
-            ds_info["type"] = "local"
-            ds_info["path"] = os.path.abspath(ds)
-            logger.info(f"Local dataset: {ds}")
-        
-        # Otherwise treat as a named dataset
-        else:
-            ds_info["type"] = "named"
-            logger.info(f"Named dataset: {ds}")
-        
-        dataset_details.append(ds_info)
-    
-    return processed_datasets, custom_datasets_found, dataset_details
 
 
 async def _run_training_task(job_id: str, params: dict):

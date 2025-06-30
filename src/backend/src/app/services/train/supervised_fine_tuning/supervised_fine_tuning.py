@@ -15,7 +15,6 @@ if is_ray_available():
     import ray
     from ray.train.huggingface.transformers import RayTrainReportCallback
 
-from llamafactory.data.loader import enhanced_get_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -48,29 +47,7 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         dataset_name_json = json.dumps(dataset_details) if dataset_details else None
         # Remove keys that might cause conflicts
         _clean_training_args(train_args)
-        
-        # # Set up paths for tokenized dataset
-        if dataset_name:
-            save_dir = os.path.join(os.getcwd(), '..', 'data' , "processed_datasets" + get_task_category(train_args), dataset_name.replace('/', '_'))
-            train_args['tokenized_path'] = save_dir
-        
-        # # Parse arguments and prepare for training
-        model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(train_args)
-        
-        # Use extended data arguments to control saving behavior
-        # Load tokenizer and template
-        tokenizer_module = load_tokenizer(model_args)
-        tokenizer = tokenizer_module["tokenizer"]
-        template = get_template_and_fix_tokenizer(tokenizer, data_args)
-        
-        # Set dataset information and preprocess
-        if dataset_name_json:
-            data_args.dataset = dataset_name_json
-            # Pre-process dataset
-            if 'eval_dataset' in train_args:
-                data_args.eval_dataset = data_args.dataset
-            enhanced_get_dataset(template, model_args, data_args, training_args, stage="sft", **tokenizer_module)
-        
+        train_args['dataset_dir'] = dataset_details
         # Run the training
         logger.info(f"Starting training job {job_id}")
         _run_training(train_args)
