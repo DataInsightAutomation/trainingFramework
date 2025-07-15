@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '#store/appStore';
-import { translations } from './inference';
+import { translations } from './Inference';
 import './InferenceModel.scss';
 
 // Define inference configuration interface

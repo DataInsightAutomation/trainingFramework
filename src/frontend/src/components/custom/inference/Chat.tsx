@@ -3,7 +3,7 @@ import { Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import { useAppStore } from '#store/appStore';
 import TextField from '#components/core/field/text/TextField';
 import { DropDown } from '#components/core/field/dropdown/Dropdown';
-import { translations } from './inference';
+import { translations } from './Inference';
 import './Chat.scss';
 
 import {API_BASE_URL} from "#constants/endpoint"

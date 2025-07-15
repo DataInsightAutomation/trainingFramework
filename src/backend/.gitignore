@@ -11,3 +11,4 @@ misc/alpaca_data_cleaned.json
 trainer_output
 node_modules
 offload
+cache
