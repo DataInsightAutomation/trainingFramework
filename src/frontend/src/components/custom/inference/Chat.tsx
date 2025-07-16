@@ -42,6 +42,7 @@ interface Message {
   timestamp: Date;
   isStreaming?: boolean;
   containsMarkdown?: boolean;
+  responseTime?: number; // <-- Add this property
 }
 
 // Parse markdown text into a structured format that React can render
@@ -342,8 +343,27 @@ const FeedbackButtons = memo(({ messageId, onFeedback }) => {
 
 FeedbackButtons.displayName = 'FeedbackButtons';
 
+// Add this component before the main Chat component
+interface StreamingTimerProps {
+  timer: number;
+}
+
+const StreamingTimer = memo(({ timer }: StreamingTimerProps) => (
+  <span className="ms-2" style={{ color: '#888', fontSize: '0.95em' }}>
+    {`(${timer}s)`}
+  </span>
+));
+
+StreamingTimer.displayName = 'StreamingTimer';
+
 // Main Chat component
-const Chat = () => {
+interface ChatProps {
+    onResponseStart?: () => void;
+    onResponseEnd?: () => void;
+    // ...other props...
+}
+
+const Chat: React.FC<ChatProps> = ({ onResponseStart, onResponseEnd, ...props }) => {
   const { currentTheme, currentLocale } = useAppStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -354,7 +374,31 @@ const Chat = () => {
   const [userHasScrolled, setUserHasScrolled] = useState(false);
   const [lastMessageId, setLastMessageId] = useState<string | null>(null);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+  const [timer, setTimer] = useState<number>(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const streamStartTimeRef = useRef<number | null>(null);
+
+  // Start timer when streaming starts - simplified version
+  useEffect(() => {
+    if (isStreaming) {
+      setTimer(0);
+      if (timerRef.current) clearInterval(timerRef.current);
+      
+      timerRef.current = setInterval(() => {
+        setTimer(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setTimer(0);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isStreaming]);
+
   // Get translated strings - memoize to prevent unnecessary rerenders
   const locale = currentLocale === 'zh' ? 'zh' : 'en';
   const t = useMemo(() => translations[locale], [locale]);
@@ -492,88 +536,13 @@ const Chat = () => {
   }, []);
   
   // Simulate streaming content with markdown detection
-  const simulateStreamingResponse = useCallback((text: string, delay = 50) => {
-    const hasMarkdown = containsMarkdown(text);
-    setIsStreaming(true);
-    
-    // Reset user scroll state when streaming starts
-    setUserHasScrolled(false);
-    
-    // Different streaming strategies based on content type
-    if (hasMarkdown) {
-      // For markdown, we'll stream character by character
-      let currentLength = 0;
-      let currentText = '';
-      
-      const interval = setInterval(() => {
-        currentLength += 5; // Increment by 5 characters at a time
-        
-        if (currentLength >= text.length) {
-          clearInterval(interval);
-          // Update message to final state
-          setMessages(prev => 
-            prev.map(m => 
-              m.isStreaming 
-                ? { ...m, content: text, isStreaming: false, containsMarkdown: true } 
-                : m
-            )
-          );
-          setIsStreaming(false);
-        } else {
-          currentText = text.substring(0, currentLength);
-          
-          setMessages(prev => 
-            prev.map(m => 
-              m.isStreaming 
-                ? { ...m, content: currentText, containsMarkdown: true } 
-                : m
-            )
-          );
-        }
-      }, delay);
-      
-      streamingTimeoutRef.current = interval;
-      return () => clearInterval(interval);
-    } else {
-      // For regular text, stream word by word
-      const words = text.split(' ');
-      let currentIndex = 0;
-      let currentText = '';
-      
-      const interval = setInterval(() => {
-        currentIndex++;
-        
-        if (currentIndex >= words.length) {
-          clearInterval(interval);
-          // Update message to final state
-          setMessages(prev => 
-            prev.map(m => 
-              m.isStreaming 
-                ? { ...m, content: text, isStreaming: false } 
-                : m
-            )
-          );
-          setIsStreaming(false);
-        } else {
-          currentText = words.slice(0, currentIndex).join(' ');
-          
-          setMessages(prev => 
-            prev.map(m => 
-              m.isStreaming 
-                ? { ...m, content: currentText } 
-                : m
-            )
-          );
-        }
-      }, delay);
-      
-      streamingTimeoutRef.current = interval;
-      return () => clearInterval(interval);
-    }
-  }, []);
   
   // Send payload to backend /chat endpoint (supports streaming response)
   const sendToBackend = useCallback(async (payload: any) => {
+    // Record start time in ref for consistent tracking
+    streamStartTimeRef.current = Date.now();
+    setIsStreaming(true);
+    
     try {
       // Attach session_id if present
       const payloadWithSession = sessionId ? { ...payload, session_id: sessionId } : payload;
@@ -585,14 +554,16 @@ const Chat = () => {
       });
 
       // --- Get session_id from response header if present ---
-      // With Access-Control-Expose-Headers set, this will work in all browsers:
       const sessionHeader = resp.headers.get('x-session-id');
       if (sessionHeader && sessionHeader !== sessionId) {
         setSessionId(sessionHeader);
       }
-      // ------------------------------------------------------
 
       if (!resp.body) {
+        const finalElapsed = streamStartTimeRef.current 
+          ? Math.round((Date.now() - streamStartTimeRef.current) / 100) / 10
+          : 0;
+          
         setMessages(prev =>
           prev.map(m =>
             m.isStreaming
@@ -600,7 +571,8 @@ const Chat = () => {
                   ...m,
                   content: 'Error: No streaming response from backend.',
                   isStreaming: false,
-                  containsMarkdown: false
+                  containsMarkdown: false,
+                  responseTime: finalElapsed
                 }
               : m
           )
@@ -612,7 +584,6 @@ const Chat = () => {
       // Read the stream and update the assistant message as chunks arrive
       const reader = resp.body.getReader();
       let result = '';
-      setIsStreaming(true);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -632,6 +603,12 @@ const Chat = () => {
         );
       }
 
+      // Calculate final response time using the ref
+      const finalElapsed = streamStartTimeRef.current 
+        ? Math.round((Date.now() - streamStartTimeRef.current) / 100) / 10
+        : 0;
+
+      // Update message with final content and response time
       setMessages(prev =>
         prev.map(m =>
           m.isStreaming
@@ -639,15 +616,23 @@ const Chat = () => {
                 ...m,
                 content: result,
                 isStreaming: false,
-                containsMarkdown: containsMarkdown(result)
+                containsMarkdown: containsMarkdown(result),
+                responseTime: finalElapsed
               }
             : m
         )
       );
+      
+      // Stop streaming
       setIsStreaming(false);
+
     } catch (err) {
       console.error('Backend error:', err);
-      setIsStreaming(false);
+      // Calculate elapsed time for error case
+      const finalElapsed = streamStartTimeRef.current 
+        ? Math.round((Date.now() - streamStartTimeRef.current) / 100) / 10
+        : 0;
+        
       setMessages(prev =>
         prev.map(m =>
           m.isStreaming
@@ -655,11 +640,14 @@ const Chat = () => {
                 ...m,
                 content: 'Error: Unable to get response from backend.',
                 isStreaming: false,
-                containsMarkdown: false
+                containsMarkdown: false,
+                responseTime: finalElapsed
               }
             : m
         )
       );
+      
+      setIsStreaming(false);
     }
   }, [sessionId]);
 
@@ -716,7 +704,10 @@ const Chat = () => {
     console.log('Prepared payload:', payload);
 
     // --- Send to backend (async, non-blocking) ---
-    sendToBackend(payload);
+    if (onResponseStart) onResponseStart(); // <-- Start timer callback for parent if needed
+    sendToBackend(payload).finally(() => {
+      if (onResponseEnd) onResponseEnd(); // <-- End timer callback for parent if needed
+    });
     // ---------------------------------------------
 
     // Example responses with markdown for demonstration
@@ -830,7 +821,7 @@ The ${modelConfig.model_name_or_path} model shows significant improvements acros
     const responseText = markdownResponses[Math.floor(Math.random() * markdownResponses.length)];
     // Start streaming simulation
     // simulateStreamingResponse(responseText, 30);
-  }, [inputText, isStreaming, generateId, simulateStreamingResponse, messages, modelConfig, sendToBackend]);
+  }, [inputText, isStreaming, generateId, messages, modelConfig, sendToBackend, onResponseStart, onResponseEnd]);
   
   // Handle enter key press - memoize
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -1043,12 +1034,23 @@ The ${modelConfig.model_name_or_path} model shows significant improvements acros
               <div className="message-footer">
                 <div className="message-time">
                   {formatTime(message.timestamp)}
-                  {message.isStreaming && (
-                    <span className="streaming-indicator">
-                      <Spinner animation="border" size="sm" />
-                      <span className="ms-1">{t.streaming}</span>
-                    </span>
-                  )}
+                  {message.role === 'assistant' && (
+                  <>
+                    {message.isStreaming ? (
+                      <span className="streaming-indicator">
+                        <Spinner animation="border" size="sm" />
+                        <span className="ms-1">{t.streaming}</span>
+                        <StreamingTimer timer={timer} />
+                      </span>
+                    ) : (
+                      message.responseTime !== undefined ? (
+                        <span className="ms-2" style={{ color: '#888', fontSize: '0.95em' }}>
+                          {`Response time: ${message.responseTime.toFixed(1)}s`}
+                        </span>
+                      ) : null
+                    )}
+                  </>
+                )}
                 </div>
                 {message.role === 'assistant' && !message.isStreaming && (
                   <FeedbackButtons 
@@ -1138,5 +1140,4 @@ The ${modelConfig.model_name_or_path} model shows significant improvements acros
     </div>
   );
 };
-
 export default Chat;
