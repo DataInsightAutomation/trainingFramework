@@ -433,7 +433,7 @@ const Chat: React.FC<ChatProps> = ({ onResponseStart, onResponseEnd, ...props })
     if (!chatContainerRef.current) return;
     
     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50; // 50px threshold
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50 // 50px threshold
     
     // If user scrolls up, mark that they've scrolled away from bottom
     if (!isAtBottom && !userHasScrolled) {
@@ -1026,7 +1026,10 @@ The ${modelConfig.model_name_or_path} model shows significant improvements acros
                   />
                 ) : (
                   <div className="plain-text">
-                    {message.content}
+                    {/* Preserve newlines for plain text */}
+                    {message.content.split('\n').map((line, idx) => (
+                      <div key={idx}>{line}</div>
+                    ))}
                     {message.isStreaming && <span className="cursor-blink">|</span>}
                   </div>
                 )}
