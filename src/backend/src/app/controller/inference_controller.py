@@ -83,10 +83,11 @@ async def chat_stream_endpoint(request: ChatRequest):
 
     obj_chat_model = ChatModel({
         "model_name_or_path": request.model_name_or_path,
-        # "adapter_name_or_path": request.adapter_name_or_path,
+        "adapter_name_or_path": request.adapter_name_or_path,
         "template": request.template,
         "finetuning_type": request.finetuning_type,
-        "infer_backend": request.infer_backend
+        "infer_backend": request.infer_backend,
+        "low_cpu_mem_usage": False
     })
     async def token_generator():
         async for chunk in obj_chat_model.astream_chat(

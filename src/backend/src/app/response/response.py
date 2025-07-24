@@ -8,21 +8,26 @@ class TrainResponse(BaseModel):
 class TrainRequest(BaseModel):
     # Basic parameters (always required)
     model_name: str
-    model_path: str
+    model_path: Optional[str] = None  # Make optional since it can be empty
     datasets: List[str]
-    train_method: str
+    stage: str  # New: direct LLaMA-Factory stage
+    finetuning_method: Optional[str] = "lora"  # New: UI abstraction for finetuning method
     token: Optional[str] = None
     
+    # Legacy field for backward compatibility (optional)
+    train_method: Optional[str] = None
+    
     # Advanced parameters with Optional[Type] = None
-    # This means they only get values when explicitly provided
     trust_remote_code: Optional[bool] = None
-    stage: Optional[str] = None
     do_train: Optional[bool] = None
     
     # Fine-tuning configuration
-    finetuning_type: Optional[str] = None
+    finetuning_type: Optional[str] = None  # LLaMA-Factory actual parameter
+    quantization_bit: Optional[int] = None  # For QLoRA support
     lora_rank: Optional[int] = None
     lora_target: Optional[str] = None
+    lora_alpha: Optional[int] = None  # Added missing parameter
+    lora_dropout: Optional[float] = None  # Added missing parameter
     template: Optional[str] = None
     
     # Dataset configuration
@@ -54,6 +59,16 @@ class TrainRequest(BaseModel):
     
     # Additional parameters can be passed without validation
     additional_params: Optional[Dict[str, Any]] = None
+
+    # Advanced dataset configuration fields
+    dataset_auto_config: Optional[bool] = None
+    dataset_ranking_override: Optional[str] = None
+    custom_column_mapping: Optional[bool] = None
+    prompt_column: Optional[str] = None
+    query_column: Optional[str] = None
+    chosen_column: Optional[str] = None
+    rejected_column: Optional[str] = None
+    response_column: Optional[str] = None
 
     class Config:
         # Exclude None values when converting to dict

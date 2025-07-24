@@ -54,6 +54,8 @@ export const translations = {
     finetuning_typeLabel: 'Finetuning Type',
     lora_rankLabel: 'LoRA Rank',
     lora_targetLabel: 'LoRA Target',
+    lora_alphaLabel: 'LoRA Alpha',
+    lora_dropoutLabel: 'LoRA Dropout',
     templateLabel: 'Template',
     cutoff_lenLabel: 'Cutoff Length',
     max_samplesLabel: 'Max Samples',
@@ -72,12 +74,24 @@ export const translations = {
     plot_lossLabel: 'Plot Loss',
     overwrite_output_dirLabel: 'Overwrite Output Directory',
 
+    // Dataset Configuration Fields
+    dataset_auto_configLabel: 'Auto Dataset Configuration',
+    dataset_ranking_overrideLabel: 'Dataset Ranking Override',
+    custom_column_mappingLabel: 'Custom Column Mapping',
+    prompt_columnLabel: 'Prompt Column Name',
+    query_columnLabel: 'Query Column Name',
+    chosen_columnLabel: 'Chosen Column Name',
+    rejected_columnLabel: 'Rejected Column Name',
+    response_columnLabel: 'Response Column Name',
+
     // Placeholders
     trust_remote_codePlaceholder: 'Select trust remote code',
     stagePlaceholder: 'Select training stage',
     finetuning_typePlaceholder: 'Select fine-tuning type',
     lora_rankPlaceholder: 'Enter LoRA rank',
     lora_targetPlaceholder: 'Enter LoRA target modules',
+    lora_alphaPlaceholder: 'Enter LoRA alpha',
+    lora_dropoutPlaceholder: 'Enter LoRA dropout',
     templatePlaceholder: 'Select template',
     cutoff_lenPlaceholder: 'Enter cutoff length',
     max_samplesPlaceholder: 'Enter max samples',
@@ -95,26 +109,45 @@ export const translations = {
     save_stepsPlaceholder: 'Enter save steps',
     plot_lossPlaceholder: 'Select plot loss',
     overwrite_output_dirPlaceholder: 'Select overwrite output directory',
-    evaluationConfigSection: 'Evaluation Settings',
-    metric_typeLabel: 'Metric Type',
-    metric_typePlaceholder: 'Select a metric type',
+
+    // Dataset Configuration Placeholders
+    dataset_auto_configPlaceholder: 'Enable automatic dataset configuration',
+    dataset_ranking_overridePlaceholder: 'Select ranking override',
+    custom_column_mappingPlaceholder: 'Enable custom column mapping',
+    prompt_columnPlaceholder: 'Enter prompt column name',
+    query_columnPlaceholder: 'Enter query column name',
+    chosen_columnPlaceholder: 'Enter chosen column name',
+    rejected_columnPlaceholder: 'Enter rejected column name',
+    response_columnPlaceholder: 'Enter response column name',
+
+    // Dataset Configuration Descriptions
+    dataset_auto_configDescription: 'Enable automatic dataset configuration based on training stage',
+    dataset_ranking_overrideDescription: 'Override dataset ranking configuration. Auto-detect is recommended.',
+    custom_column_mappingDescription: 'Enable custom column mapping (for datasets with non-standard column names)',
+    prompt_columnDescription: 'Column name for prompts/instructions',
+    query_columnDescription: 'Column name for query/input',
+    chosen_columnDescription: 'Column name for chosen responses (RM training only)',
+    rejected_columnDescription: 'Column name for rejected responses (RM training only)',
+    response_columnDescription: 'Column name for responses (non-RM training)',
+
+    // Add missing basic field translations
     addCustomModel: 'Add custom model: "{input}"',
     enterCustomModelName: 'Enter custom model name or path',
     modelNameDescription: 'Select a model or enter a custom model name/path (e.g., local path or HuggingFace model ID)',
     datasetDescription: "Dataset(s) to use for training",
-    // Token field translations
-    tokenLabel: 'API Token',
-    tokenPlaceholder: 'Enter your API token',
+    
+    // Add missing field descriptions
+    finetuningMethodDescription: 'Choose how to modify the model parameters during training',
+    stageDescription: 'Select the training stage to perform',
     tokenDescription: 'Optional: Provide an API token for authentication with model providers',
-
-    // Add translations for new fields
+    
+    // Add missing advanced field descriptions  
+    quantizationDescription: 'Use quantization to reduce memory usage during training',
     finetuningTypeDescription: 'Select the method to use for finetuning the model',
     loraRankDescription: 'The rank of the LoRA matrices (higher = more parameters)',
     loraTargetDescription: 'Target modules to apply LoRA to (comma-separated or "all")',
-    stageDescription: 'Select the training stage to perform',
-    trainingMethodSectionTitle: 'Training Method',
-    trainingMethodSectionDescription: 'Configure how the model will be trained',
-    rlhfStageDescription: 'Select which stage of RLHF to perform',
+    loraAlphaDescription: 'LoRA scaling parameter (typically 2x the rank)',
+    loraDropoutDescription: 'Dropout rate for LoRA layers (0.0 = no dropout)',
 
     // Training method labels
     supervisedFineTuning: 'Supervised Fine-Tuning (SFT)',
@@ -122,6 +155,25 @@ export const translations = {
     loraFinetuning: 'LoRA Fine-tuning',
     qloraFinetuning: 'QLoRA Fine-tuning',
     fullFinetuning: 'Full Fine-tuning',
+
+    // Add missing basic field labels
+    tokenLabel: 'API Token',
+    finetuning_methodLabel: 'Finetuning Method',
+    reward_modelLabel: 'Reward Model Path',
+    
+    // Add missing advanced field labels
+    quantization_bitLabel: 'Quantization Bits',
+    
+    // Add missing placeholders for basic fields
+    tokenPlaceholder: 'Enter your API token',
+    finetuning_methodPlaceholder: 'Select finetuning method',
+    reward_modelPlaceholder: 'Enter path to trained reward model',
+    
+    // Add missing placeholders for advanced fields
+    quantization_bitPlaceholder: 'Select quantization level',
+
+    // Add descriptions
+    rewardModelDescription: 'Path to the trained reward model (required for PPO training). Usually saves/modelname/rm/lora',
   },
   zh: {
     addCustomModel: '添加自定义模型: "{input}"',
@@ -180,6 +232,8 @@ export const translations = {
     finetuning_typeLabel: '微调类型',
     lora_rankLabel: 'LoRA 排名',
     lora_targetLabel: 'LoRA 目标',
+    lora_alphaLabel: 'LoRA Alpha',
+    lora_dropoutLabel: 'LoRA Dropout',
     templateLabel: '模板',
     cutoff_lenLabel: '截断长度',
     max_samplesLabel: '最大样本',
@@ -198,12 +252,24 @@ export const translations = {
     plot_lossLabel: '绘制损失',
     overwrite_output_dirLabel: '覆盖输出目录',
 
+    // Dataset Configuration Fields (Chinese)
+    dataset_auto_configLabel: '自动数据集配置',
+    dataset_ranking_overrideLabel: '数据集排名覆盖',
+    custom_column_mappingLabel: '自定义列映射',
+    prompt_columnLabel: '提示列名称',
+    query_columnLabel: '查询列名称',
+    chosen_columnLabel: '选中列名称',
+    rejected_columnLabel: '拒绝列名称',
+    response_columnLabel: '响应列名称',
+
     // Placeholders
     trust_remote_codePlaceholder: '选择信任远程代码',
     stagePlaceholder: '选择训练阶段',
     finetuning_typePlaceholder: '选择微调类型',
     lora_rankPlaceholder: '输入 LoRA 排名',
     lora_targetPlaceholder: '输入 LoRA 目标模块',
+    lora_alphaPlaceholder: '输入 LoRA alpha',
+    lora_dropoutPlaceholder: '输入 LoRA dropout',
     templatePlaceholder: '选择模板',
     cutoff_lenPlaceholder: '输入截断长度',
     max_samplesPlaceholder: '输入最大样本',
@@ -221,23 +287,45 @@ export const translations = {
     save_stepsPlaceholder: '输入保存步数',
     plot_lossPlaceholder: '选择绘制损失',
     overwrite_output_dirPlaceholder: '选择覆盖输出目录',
-    evaluationConfigSection: '评估设置',
-    metric_typeLabel: '指标类型',
-    metric_typePlaceholder: '选择指标类型',
 
-    // Token field translations in Chinese
-    tokenLabel: 'API 令牌',
-    tokenPlaceholder: '输入您的 API 令牌',
+    // Dataset Configuration Placeholders (Chinese)
+    dataset_auto_configPlaceholder: '启用自动数据集配置',
+    dataset_ranking_overridePlaceholder: '选择排名覆盖',
+    custom_column_mappingPlaceholder: '启用自定义列映射',
+    prompt_columnPlaceholder: '输入提示列名称',
+    query_columnPlaceholder: '输入查询列名称',
+    chosen_columnPlaceholder: '输入选中列名称',
+    rejected_columnPlaceholder: '输入拒绝列名称',
+    response_columnPlaceholder: '输入响应列名称',
+
+    // Dataset Configuration Descriptions (Chinese)
+    dataset_auto_configDescription: '基于训练阶段启用自动数据集配置',
+    dataset_ranking_overrideDescription: '覆盖数据集排名配置。建议使用自动检测。',
+    custom_column_mappingDescription: '启用自定义列映射（适用于非标准列名的数据集）',
+    prompt_columnDescription: '提示/指令的列名称',
+    query_columnDescription: '查询/输入的列名称',
+    chosen_columnDescription: '选中响应的列名称（仅限RM训练）',
+    rejected_columnDescription: '拒绝响应的列名称（仅限RM训练）',
+    response_columnDescription: '响应的列名称（非RM训练）',
+
+    // Add missing basic field translations
+    addCustomModel: '添加自定义模型: "{input}"',
+    enterCustomModelName: '输入自定义模型名称或路径',
+    modelNameDescription: '选择模型或输入自定义模型名称/路径（例如，本地路径或 HuggingFace 模型 ID）',
+    datasetDescription: "用于训练的数据集",
+    
+    // Add missing field descriptions
+    finetuningMethodDescription: '选择训练过程中如何修改模型参数',
+    stageDescription: '选择要执行的训练阶段',
     tokenDescription: '可选：提供 API 令牌用于模型提供商的身份验证',
-
-    // Add translations for new fields
+    
+    // Add missing advanced field descriptions  
+    quantizationDescription: '使用量化减少训练时的内存使用',
     finetuningTypeDescription: '选择用于微调模型的方法',
     loraRankDescription: 'LoRA矩阵的秩（越高=参数越多）',
     loraTargetDescription: '要应用LoRA的目标模块（逗号分隔或"all"）',
-    stageDescription: '选择要执行的训练阶段',
-    trainingMethodSectionTitle: '训练方法',
-    trainingMethodSectionDescription: '配置模型的训练方式',
-    rlhfStageDescription: '选择要执行的RLHF阶段',
+    loraAlphaDescription: 'LoRA缩放参数（通常是rank的2倍）',
+    loraDropoutDescription: 'LoRA层的丢弃率（0.0 = 无丢弃）',
 
     // Training method labels
     supervisedFineTuning: '监督式微调 (SFT)',
@@ -245,5 +333,24 @@ export const translations = {
     loraFinetuning: 'LoRA微调',
     qloraFinetuning: 'QLoRA微调',
     fullFinetuning: '完全微调',
+
+    // Add missing basic field labels (Chinese)
+    tokenLabel: 'API 令牌',
+    finetuning_methodLabel: '微调方法',
+    reward_modelLabel: '奖励模型路径',
+    
+    // Add missing advanced field labels (Chinese)
+    quantization_bitLabel: '量化位数',
+    
+    // Add missing placeholders for basic fields (Chinese)
+    tokenPlaceholder: '输入您的 API 令牌',
+    finetuning_methodPlaceholder: '选择微调方法',
+    reward_modelPlaceholder: '输入训练好的奖励模型路径',
+    
+    // Add missing placeholders for advanced fields (Chinese)
+    quantization_bitPlaceholder: '选择量化级别',
+
+    // Add descriptions (Chinese)
+    rewardModelDescription: '训练好的奖励模型路径（PPO训练必需）。通常是 saves/modelname/rm/lora',
   }
 };

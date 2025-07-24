@@ -17,29 +17,41 @@ const advancedFieldSections = {
     title: 'modelConfigSection',
     fields: [
       { name: 'trust_remote_code', type: 'toggle', defaultValue: 'true' },
-      // Stage will be added dynamically
+      // Add quantization settings for QLoRA support
+      { 
+        name: 'quantization_bit', 
+        type: 'select', 
+        options: [
+          { value: '', directLabel: 'No Quantization (Full Precision)' },
+          { value: '4', directLabel: '4-bit Quantization (QLoRA)' },
+          { value: '8', directLabel: '8-bit Quantization' }
+        ],
+        defaultValue: '',
+        description: 'quantizationDescription'
+      },
     ]
   },
   finetuningConfig: {
     title: 'finetuningConfigSection',
     fields: [
-      // Add finetuning_type as the first field in this section
+      // Correct finetuning_type options per LLaMA-Factory docs
       {
         name: 'finetuning_type',
         type: 'select',
-        required: true, // Make this field required
+        required: true,
         options: [
-          { value: 'lora', directLabel: 'Low-Rank Adaptation (LoRA) - Efficient, recommended' },
-          { value: 'qlora', directLabel: 'Quantized LoRA (QLoRA) - More memory efficient' },
-          { value: 'full', directLabel: 'Full Fine-tuning - Uses more resources' },
-          { value: 'freeze', directLabel: 'Freeze - Only train specific layers' }
+          { value: 'lora', directLabel: 'LoRA - Low-Rank Adaptation (recommended)' },
+          { value: 'freeze', directLabel: 'Freeze - Only train specific layers' },
+          { value: 'full', directLabel: 'Full - Train all parameters (resource intensive)' }
         ],
-        description: 'finetuningTypeDescription',  // Changed to translation key
+        description: 'finetuningTypeDescription',
         defaultValue: 'lora'
       },
-      // Add lora_rank back to advanced settings
-      { name: 'lora_rank', type: 'number', min: 1, max: 64, step: 1, defaultValue: '8', description: 'loraRankDescription' },  // Changed to translation key
-      { name: 'lora_target', type: 'text', defaultValue: 'all', description: 'loraTargetDescription' },  // Changed to translation key
+      // Add lora_rank to advanced settings
+      { name: 'lora_rank', type: 'number', min: 1, max: 64, step: 1, defaultValue: '8', description: 'loraRankDescription' },
+      { name: 'lora_target', type: 'text', defaultValue: 'all', description: 'loraTargetDescription' },
+      { name: 'lora_alpha', type: 'number', min: 1, max: 128, step: 1, defaultValue: '16', description: 'loraAlphaDescription' },
+      { name: 'lora_dropout', type: 'number', min: 0, max: 0.5, step: 0.01, defaultValue: '0.0', description: 'loraDropoutDescription' },
       {
         name: 'template', type: 'select', options: [
           { value: 'llama3', directLabel: 'Llama 3' },
@@ -52,7 +64,93 @@ const advancedFieldSections = {
   datasetConfig: {
     title: 'datasetConfigSection',
     fields: [
-      { name: 'cutoff_len', type: 'number', min: 128, max: 8192, step: 32 },
+      // Dataset configuration override section
+      {
+        name: 'dataset_auto_config',
+        type: 'toggle',
+        defaultValue: 'true',
+        description: 'dataset_auto_configDescription',
+        required: false
+      },
+      {
+        name: 'dataset_ranking_override',
+        type: 'select',
+        options: [
+          { value: 'auto', directLabel: 'Auto-detect based on stage (recommended)' },
+          { value: 'true', directLabel: 'Force ranking=True (for RM training)' },
+          { value: 'false', directLabel: 'Force ranking=False (for SFT/DPO/PPO training)' }
+        ],
+        defaultValue: 'auto',
+        description: 'dataset_ranking_overrideDescription',
+        required: false,
+        dependsOn: 'dataset_auto_config',
+        showWhen: 'false' // Only show when auto-config is disabled
+      },
+      // Custom column mapping for advanced users
+      {
+        name: 'custom_column_mapping',
+        type: 'toggle',
+        defaultValue: 'false',
+        description: 'custom_column_mappingDescription',
+        required: false
+      },
+      {
+        name: 'prompt_column',
+        type: 'text',
+        defaultValue: 'instruction',
+        description: 'prompt_columnDescription',
+        placeholder: 'prompt_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'query_column',
+        type: 'text',
+        defaultValue: 'input',
+        description: 'query_columnDescription',
+        placeholder: 'query_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'chosen_column',
+        type: 'text',
+        defaultValue: 'chosen',
+        description: 'chosen_columnDescription',
+        placeholder: 'chosen_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'rejected_column',
+        type: 'text',
+        defaultValue: 'rejected',
+        description: 'rejected_columnDescription',
+        placeholder: 'rejected_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'response_column',
+        type: 'text',
+        defaultValue: 'output',
+        description: 'response_columnDescription',
+        placeholder: 'response_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'cutoff_len',
+        type: 'number',
+        min: 128,
+        max: 8192,
+        step: 32
+      },
       {
         name: 'max_samples',
         type: 'number',
@@ -102,44 +200,64 @@ const basicFields = [
     name: 'modelName',
     type: 'searchableSelect',
     options: [], // Will be populated from API
-    creatable: true, // Allow creating custom options
-    createMessage: 'addCustomModel', // Translation key for "Add custom model: {input}"
-    createPlaceholder: 'enterCustomModelName', // Translation key for placeholder
-    customOptionPrefix: 'custom', // Prefix for custom option values
-    description: 'modelNameDescription', // Add a description explaining custom model input
-    required: true, // Make this field required
+    creatable: true,
+    createMessage: 'addCustomModel',
+    createPlaceholder: 'enterCustomModelName',
+    customOptionPrefix: 'custom',
+    description: 'modelNameDescription',
+    required: true,
   },
   {
     name: 'modelPath',
     type: 'text',
-    required: false, // Make this field optional
-    description: 'modelPathDescription', // Add a description explaining custom model input
+    required: false,
+    description: 'modelPathDescription',
   },
   {
     name: 'dataset',
     type: 'multiSelect',
     options: [], // Will be populated from API
     required: true,
-    description: 'datasetDescription', // Add a description explaining dataset input
+    description: 'datasetDescription',
   },
-  // Training method and stage will be positioned right after dataset
+  // Stage - what you want to accomplish (maps directly to LLaMA-Factory)
   {
-    name: 'trainMethod',
+    name: 'stage',
     type: 'searchableSelect',
     options: [
-      { value: 'supervised', label: 'supervisedFineTuning', directLabel: 'Supervised Fine-Tuning (SFT)' },
-      { value: 'rlhf', label: 'rlhfTraining', directLabel: 'Reinforcement Learning from Human Feedback (RLHF)' },
-      { value: 'distillation', label: 'distillation', directLabel: 'Knowledge Distillation' }
+      { value: 'sft', directLabel: 'Supervised Fine-Tuning (SFT) - Train on instruction/chat datasets' },
+      { value: 'pt', directLabel: 'Continued Pretraining (PT) - Train on raw text data' },
+      { value: 'rm', directLabel: 'Reward Model (RM) - Train on comparison/ranking datasets' },
+      { value: 'ppo', directLabel: 'PPO - Reinforcement learning (requires trained reward model)' },
+      { value: 'dpo', directLabel: 'DPO - Direct preference optimization on RLHF datasets' },
+      { value: 'kto', directLabel: 'KTO - Kahneman-Tversky optimization on preference data' },
+      { value: 'orpo', directLabel: 'ORPO - Odds ratio preference optimization' }
     ],
-    colSpan: 6, // Half width
-    description: 'trainMethodDescription', 
-    required: true, // Make this field required
+    colSpan: 6,
+    description: 'stageDescription', 
+    required: true,
+    defaultValue: 'sft'
+  },
+  // Finetuning method - how to modify the model (all stages support all methods)
+  {
+    name: 'finetuning_method',
+    type: 'select',
+    options: [
+      { value: 'lora', directLabel: 'LoRA - Low-Rank Adaptation (recommended)' },
+      { value: 'qlora', directLabel: 'QLoRA - Quantized LoRA (memory efficient)' },
+      { value: 'freeze', directLabel: 'Freeze - Only train specific layers' },
+      { value: 'full', directLabel: 'Full - Train all parameters (resource intensive)' }
+    ],
+    colSpan: 6,
+    description: 'finetuningMethodDescription',
+    required: true,
+    defaultValue: 'lora'
   },
   {
     name: 'token',
     type: 'text',
     required: false,
-    description: 'tokenDescription' // Add a translation key for the description
+    description: 'tokenDescription'
   }
 ];
 
@@ -288,13 +406,14 @@ const Train = () => {
       modelName: '',
       modelPath: '',
       dataset: '',
-      trainMethod: 'supervised',
-      finetuning_type: 'lora',
+      stage: 'sft', // Updated: use stage instead of trainMethod
+      finetuning_method: 'lora', // Updated: use finetuning_method instead of finetuning_type
       token: '',
       trust_remote_code: 'true',
-      stage: 'sft',
       lora_rank: '8',
       lora_target: 'all',
+      lora_alpha: '16', // Added missing lora_alpha
+      lora_dropout: '0.0', // Added missing lora_dropout
       template: 'llama3',
       cutoff_len: '2048',
       max_samples: '',
@@ -312,6 +431,7 @@ const Train = () => {
       save_steps: '500',
       plot_loss: 'true',
       overwrite_output_dir: 'true',
+      quantization_bit: '', // Added for QLoRA support
     },
     updateStoreCallback: useAppStore.getState().updateTrainFormData,
     getStoreData: () => useAppStore.getState().trainFormData,
@@ -324,32 +444,84 @@ const Train = () => {
     }
   });
 
-  // Add state to track the current training method
-  const [currentTrainMethod, setCurrentTrainMethod] = useState<string>('supervised');
+  // Add state to track the current stage
+  const [currentStage, setCurrentStage] = useState<string>('sft');
 
-  // Update train method when form data changes
+  // Update stage when form data changes
   useEffect(() => {
-    if (formData && formData.trainMethod && formData.trainMethod !== currentTrainMethod) {
-      setCurrentTrainMethod(formData.trainMethod);
-      console.log('Training method changed to:', formData.trainMethod);
+    if (formData && formData.stage && formData.stage !== currentStage) {
+      setCurrentStage(formData.stage);
+      console.log('Training stage changed to:', formData.stage);
     }
-  }, [formData?.trainMethod]); // Only depend on trainMethod, not the entire formData object
+  }, [formData?.stage]);
 
-  // Updated function to get stage options based on training method
-  const getStageOptions = (method: string) => {
-    if (method === 'rlhf') {
-      return [
-        { value: 'rm', directLabel: 'Reward Model Training (First Stage)' },
-        { value: 'ppo', directLabel: 'PPO Optimization (Second Stage)' },
-        { value: 'dpo', directLabel: 'Direct Preference Optimization' },
-        { value: 'orpo', directLabel: 'ORPO (Optimization Reinforced)' },
-        { value: 'kto', directLabel: 'KTO (Knowledge Transfer)' }
-      ];
-    } else {
-      return [
-        { value: 'sft', directLabel: 'Supervised Fine-Tuning (SFT)' }
-      ];
+  // All stages support all finetuning methods
+  const getFinetuningMethodOptions = (stage: string) => {
+    return [
+      { value: 'lora', directLabel: 'LoRA - Low-Rank Adaptation (recommended)' },
+      { value: 'qlora', directLabel: 'QLoRA - Quantized LoRA (memory efficient)' },
+      { value: 'freeze', directLabel: 'Freeze - Only train specific layers' },
+      { value: 'full', directLabel: 'Full - Train all parameters (resource intensive)' }
+    ];
+  };
+
+  // Convert UI finetuning method to LLaMA-Factory parameters
+  const convertFinetuningMethod = (method: string) => {
+    switch (method) {
+      case 'qlora':
+        return { finetuning_type: 'lora', quantization_bit: 4 };
+      case 'lora':
+        return { finetuning_type: 'lora', quantization_bit: null };
+      case 'freeze':
+        return { finetuning_type: 'freeze', quantization_bit: null };
+      case 'full':
+        return { finetuning_type: 'full', quantization_bit: null };
+      default:
+        return { finetuning_type: 'lora', quantization_bit: null };
     }
+  };
+
+  // Add dataset configuration status component
+  const DatasetConfigStatus = ({ stage, datasets }: { stage: string, datasets: string[] }) => {
+    if (!datasets.length) return null;
+    
+    const isRlhfDataset = datasets.some(d => d.toLowerCase().includes('rlhf') || d.toLowerCase().includes('preference'));
+    
+    return (
+      <div style={{
+        backgroundColor: stage === 'rm' ? '#fff3cd' : '#d1ecf1',
+        border: `1px solid ${stage === 'rm' ? '#ffeaa7' : '#bee5eb'}`,
+        borderRadius: '4px',
+        padding: '12px',
+        marginTop: '8px',
+        fontSize: '0.9em'
+      }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+          🔧 Auto-Configuration for {stage.toUpperCase()} Training:
+        </div>
+        
+        {stage === 'rm' ? (
+          <>
+            <div>• Dataset ranking: <code>True</code> (required for reward model training)</div>
+            <div>• Column mapping: <code>instruction→prompt, chosen/rejected→comparison</code></div>
+            {!isRlhfDataset && (
+              <div style={{ color: '#856404', marginTop: '4px' }}>
+                ⚠️ This dataset may not be ideal for RM training. RLHF datasets work best.
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div>• Dataset ranking: <code>False</code> (standard for {stage} training)</div>
+            <div>• Column mapping: <code>instruction→prompt, output→response</code></div>
+          </>
+        )}
+        
+        <div style={{ fontSize: '0.85em', color: '#666', marginTop: '6px' }}>
+          Advanced users can override these settings in Advanced Mode.
+        </div>
+      </div>
+    );
   };
 
   // Get form fields using the shared processor
@@ -366,82 +538,79 @@ const Train = () => {
       fieldsWithOptions[2].options = datasetOptions;
     }
 
-    // Get current train method for dynamic fields
-    const method = currentTrainMethod || 'supervised';
+    // Get current stage for dynamic fields
+    const stage = currentStage || 'sft';
 
-    // Handle basic mode special fields
-    if (!showAdvanced) {
-      // Find index of trainMethod field to position stage field after it
-      const trainMethodIndex = fieldsWithOptions.findIndex((f: { name: string; }) => f.name === 'trainMethod');
+    // Update finetuning_method options (all stages support all methods)
+    const finetuningMethodIndex = fieldsWithOptions.findIndex(f => f.name === 'finetuning_method');
+    if (finetuningMethodIndex >= 0) {
+      fieldsWithOptions[finetuningMethodIndex].options = getFinetuningMethodOptions(stage);
+    }
 
-      if (trainMethodIndex >= 0) {
-        // Insert the stage field right after trainMethod
-        fieldsWithOptions.splice(trainMethodIndex + 1, 0, {
-          name: 'stage',
-          type: 'select',
-          options: getStageOptions(method),
-          description: 'stageDescription',  // Changed to translation key
-          required: true, // Mark as required to show asterisk
-          defaultValue: method === 'rlhf' ? 'rm' : 'sft',
-          colSpan: 6 // Half width to align with trainMethod
-        });
-
-        // Add finetuning_type after stage
-        fieldsWithOptions.splice(trainMethodIndex + 2, 0, {
-          name: 'finetuning_type',
-          type: 'select',
-          options: getFinetuningTypeOptions(),
-          description: 'finetuningTypeDescription',  // Changed to translation key
-          defaultValue: formData.finetuning_type || 'lora',
-          colSpan: 6,
-          required: true // Make this field required
-        });
-        
-        // Find token field and move it after finetuning_type if needed
-        interface FormFieldOption {
-          value: string;
-          label?: string;
-          directLabel?: string;
-        }
-
-        interface FormField {
-          name: string;
-          type: string;
-          options?: FormFieldOption[];
-          required?: boolean;
-          colSpan?: number;
-          description?: string;
-          defaultValue?: string;
-          min?: number;
-          max?: number;
-          step?: number;
-          creatable?: boolean;
-          createMessage?: string;
-          createPlaceholder?: string;
-          customOptionPrefix?: string;
-        }
-
-        const tokenIndex: number = fieldsWithOptions.findIndex((f: FormField) => f.name === 'token');
-        if (tokenIndex > trainMethodIndex + 3) { // If token is after our newly inserted fields
-          // Remove token from its current position
-          const tokenField = fieldsWithOptions.splice(tokenIndex, 1)[0];
-          // Set width to half
-          tokenField.colSpan = 6;
-          // Add it next to finetuning_type
-          fieldsWithOptions.splice(trainMethodIndex + 3, 0, tokenField);
-        }
-      }
-
-      // If not in search mode, return the basic fields with our custom additions
-      if (!searchQuery.trim()) {
-        return fieldsWithOptions;
+    // Add stage-specific help text and dataset suggestions
+    const stageFieldIndex = fieldsWithOptions.findIndex(f => f.name === 'stage');
+    if (stageFieldIndex >= 0) {
+      switch (stage) {
+        case 'rm':
+          fieldsWithOptions[stageFieldIndex].helpText = 'Step 1 of RLHF: Train a reward model to score response quality. Works best with comparison datasets (like RLHF datasets with chosen/rejected pairs).';
+          fieldsWithOptions[stageFieldIndex].warningText = 'Note: RM training requires datasets with comparison data. The system will auto-configure your selected dataset.';
+          break;
+        case 'ppo':
+          fieldsWithOptions[stageFieldIndex].helpText = 'Step 2 of RLHF: Use reward model to improve responses. Requires a trained reward model from RM stage.';
+          break;
+        case 'dpo':
+        case 'kto':
+        case 'orpo':
+          fieldsWithOptions[stageFieldIndex].helpText = 'Direct preference training without explicit reward model. Works great with RLHF/preference datasets.';
+          break;
+        case 'pt':
+          fieldsWithOptions[stageFieldIndex].helpText = 'Continue training on raw text to expand knowledge. Use text corpus datasets.';
+          break;
+        case 'sft':
+        default:
+          fieldsWithOptions[stageFieldIndex].helpText = 'Train on supervised examples. Use instruction/chat datasets.';
       }
     }
 
+    // Add dataset configuration status after dataset field (renamed variable)
+    const datasetIndex = fieldsWithOptions.findIndex(f => f.name === 'dataset');
+    if (datasetIndex >= 0) {
+      if (stage === 'rm') {
+        fieldsWithOptions[datasetIndex].helpText = 'For RM training: The system will auto-configure any dataset for reward model training. RLHF datasets work best.';
+      }
+    }
+
+    // If not in search mode and not in advanced mode, return the basic fields
+    if (!showAdvanced && !searchQuery.trim()) {
+      // Add custom component AFTER JSON operations and ONLY for basic mode
+      if (datasetIndex >= 0) {
+        fieldsWithOptions[datasetIndex].customComponent = (
+          <DatasetConfigStatus 
+            stage={stage} 
+            datasets={formData?.dataset ? formData.dataset.split(',').map(d => d.trim()) : []} 
+          />
+        );
+      }
+      return fieldsWithOptions;
+    }
+
+    // For advanced mode, create a copy of advanced sections
+    const advancedSectionsWithStage = JSON.parse(JSON.stringify(advancedFieldSections));
+    
+    // Update finetuning_type options in advanced sections (correct LLaMA-Factory options)
+    const finetuningField = advancedSectionsWithStage.finetuningConfig.fields.find(f => f.name === 'finetuning_type');
+    if (finetuningField) {
+      finetuningField.options = [
+        { value: 'lora', directLabel: 'LoRA - Low-Rank Adaptation (recommended)' },
+        { value: 'freeze', directLabel: 'Freeze - Only train specific layers' },
+        { value: 'full', directLabel: 'Full - Train all parameters (resource intensive)' }
+      ];
+    }
+
     // Use the shared processor for search filtering and advanced mode
-    return processFormFields({
+    const processedFields = processFormFields({
       basicFields: fieldsWithOptions,
-      advancedSections: advancedFieldSections,
+      advancedSections: advancedSectionsWithStage,
       expandedSections,
       toggleSection,
       formData,
@@ -450,13 +619,26 @@ const Train = () => {
       currentLocale,
       translations
     });
+
+    // Add custom component AFTER processFormFields to avoid circular reference issues
+    const datasetFieldInProcessed = processedFields.find(f => f.name === 'dataset');
+    if (datasetFieldInProcessed) {
+      datasetFieldInProcessed.customComponent = (
+        <DatasetConfigStatus 
+          stage={stage} 
+          datasets={formData?.dataset ? formData.dataset.split(',').map(d => d.trim()) : []} 
+        />
+      );
+    }
+
+    return processedFields;
   }, [
     modelOptions,
     datasetOptions,
     expandedSections,
     searchQuery,
     currentLocale,
-    currentTrainMethod,
+    currentStage,
     showAdvanced,
     formData
   ]);
@@ -480,25 +662,37 @@ const Train = () => {
   const prepareBasicRequestData = (data: Record<string, string>) => {
     const datasets = data.dataset.split(',').map(d => d.trim()).filter(d => d);
     
+    // Convert UI finetuning method to LLaMA-Factory parameters
+    const finetuningConfig = convertFinetuningMethod(data.finetuning_method || 'lora');
+    
     const requestData: any = {
       datasets,
-      train_method: data.trainMethod,
-      finetuning_type: data.finetuning_type,
+      stage: data.stage, // Direct mapping to LLaMA-Factory stage
+      finetuning_method: data.finetuning_method || 'lora', // Send UI field
+      finetuning_type: finetuningConfig.finetuning_type, // Send LLaMA-Factory field
+      do_train: true // Always true for training
     };
+    
+    // Add quantization if QLoRA is selected
+    if (finetuningConfig.quantization_bit) {
+      requestData.quantization_bit = finetuningConfig.quantization_bit;
+    }
     
     // Add token if provided
     if (data.token) requestData.token = data.token;
     
-    // Handle stage based on training method
-    requestData.stage = data.trainMethod === 'rlhf' && data.stage 
-      ? data.stage 
-      : (data.stage || 'sft');
-    
-    // Handle LoRA parameters
-    if (data.finetuning_type === 'lora' || data.finetuning_type === 'qlora') {
+    // Handle LoRA parameters only for LoRA-based methods
+    if (finetuningConfig.finetuning_type === 'lora') {
       requestData.lora_rank = data.lora_rank 
         ? parseInt(data.lora_rank, 10) 
-        : 8; // Default value
+        : 8;
+      requestData.lora_alpha = data.lora_alpha 
+        ? parseInt(data.lora_alpha, 10) 
+        : 16;
+      requestData.lora_dropout = data.lora_dropout 
+        ? parseFloat(data.lora_dropout) 
+        : 0.0;
+      requestData.lora_target = data.lora_target || 'all';
     }
     
     return requestData;
@@ -546,6 +740,26 @@ const Train = () => {
   // Extract error message from API error response
   const getErrorMessage = (error: any): string => {
     if (
+      typeof error === 'object' && 
+      error?.response?.data?.detail
+    ) {
+      const detail = error.response.data.detail;
+      
+      // Check for dataset ranking compatibility errors
+      if (detail.includes("ranking=False but stage=") || detail.includes("ranking=True but stage=")) {
+        return detail; // Return the detailed message from backend
+      }
+      
+      // Check for the specific LLaMA-Factory dataset incompatibility error
+      if (detail.includes("The dataset is not applicable in the current training stage")) {
+        return "Dataset incompatible with training stage. " +
+               "For RM training, use comparison/ranking datasets. " +
+               "For DPO/PPO/KTO training, use preference datasets. " +
+               "Try switching to DPO stage for RLHF preference datasets.";
+      }
+      
+      return detail;
+    } else if (
       typeof error === 'object' && 
       error?.response?.data?.message
     ) {
@@ -608,23 +822,14 @@ const Train = () => {
     }
   };
   
-  // Add custom handler for field changes to manage train method changes
+  // Add custom handler for field changes
   const handleFormChange = (name: string, value: string) => {
-    // Special case for train method to update stage as well
-    if (name === 'trainMethod') {
-      setCurrentTrainMethod(value);
-      const newStage = value === 'rlhf' ? 'rm' : 'sft';
-
-      // Update both values at once
-      setFormData(prev => ({
-        ...prev,
-        trainMethod: value,
-        stage: newStage
-      }));
-      return;
+    // Special case for stage
+    if (name === 'stage') {
+      setCurrentStage(value);
     }
 
-    // For ALL field types, directly update form data to prevent infinite loops
+    // For ALL field types, directly update form data
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -678,15 +883,68 @@ const Train = () => {
     updateFormData: useAppStore.getState().updateTrainFormData
   }), [currentLocale]);
 
-  return (
-    <>
-      {/* Error banner */}
-      <ErrorBanner
-        message={error}
-        retryCount={showErrorBanner ? 2 : 0}
-        onRetry={() => setRetryCount(prev => prev + 1)}
-      />
+  // Advanced dataset configuration preview
+  const DatasetConfigPreview = () => {
+    if (!showAdvanced || !formData?.dataset) return null;
+    
+    const datasets = formData.dataset.split(',').map(d => d.trim());
+    const stage = formData.stage || 'sft';
+    const autoConfig = formData.dataset_auto_config !== 'false';
+    const customMapping = formData.custom_column_mapping === 'true';
+    
+    return (
+      <div style={{
+        backgroundColor: '#f8f9fa',
+        border: '1px solid #dee2e6',
+        borderRadius: '4px',
+        padding: '12px',
+        marginBottom: '16px'
+      }}>
+        <h6 style={{ marginBottom: '8px' }}>Dataset Configuration Preview:</h6>
+        
+        {datasets.map(dataset => (
+          <div key={dataset} style={{ marginBottom: '8px', fontSize: '0.9em' }}>
+            <strong>{dataset}:</strong>
+            <div style={{ marginLeft: '16px' }}>
+              {autoConfig ? (
+                <>
+                  <div>• Auto-configured for <code>{stage}</code> training</div>
+                  <div>• Ranking: <code>{stage === 'rm' ? 'True' : 'False'}</code></div>
+                  {!customMapping && (
+                    <div>• Columns: {stage === 'rm' 
+                      ? <code>instruction→prompt, chosen/rejected→comparison</code>
+                      : <code>instruction→prompt, output→response</code>
+                    }</div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div>• Manual configuration</div>
+                  <div>• Ranking: <code>{formData.dataset_ranking_override || 'auto'}</code></div>
+                </>
+              )}
+              
+              {customMapping && (
+                <div>• Custom mapping: 
+                  <code>{formData.prompt_column || 'instruction'}→prompt</code>,
+                  {stage === 'rm' ? (
+                    <> <code>{formData.chosen_column || 'chosen'}/{formData.rejected_column || 'rejected'}→comparison</code></>
+                  ) : (
+                    <> <code>{formData.response_column || 'output'}→response</code></>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
+  // Add the preview component to advanced mode
+  const TrainWithPreview = () => (
+    <>
+      {showAdvanced && <DatasetConfigPreview />}
       <ModelForm
         title="trainNewModel"
         submitButtonText="startTraining"
@@ -700,13 +958,23 @@ const Train = () => {
       />
     </>
   );
+
+  return (
+    <>
+      <ErrorBanner
+        message={error}
+        retryCount={showErrorBanner ? 2 : 0}
+        onRetry={() => setRetryCount(prev => prev + 1)}
+      />
+      <TrainWithPreview />
+    </>
+  );
 };
 
-// Create a wrapper component that includes the shared layout
 const TrainWithLayout = () => (
   <ModelConfigLayout
-    title="Configure Training Options"
     translations={translations}
+    title="Configure Training Options"
   >
     <Train />
   </ModelConfigLayout>

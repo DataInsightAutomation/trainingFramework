@@ -43,6 +43,7 @@ export const trainingService = {
           train_method: trainingData.train_method,
           token: trainingData.token,
           finetuning_type: trainingData.finetuning_type,
+          stage: trainingData.stage
         };
         console.log("Training service using BASIC mode - filtering out advanced parameters");
       } else {

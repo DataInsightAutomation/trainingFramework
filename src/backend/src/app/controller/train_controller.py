@@ -9,6 +9,7 @@ from app.config.training_defaults import get_default_config
 from app.util.util import process_datasets
 
 import logging as logger
+from typing import List
 
 router = APIRouter(
     prefix="",
@@ -17,25 +18,89 @@ router = APIRouter(
 )
 
 
-def map_train_method_from_input(train_method: str) -> str:
+def map_stage_to_llamafactory(stage: str) -> str:
     """
-    Map the input train method to the internal representation.
+    Map the frontend stage directly to LLaMA-Factory stage.
+    Frontend stages now directly correspond to LLaMA-Factory stages.
     """
-    if train_method == "supervised":
-        return "sft"
-    elif train_method == "rlhf":
-        return "rlhf"
-    # should be not using
-    elif train_method in ["lora", "qlora", "finetuning"]:
-        # These are transformed into 'supervised' with appropriate finetuning_type
-        # but the stage should still be 'sft'
-        return "sft"
-    elif train_method == "distillation":
-        return "distillation"
+    valid_stages = ["sft", "pt", "rm", "ppo", "dpo", "kto", "orpo"]
+    if stage in valid_stages:
+        return stage
     else:
-        raise HTTPException(status_code=400, detail=f"Unsupported train method: {train_method}")
+        raise HTTPException(status_code=400, detail=f"Unsupported stage: {stage}")
 
 
+def map_finetuning_method_to_llamafactory(method: str, quantization_bit: int = None) -> dict:
+    """
+    Convert frontend finetuning method to LLaMA-Factory parameters.
+    """
+    if method == "qlora":
+        return {"finetuning_type": "lora", "quantization_bit": 4}
+    elif method == "lora":
+        return {"finetuning_type": "lora"}
+    elif method == "freeze":
+        return {"finetuning_type": "freeze"}
+    elif method == "full":
+        return {"finetuning_type": "full"}
+    else:
+        # Default to lora if unknown
+        return {"finetuning_type": "lora"}
+
+
+def validate_dataset_for_stage(datasets: List[str], stage: str) -> bool:
+    """
+    Validate if datasets are compatible with the training stage.
+    Note: This is a basic validation based on dataset names.
+    The actual validation is done by LLaMA-Factory based on dataset_attr.ranking
+    """
+    logger.info(f"Validating datasets {datasets} for stage '{stage}'")
+    
+    incompatible_datasets = []
+    
+    for dataset in datasets:
+        dataset_lower = dataset.lower()
+        
+        if stage == 'rm':
+            # RM stage needs datasets with ranking=True attribute
+            # This is just a heuristic check - the real check is done by LLaMA-Factory
+            if 'rlhf' in dataset_lower and 'comparison' not in dataset_lower and 'ranking' not in dataset_lower:
+                incompatible_datasets.append(dataset)
+                logger.warning(f"Dataset '{dataset}' appears to be an RLHF preference dataset. "
+                              f"RM training requires datasets with ranking=True attribute (comparison data).")
+        
+        elif stage == 'sft':
+            # SFT should use instruction/chat datasets (ranking=False)
+            if 'rlhf' in dataset_lower or 'preference' in dataset_lower:
+                incompatible_datasets.append(dataset)
+                logger.warning(f"Dataset '{dataset}' appears to be a preference dataset, not suitable for SFT")
+    
+    # For other stages (ppo, dpo, kto, orpo), we'll be more permissive
+    # and let LLaMA-Factory do the actual validation
+    
+    if incompatible_datasets:
+        return False
+    
+    return True
+
+
+def auto_configure_dataset_for_stage(datasets: List[str], stage: str) -> dict:
+    """
+    Automatically configure dataset attributes based on the training stage.
+    This creates dataset overrides that will be passed to LLaMA-Factory.
+    """
+    dataset_overrides = {}
+    
+    for dataset_name in datasets:
+        if stage == "rm":
+            # For RM training, override to ranking=True
+            dataset_overrides[dataset_name] = {"ranking": True}
+            logger.info(f"🔧 Override dataset '{dataset_name}' to ranking=True for RM training")
+        else:
+            # For other stages, override to ranking=False  
+            dataset_overrides[dataset_name] = {"ranking": False}
+            logger.info(f"🔧 Override dataset '{dataset_name}' to ranking=False for {stage} training")
+    
+    return dataset_overrides
 
 
 async def _run_training_task(job_id: str, params: dict):
@@ -70,74 +135,123 @@ async def _run_training_task(job_id: str, params: dict):
 )
 async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
     try:
+        # Handle both old and new field names during transition
+        stage = getattr(request, 'stage', None)
+        finetuning_method = getattr(request, 'finetuning_method', None) or getattr(request, 'finetuning_type', None)
+        
+        # If stage is not provided, try to derive from old train_method field
+        if not stage:
+            train_method = getattr(request, 'train_method', None)
+            if train_method:
+                if train_method == "supervised":
+                    stage = "sft"
+                elif train_method == "rlhf":
+                    stage = "ppo"
+                else:
+                    stage = train_method  # Assume direct mapping
+            else:
+                stage = "sft"  # Default fallback
+        
+        # If finetuning_method is not provided, default to lora
+        if not finetuning_method:
+            finetuning_method = "lora"
+        
+        # Map stage directly to LLaMA-Factory stage FIRST (before validation)
+        validated_stage = map_stage_to_llamafactory(stage)
+        
         # Determine if this is a basic or advanced request
-        is_advanced = any(getattr(request, field) is not None for field in [
-            'trust_remote_code', 'stage', 'finetuning_type', 'lora_rank', 'lora_target',
+        is_advanced = any(getattr(request, field, None) is not None for field in [
+            'trust_remote_code', 'lora_rank', 'lora_target', 'lora_alpha', 'lora_dropout',
             'template', 'cutoff_len', 'max_samples', 'overwrite_cache', 'preprocessing_num_workers',
             'per_device_train_batch_size', 'gradient_accumulation_steps', 'learning_rate',
             'num_train_epochs', 'lr_scheduler_type', 'warmup_ratio', 'bf16',
             'output_dir', 'logging_steps', 'save_steps', 'plot_loss', 'overwrite_output_dir',
+            'quantization_bit'
         ])
         
         logger.info(f"Request type: {'Advanced' if is_advanced else 'Basic'}")
-        logger.info(f"Model: {request.model_name}, Method: {request.train_method}")
+        logger.info(f"Model: {request.model_name}, Stage: {validated_stage}, Method: {finetuning_method}")
         
-        # Process datasets
-        processed_datasets, custom_datasets_found, dataset_details = process_datasets(request.datasets)
+        # Process datasets with stage-aware configuration
+        # Extract advanced config from request if available
+        advanced_config = {}
+        if is_advanced:
+            advanced_config = {
+                'dataset_auto_config': getattr(request, 'dataset_auto_config', True),
+                'dataset_ranking_override': getattr(request, 'dataset_ranking_override', 'auto'),
+                'custom_column_mapping': getattr(request, 'custom_column_mapping', False),
+                'prompt_column': getattr(request, 'prompt_column', 'instruction'),
+                'query_column': getattr(request, 'query_column', 'input'),
+                'chosen_column': getattr(request, 'chosen_column', 'chosen'),
+                'rejected_column': getattr(request, 'rejected_column', 'rejected'),
+                'response_column': getattr(request, 'response_column', 'output')
+            }
         
+        processed_datasets, custom_datasets_found, dataset_details = process_datasets(
+            request.datasets, 
+            validated_stage, 
+            advanced_config if advanced_config else None
+        )
+
+        logger.info(f"✅ Dataset auto-configured for stage '{validated_stage}'")
+
         # Get provided fields (excluding None values)
         request_dict = request.dict(exclude_none=True)
         
-        # Map training method and finetuning type based on frontend selections
-        train_method = request.train_method
-        finetuning_type = request_dict.get("finetuning_type", None)
+        # Map finetuning method to LLaMA-Factory parameters
+        finetuning_config = map_finetuning_method_to_llamafactory(
+            finetuning_method,
+            getattr(request, 'quantization_bit', None)
+        )
         
-        # Handle special case for lora/qlora/finetuning as primary methods
-        if train_method in ["lora", "qlora", "finetuning"]:
-            if train_method == "lora":
-                finetuning_type = "lora"
-            elif train_method == "qlora":
-                finetuning_type = "qlora"
-            elif train_method == "finetuning":
-                finetuning_type = "full"
-            # Set the actual method to supervised
-            train_method = "supervised"
-            
-        # Start with basic parameters
+        # Start with basic LLaMA-Factory parameters
         full_params = {
             "model_name_or_path": request.model_name,
-            "model_path": request.model_path,
             "dataset": ','.join(processed_datasets) if processed_datasets else None,
-            "has_custom_datasets": custom_datasets_found,
-            "stage": map_train_method_from_input(train_method), 
+            "stage": validated_stage,  # Direct mapping to LLaMA-Factory stage
             "do_train": True,
-            # Add Intel-specific options
-            # "use_ipex": True,
+            # "ranking": ranking,
+            **finetuning_config  # Apply finetuning type and quantization
         }
         
-        # Add finetuning_type if it was set
-        if finetuning_type:
-            full_params["finetuning_type"] = finetuning_type
+        # Add model path if provided
+        if hasattr(request, 'model_path') and request.model_path:
+            full_params["model_name_or_path"] = request.model_path
+            logger.info('Using model_path instead of model_name')
             
         # Add token if provided
         if hasattr(request, 'token') and request.token:
-            full_params["hub_token"] = request.token  # Add to params for functions that accept it directly
-            os.environ["HF_TOKEN"] = request.token    # Set in environment for libraries that check env vars
-            # Add this additional environment variable for better compatibility
+            full_params["hub_token"] = request.token
+            os.environ["HF_TOKEN"] = request.token
             os.environ["HUGGING_FACE_HUB_TOKEN"] = request.token
-            logger.info("Token provided for training (set in environment variables)")
+            logger.info("Token provided for training")
         else:
-            os.environ["HF_TOKEN"] = ''    # Set in environment for libraries that check env vars
+            os.environ["HF_TOKEN"] = ''
             os.environ["HUGGING_FACE_HUB_TOKEN"] = ''
+
+        # Add LoRA parameters if using LoRA-based finetuning
+        if finetuning_config.get("finetuning_type") == "lora":
+            lora_params = {
+                "lora_rank": getattr(request, 'lora_rank', 8),
+                "lora_alpha": getattr(request, 'lora_alpha', 16),
+                "lora_dropout": getattr(request, 'lora_dropout', 0.0),
+                "lora_target": getattr(request, 'lora_target', 'all')
+            }
+            full_params.update({k: v for k, v in lora_params.items() if v is not None})
 
         # Add advanced parameters if provided
         if is_advanced:
+            # Exclude frontend-specific fields that don't map to LLaMA-Factory
+            excluded_fields = [
+                "model_name", "model_path", "datasets", "stage", "finetuning_method", 
+                "finetuning_type", "train_method", "token"
+            ]
             advanced_params = {k: v for k, v in request_dict.items() 
-                            if k not in ["model_name", "model_path", "datasets", "train_method", "token"]}
+                            if k not in excluded_fields}
             full_params.update(advanced_params)
 
-        # Apply method-specific defaults for missing parameters
-        defaults = get_default_config(request.train_method)
+        # Apply stage-specific defaults
+        defaults = get_default_config(validated_stage)
         for param_name, default_value in defaults.items():
             if param_name not in full_params:
                 full_params[param_name] = default_value
@@ -145,26 +259,47 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
         # Generate output directory if not specified
         if "output_dir" not in full_params:
             model_short_name = request.model_name.split('/')[-1]
-            training_method = request.train_method
-            finetuning_type = full_params.get("finetuning_type", "default")
-            stage = full_params.get("stage", "default")
+            finetuning_type = finetuning_config.get("finetuning_type", "lora")
             
-            full_params["output_dir"] = f"saves/{model_short_name}/{training_method}/{finetuning_type}/{stage}"
+            full_params["output_dir"] = f"saves/{model_short_name}/{validated_stage}/{finetuning_type}"
             logger.info(f"Generated output_dir: {full_params['output_dir']}")
-
-        # Use model_path if provided
-        if request.model_path:
-            logger.info('Using model_path instead of model_name')
-            full_params["model_name_or_path"] = request.model_path
         
         # Add detailed dataset information
         if dataset_details:
             full_params["dataset_details"] = dataset_details
         
-        # Remove model_path to avoid confusion
-        if "model_path" in full_params:
-            del full_params["model_path"]
+        # Handle PPO stage specific requirements
+        if validated_stage == "ppo":
+            # PPO requires a reward model path
+            reward_model_path = getattr(request, 'reward_model', None)
             
+            if not reward_model_path:
+                # Generate default reward model path if not provided
+                model_short_name = request.model_name.split('/')[-1]
+                reward_model_path = f"saves/{model_short_name}/rm/lora"
+                logger.info(f"No reward model provided, using default: {reward_model_path}")
+            
+            # Convert to absolute path and validate
+            if not os.path.isabs(reward_model_path):
+                reward_model_path = os.path.join(os.getcwd(), reward_model_path)
+            
+            # Check if reward model exists
+            if not os.path.exists(reward_model_path):
+                logger.warning(f"Reward model path does not exist: {reward_model_path}")
+                logger.info(f"PPO training will proceed, but may fail if reward model is not found")
+            else:
+                logger.info(f"✅ Found reward model at: {reward_model_path}")
+            
+            full_params["reward_model"] = reward_model_path
+            
+            # Add PPO-specific defaults if not already set
+            if "max_new_tokens" not in full_params:
+                full_params["max_new_tokens"] = 512
+            if "top_k" not in full_params:
+                full_params["top_k"] = 0
+            if "top_p" not in full_params:
+                full_params["top_p"] = 0.9
+
         # Generate a job ID
         job_id = f"train-{hash(request.model_name)}-{int(time.time())}"
 
@@ -175,13 +310,17 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
             "message": "Job queued",
             "parameters": full_params
         }
-
+        
+        logger.info(f"LLaMA-Factory parameters: {full_params}")
+        
         # Schedule the training as a background task
         background_tasks.add_task(_run_training_task, job_id, full_params)
-        # await _run_training_task(job_id, full_params)
         
         logger.info(f"Job {job_id} scheduled for background execution")
         return {"job_id": job_id, "status": "PENDING"}
+        
     except Exception as e:
+        import traceback
+        logger.error("Error handling training request:\n" + traceback.format_exc())
         logger.error(f"Error handling training request: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

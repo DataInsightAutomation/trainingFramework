@@ -32,6 +32,7 @@ AVAILABLE_DATASETS = [
     # Dataset(id="alpaca-cleaned", name="Alpaca (Cleaned)", description="Cleaned version of the Stanford Alpaca dataset", category="Instruction"),
     Dataset(id="easydata2022/private_alpaca_mini_slice", name="Easydata Alpaca private Easydata", description="Custom test dataset based on Huggingface Alpaca mini", category="Instruction"),
     Dataset(id="easydata2022/public_alpaca_mini_slice", name="Easydata Alpaca Public Easydata", description="Custom test dataset based on a smaller version of Alpaca", category="Instruction"),
+    Dataset(id="easydata2022/public_hh_rlhf_500", name="Easydata Antropic Public hh-rlhf", description="Custom test dataset based on a smaller version of hh-rlhf", category="Instruction"),
     # Dataset(id="alpaca-gpt4", name="Alpaca-GPT4", description="GPT-4 generated Alpaca dataset", category="Instruction"),
     # Dataset(id="dolly-15k", name="Dolly 15k", description="Databricks' Dolly 15k instruction dataset", category="Instruction"),
     # Dataset(id="oasst1", name="Open Assistant", description="Open Assistant dataset", category="Conversation"),

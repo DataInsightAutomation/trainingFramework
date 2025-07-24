@@ -48,6 +48,10 @@ async def run_training_job(job_id: str, train_args: Optional[Dict[str, Any]] = N
         # Remove keys that might cause conflicts
         _clean_training_args(train_args)
         train_args['dataset_dir'] = dataset_details
+        print(train_args,'train_argstrain_argstrain_args')
+        if train_args['stage'] == 'rlhf':
+            train_args['stage'] = 'ppo'
+
         # Run the training
         logger.info(f"Starting training job {job_id}")
         _run_training(train_args)
