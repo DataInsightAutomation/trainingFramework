@@ -68,14 +68,14 @@ def validate_dataset_for_stage(datasets: List[str], stage: str) -> bool:
                 logger.warning(f"Dataset '{dataset}' appears to be an RLHF preference dataset. "
                               f"RM training requires datasets with ranking=True attribute (comparison data).")
         
-        elif stage == 'sft':
-            # SFT should use instruction/chat datasets (ranking=False)
+        elif stage in ['sft', 'pt', 'ppo']:
+            # Standard stages should use instruction/chat datasets (ranking=False)
             if 'rlhf' in dataset_lower or 'preference' in dataset_lower:
                 incompatible_datasets.append(dataset)
-                logger.warning(f"Dataset '{dataset}' appears to be a preference dataset, not suitable for SFT")
+                logger.warning(f"Dataset '{dataset}' appears to be a preference dataset, not suitable for {stage}")
     
-    # For other stages (ppo, dpo, kto, orpo), we'll be more permissive
-    # and let LLaMA-Factory do the actual validation
+    # For preference stages (dpo, kto, orpo), we expect preference datasets
+    # For other stages, we'll be more permissive and let LLaMA-Factory do the actual validation
     
     if incompatible_datasets:
         return False
@@ -135,26 +135,9 @@ async def _run_training_task(job_id: str, params: dict):
 )
 async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
     try:
-        # Handle both old and new field names during transition
-        stage = getattr(request, 'stage', None)
-        finetuning_method = getattr(request, 'finetuning_method', None) or getattr(request, 'finetuning_type', None)
-        
-        # If stage is not provided, try to derive from old train_method field
-        if not stage:
-            train_method = getattr(request, 'train_method', None)
-            if train_method:
-                if train_method == "supervised":
-                    stage = "sft"
-                elif train_method == "rlhf":
-                    stage = "ppo"
-                else:
-                    stage = train_method  # Assume direct mapping
-            else:
-                stage = "sft"  # Default fallback
-        
-        # If finetuning_method is not provided, default to lora
-        if not finetuning_method:
-            finetuning_method = "lora"
+        # Get stage and finetuning method from request
+        stage = getattr(request, 'stage', 'sft')  # Default to SFT if not provided
+        finetuning_method = getattr(request, 'finetuning_method', 'lora')  # Default to LoRA
         
         # Map stage directly to LLaMA-Factory stage FIRST (before validation)
         validated_stage = map_stage_to_llamafactory(stage)
@@ -173,12 +156,10 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
         logger.info(f"Model: {request.model_name}, Stage: {validated_stage}, Method: {finetuning_method}")
         
         # Process datasets with stage-aware configuration
-        # Extract advanced config from request if available
+        # Extract advanced config from request if available  
         advanced_config = {}
         if is_advanced:
             advanced_config = {
-                'dataset_auto_config': getattr(request, 'dataset_auto_config', True),
-                'dataset_ranking_override': getattr(request, 'dataset_ranking_override', 'auto'),
                 'custom_column_mapping': getattr(request, 'custom_column_mapping', False),
                 'prompt_column': getattr(request, 'prompt_column', 'instruction'),
                 'query_column': getattr(request, 'query_column', 'input'),
@@ -244,7 +225,10 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
             # Exclude frontend-specific fields that don't map to LLaMA-Factory
             excluded_fields = [
                 "model_name", "model_path", "datasets", "stage", "finetuning_method", 
-                "finetuning_type", "train_method", "token"
+                "finetuning_type", "token",
+                # Custom dataset configuration fields (used by process_datasets but not LLaMA-Factory)
+                "custom_column_mapping", "prompt_column", "query_column", 
+                "chosen_column", "rejected_column", "response_column"
             ]
             advanced_params = {k: v for k, v in request_dict.items() 
                             if k not in excluded_fields}
@@ -271,39 +255,18 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
         # Handle PPO stage specific requirements
         if validated_stage == "ppo":
             # PPO requires a reward model path
-            reward_model_path = getattr(request, 'reward_model', None)
-            
+            reward_model_path = full_params.get("reward_model")
             if not reward_model_path:
-                # Generate default reward model path if not provided
+                # Generate default reward model path
                 model_short_name = request.model_name.split('/')[-1]
                 reward_model_path = f"saves/{model_short_name}/rm/lora"
-                logger.info(f"No reward model provided, using default: {reward_model_path}")
-            
-            # Convert to absolute path and validate
-            if not os.path.isabs(reward_model_path):
-                reward_model_path = os.path.join(os.getcwd(), reward_model_path)
-            
-            # Check if reward model exists
-            if not os.path.exists(reward_model_path):
-                logger.warning(f"Reward model path does not exist: {reward_model_path}")
-                logger.info(f"PPO training will proceed, but may fail if reward model is not found")
-            else:
-                logger.info(f"✅ Found reward model at: {reward_model_path}")
-            
-            full_params["reward_model"] = reward_model_path
-            
-            # Add PPO-specific defaults if not already set
-            if "max_new_tokens" not in full_params:
-                full_params["max_new_tokens"] = 512
-            if "top_k" not in full_params:
-                full_params["top_k"] = 0
-            if "top_p" not in full_params:
-                full_params["top_p"] = 0.9
-
+                full_params["reward_model"] = os.path.join(os.getcwd(), reward_model_path)
+                logger.info(f"Using default reward model path: {full_params['reward_model']}")
+        
         # Generate a job ID
         job_id = f"train-{hash(request.model_name)}-{int(time.time())}"
 
-        # Store job status
+        # Store job statusj
         job_status[job_id] = {
             "status": "PENDING",
             "progress": 0.0,

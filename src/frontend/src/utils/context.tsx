@@ -7,6 +7,7 @@ type SettingKey = 'activeKeyLeftPanel' | 'theme' | 'userName';
 
 // Define the train form data type
 export interface TrainFormData {
+stage: string; // Added stage field
   modelName: string;
   modelPath: string;
   dataset: string; // This will now store comma-separated values
@@ -47,7 +48,8 @@ export const defaultState: LocaleKeyState = {
         modelName: '',
         modelPath: '',
         dataset: '',
-        trainMethod: ''
+        trainMethod: '',
+        stage: ''
     },
     evaluateFormData: {
         modelName: '',

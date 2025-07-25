@@ -27,7 +27,8 @@ const advancedFieldSections = {
           { value: '8', directLabel: '8-bit Quantization' }
         ],
         defaultValue: '',
-        description: 'quantizationDescription'
+        description: 'quantizationDescription',
+        required: false, // Optional for advanced users
       },
     ]
   },
@@ -58,7 +59,58 @@ const advancedFieldSections = {
           { value: 'mistral', directLabel: 'Mistral' },
           { value: 'chatml', directLabel: 'ChatML' },
         ]
+      }
+    ]
+  },
+  rlhfConfig: {
+    title: 'rlhfConfigSection',
+    fields: [
+      {
+        name: 'reward_model',
+        type: 'searchableSelect',
+        options: [], // Will be populated based on PPO stage
+        description: 'rewardModelDescription',
+        required: false,
+        creatable: true,
+        createMessage: 'zcxz',
+        createPlaceholder: 'xzc',
+        customOptionPrefix: 'custom',
       },
+      {
+        name: "beta_value",
+        type: "range",
+        defaultValue: '0.1',
+        min: 0.1,
+        max: 1.0,
+        step: 0.1,
+        description: 'betaValueDescription',
+        required: false, // Optional for advanced users
+      },
+      {
+
+        name: "ftx_gamma",
+        type: "range",
+        defaultValue: '0.1',
+        min: 0.1,
+        max: 1.0,
+        step: 0.1,
+        description: 'ftxGammaDescription',
+        required: false, // Optional for advanced users
+      },
+      {
+        name: "loss_type",
+        type: "select",
+        options: [
+          { value: 'sigmoid', directLabel: 'Sigmoid Loss' },
+          { value: 'hinge', directLabel: 'Hinge Loss' },
+          { value: 'ipo', directLabel: 'IPO Loss' },
+          { value: 'kto_pair', directLabel: 'KTO Pair Loss' },
+          { value: 'orpo', directLabel: 'ORPO Loss' },
+          { value: 'simpo', directLabel: 'SIMPO Loss' }
+        ],
+        description: 'lossTypeDescription',
+        required: false, // Optional for advanced users
+      }
     ]
   },
   datasetConfig: {
@@ -74,7 +126,7 @@ const advancedFieldSections = {
       },
       {
         name: 'dataset_ranking_override',
-        type: 'select',
+        type: 'searchableSelect',
         options: [
           { value: 'auto', directLabel: 'Auto-detect based on stage (recommended)' },
           { value: 'true', directLabel: 'Force ranking=True (for RM training)' },
@@ -223,7 +275,7 @@ const basicFields = [
   // Stage - what you want to accomplish (maps directly to LLaMA-Factory)
   {
     name: 'stage',
-    type: 'searchableSelect',
+    type: 'select', // <-- THIS SHOULD BE 'searchableSelect' for creatable/selectable behavior!
     options: [
       { value: 'sft', directLabel: 'Supervised Fine-Tuning (SFT) - Train on instruction/chat datasets' },
       { value: 'pt', directLabel: 'Continued Pretraining (PT) - Train on raw text data' },
@@ -510,6 +562,24 @@ const Train = () => {
               </div>
             )}
           </>
+        ) : stage === 'ppo' ? (
+          <>
+            <div>• Dataset ranking: <code>False</code> (uses reward model internally)</div>
+            <div>• Column mapping: <code>None</code> (PPO uses trained reward model, not direct dataset columns)</div>
+            <div style={{ color: '#0c5460', marginTop: '4px' }}>
+              ℹ️ PPO requires a trained reward model from RM stage.
+            </div>
+          </>
+        ) : ['dpo', 'kto', 'orpo'].includes(stage) ? (
+          <>
+            <div>• Dataset ranking: <code>False</code> (standard for preference optimization)</div>
+            <div>• Column mapping: <code>instruction→prompt, chosen/rejected→comparison</code></div>
+            {!isRlhfDataset && (
+              <div style={{ color: '#856404', marginTop: '4px' }}>
+                ⚠️ This dataset should have chosen/rejected columns for preference training.
+              </div>
+            )}
+          </>
         ) : (
           <>
             <div>• Dataset ranking: <code>False</code> (standard for {stage} training)</div>
@@ -631,6 +701,7 @@ const Train = () => {
       );
     }
 
+
     return processedFields;
   }, [
     modelOptions,
@@ -640,7 +711,7 @@ const Train = () => {
     currentLocale,
     currentStage,
     showAdvanced,
-    formData
+    formData,
   ]);
 
   // Helper functions to make handleSubmit more readable
@@ -694,7 +765,7 @@ const Train = () => {
         : 0.0;
       requestData.lora_target = data.lora_target || 'all';
     }
-    
+
     return requestData;
   };
   
@@ -823,13 +894,16 @@ const Train = () => {
   };
   
   // Add custom handler for field changes
-  const handleFormChange = (name: string, value: string) => {
-    // Special case for stage
-    if (name === 'stage') {
-      setCurrentStage(value);
+  const handleFormChange = (name: string, value: any) => {
+    if (name === 'trainMethod') {
+      const newStage = value === 'rlhf' ? 'rm' : 'sft';
+      setFormData(prev => ({
+        ...prev,
+        trainMethod: value,
+        stage: newStage
+      }));
+      return;
     }
-
-    // For ALL field types, directly update form data
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -913,6 +987,10 @@ const Train = () => {
                   {!customMapping && (
                     <div>• Columns: {stage === 'rm' 
                       ? <code>instruction→prompt, chosen/rejected→comparison</code>
+                      : stage === 'ppo'
+                      ? <code>None (uses reward model)</code>
+                      : ['dpo', 'kto', 'orpo'].includes(stage)
+                      ? <code>instruction→prompt, chosen/rejected→comparison</code>
                       : <code>instruction→prompt, output→response</code>
                     }</div>
                   )}
@@ -927,8 +1005,10 @@ const Train = () => {
               {customMapping && (
                 <div>• Custom mapping: 
                   <code>{formData.prompt_column || 'instruction'}→prompt</code>,
-                  {stage === 'rm' ? (
+                  {stage === 'rm' || ['dpo', 'kto', 'orpo'].includes(stage) ? (
                     <> <code>{formData.chosen_column || 'chosen'}/{formData.rejected_column || 'rejected'}→comparison</code></>
+                  ) : stage === 'ppo' ? (
+                    <> <code>None (uses reward model)</code></>
                   ) : (
                     <> <code>{formData.response_column || 'output'}→response</code></>
                   )}

@@ -47,6 +47,7 @@ export const translations = {
     datasetConfigSection: 'Dataset Processing',
     trainingConfigSection: 'Training Parameters',
     outputConfigSection: 'Output Configuration',
+    rlhfConfigSection: 'RLHF/PPO Settings',
 
     // Field labels
     trust_remote_codeLabel: 'Trust Remote Code',
@@ -163,17 +164,21 @@ export const translations = {
     
     // Add missing advanced field labels
     quantization_bitLabel: 'Quantization Bits',
-    
-    // Add missing placeholders for basic fields
-    tokenPlaceholder: 'Enter your API token',
-    finetuning_methodPlaceholder: 'Select finetuning method',
-    reward_modelPlaceholder: 'Enter path to trained reward model',
-    
+    beta_valueLabel: 'Beta Value',
+    ftx_gammaLabel: 'FTX Gamma',
+    loss_typeLabel: 'Loss Type',
+
     // Add missing placeholders for advanced fields
     quantization_bitPlaceholder: 'Select quantization level',
+    beta_valuePlaceholder: 'Set beta value',
+    ftx_gammaPlaceholder: 'Set FTX gamma value',
+    loss_typePlaceholder: 'Select loss function',
 
     // Add descriptions
     rewardModelDescription: 'Path to the trained reward model (required for PPO training). Usually saves/modelname/rm/lora',
+    betaValueDescription: 'Beta parameter for RLHF/PPO algorithms (advanced, optional)',
+    ftxGammaDescription: 'FTX gamma parameter for RLHF/PPO algorithms (advanced, optional)',
+    lossTypeDescription: 'Select the loss function to use for RLHF/PPO training (advanced, optional)',
   },
   zh: {
     addCustomModel: '添加自定义模型: "{input}"',
@@ -225,6 +230,7 @@ export const translations = {
     datasetConfigSection: '数据集处理',
     trainingConfigSection: '训练参数',
     outputConfigSection: '输出配置',
+    rlhfConfigSection: 'RLHF/PPO 设置',
 
     // Field labels (Chinese translations would go here)
     trust_remote_codeLabel: '信任远程代码',
@@ -341,7 +347,10 @@ export const translations = {
     
     // Add missing advanced field labels (Chinese)
     quantization_bitLabel: '量化位数',
-    
+    beta_valueLabel: 'Beta值',
+    ftx_gammaLabel: 'FTX Gamma',
+    loss_typeLabel: '损失函数',
+
     // Add missing placeholders for basic fields (Chinese)
     tokenPlaceholder: '输入您的 API 令牌',
     finetuning_methodPlaceholder: '选择微调方法',
@@ -352,5 +361,8 @@ export const translations = {
 
     // Add descriptions (Chinese)
     rewardModelDescription: '训练好的奖励模型路径（PPO训练必需）。通常是 saves/modelname/rm/lora',
+    betaValueDescription: 'RLHF/PPO算法的Beta参数（高级，可选）',
+    ftxGammaDescription: 'RLHF/PPO算法的FTX Gamma参数（高级，可选）',
+    lossTypeDescription: '选择RLHF/PPO训练使用的损失函数（高级，可选）',
   }
 };

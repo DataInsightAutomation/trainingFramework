@@ -108,14 +108,9 @@ const SearchableSelectField: React.FC<SearchableSelectProps> = ({
       setShowDropdown(true);
     }
     
-    // Direct input mode for creatable fields - update form value directly
-    // This makes custom entry much more intuitive
-    if (creatable) {
-      // Create a temporary custom option for what the user is typing
-      const tempCustomValue = `${customOptionPrefix}:${term}`;
-      setSelectedOption({ value: tempCustomValue, label: term });
-      onChange(name, tempCustomValue);
-    }
+    // Do NOT call onChange on every keystroke for creatable fields
+    // Only update the internal searchTerm state while typing
+    // The form value will be updated only when the user selects/creates an option
   };
   
   // Handle key press events
@@ -129,6 +124,10 @@ const SearchableSelectField: React.FC<SearchableSelectProps> = ({
       setShowDropdown(false);
     } else if (e.key === 'Escape') {
       setShowDropdown(false);
+      // Restore the previous value on escape
+      if (selectedOption) {
+        setSearchTerm('');
+      }
     } else if (e.key === 'ArrowDown' && filteredOptions.length > 0) {
       // Focus the first option in the dropdown
       const firstOption = document.querySelector('.searchable-select-dropdown .list-group-item');
@@ -179,6 +178,17 @@ const SearchableSelectField: React.FC<SearchableSelectProps> = ({
             if (!creatable) { // Only clear search term if not creatable
               setSearchTerm('');
             }
+          }}
+          onBlur={() => {
+            // For creatable fields, commit the searchTerm as a custom value when losing focus
+            if (creatable && searchTerm.trim() && searchTerm !== displayValue) {
+              const newOptionValue = `${customOptionPrefix}:${searchTerm}`;
+              const newOption = { value: newOptionValue, label: searchTerm };
+              setSelectedOption(newOption);
+              onChange(name, newOptionValue);
+            }
+            // Close dropdown after a short delay to allow clicks on dropdown items
+            setTimeout(() => setShowDropdown(false), 150);
           }}
           onKeyDown={handleKeyDown}
           required={required}

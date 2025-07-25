@@ -37,6 +37,9 @@ export function useModelForm({
   // Get context for advanced mode and search
   const { showAdvanced, searchQuery } = useContext(ModelConfigContext);
   
+  // Debug context values
+  console.log('useModelForm context values:', { showAdvanced, searchQuery });
+  
   // State management
   const [formData, setFormData] = useState<Record<string, string>>(defaultValues);
   const [modelOptions, setModelOptions] = useState<Array<{ value: string; directLabel: string }>>([]);

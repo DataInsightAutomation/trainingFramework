@@ -126,7 +126,7 @@ export const useAppStore = create(
         toggleFooter: () => set(state => ({ showFooter: !state.showFooter })),
 
         updateTrainFormData: (data) => set(state => ({
-            trainFormData: state.trainFormData ? { ...state.trainFormData, ...data } : data
+            trainFormData: state.trainFormData ? { ...state.trainFormData, ...data } : { ...data }
         })),
 
         updateExportFormData: (data) => set(state => ({

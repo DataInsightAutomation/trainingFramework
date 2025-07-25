@@ -89,68 +89,55 @@ def process_datasets(datasets: list[str], stage: str = None, advanced_config: di
                 # Fallback to auto
                 dataset_details[ds]["ranking"] = stage == 'rm'
         
-        # Configure column mapping
+        # Configure column mapping based on training stage requirements
         if custom_mapping and advanced_config:
             # Use custom column mapping from user
-            if stage == 'rm':
+            if stage in ['rm', 'dpo', 'kto', 'orpo']:
+                # These stages need preference/comparison columns
                 dataset_details[ds]["columns"] = {
                     "prompt": advanced_config.get('prompt_column', 'instruction'),
                     "query": advanced_config.get('query_column', 'input'),
                     "chosen": advanced_config.get('chosen_column', 'chosen'),
                     "rejected": advanced_config.get('rejected_column', 'rejected')
                 }
-            else:
+            elif stage in ['sft', 'pt']:
+                # These stages need standard instruction/response columns
                 dataset_details[ds]["columns"] = {
                     "prompt": advanced_config.get('prompt_column', 'instruction'),
                     "query": advanced_config.get('query_column', 'input'),
                     "response": advanced_config.get('response_column', 'output')
                 }
-            logger.info(f"🔧 Custom column mapping applied to dataset '{ds}': {dataset_details[ds]['columns']}")
+            # Note: PPO doesn't need explicit column mapping as it uses the reward model
+            logger.info(f"🔧 Custom column mapping applied to dataset '{ds}' for {stage}: {dataset_details[ds].get('columns', 'none')}")
         else:
-            # Use default auto-configuration
-            # Check if it's a HuggingFace-style dataset path
-            if '/' in ds and not os.path.exists(ds):
-                dataset_details[ds]["hf_hub_url"] = ds
-            else:
-                dataset_details[ds]["file_name"] = ds
-            
-            # Auto-configure ranking based on stage and dataset type
-            is_rlhf_dataset = any(keyword in ds.lower() for keyword in ['rlhf', 'hh_rlhf', 'preference', 'comparison'])
-            
+            # Use automatic column mapping based on stage
             if stage == 'rm':
-                # RM training always needs ranking=True
-                dataset_details[ds]["ranking"] = True
-                logger.info(f"🔧 Auto-configured dataset '{ds}' with ranking=True for RM training")
-                
-                # Set column mapping for reward model training
-                if is_rlhf_dataset:
-                    dataset_details[ds]["columns"] = {
-                        "prompt": "instruction",
-                        "query": "input", 
-                        "chosen": "chosen",
-                        "rejected": "rejected"
-                    }
-                else:
-                    # For non-RLHF datasets, try to make them work with RM
-                    dataset_details[ds]["columns"] = {
-                        "prompt": "instruction",
-                        "query": "input",
-                        "chosen": "output",  # Fallback to single output
-                        "rejected": "output"  # Will need manual handling
-                    }
-                    logger.warning(f"Dataset '{ds}' may not be ideal for RM training - consider using an RLHF dataset")
-                    
-            else:
-                # Non-RM stages use ranking=False
-                dataset_details[ds]["ranking"] = False
-                logger.info(f"🔧 Auto-configured dataset '{ds}' with ranking=False for {stage} training")
-                
-                # Standard column mapping for other stages
+                # RM needs preference/comparison data
+                dataset_details[ds]["columns"] = {
+                    "prompt": "instruction",
+                    "query": "input", 
+                    "chosen": "chosen",
+                    "rejected": "rejected"
+                }
+                logger.info(f"🔧 Auto-configured RM preference columns for dataset '{ds}'")
+            elif stage in ['dpo', 'kto', 'orpo']:
+                # Direct preference optimization also needs chosen/rejected
+                dataset_details[ds]["columns"] = {
+                    "prompt": "instruction",
+                    "query": "input", 
+                    "chosen": "chosen",
+                    "rejected": "rejected"
+                }
+                logger.info(f"🔧 Auto-configured preference columns for {stage} on dataset '{ds}'")
+            elif stage in ['sft', 'pt']:
+                # Standard instruction/response training
                 dataset_details[ds]["columns"] = {
                     "prompt": "instruction",
                     "query": "input",
                     "response": "output"
                 }
+                logger.info(f"🔧 Auto-configured standard columns for {stage} on dataset '{ds}'")
+            # Note: PPO doesn't get explicit column mapping - it uses the reward model internally
 
     return processed_datasets, custom_datasets_found, dataset_details
 

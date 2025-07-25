@@ -42,6 +42,9 @@ export interface FormField {
     disabled?: boolean; // Optional property to disable the field
     placeholder?: string; // Placeholder text for input fields
     advancedOnly?: boolean; // Add property to mark fields that only appear in advanced mode
+    // Conditional field properties
+    dependsOn?: string; // Field name that this field depends on
+    showWhen?: string; // Value that the dependent field should have to show this field
 }
 
 // Add a button configuration interface
@@ -105,8 +108,7 @@ const ModelForm = ({
     const theme = currentTheme;
     const t = translations[locale as keyof typeof translations];
 
-    // Initialize form values from props or default
-    const [formValues, setFormValues] = useState<Record<string, string>>(formData || {});
+
 
     // Add useEffect to reset validation when showAdvanced changes
     useEffect(() => {
@@ -129,6 +131,15 @@ const ModelForm = ({
         // If the field is marked as advanced-only and we're not in advanced mode, hide it
         if (field.advancedOnly && !showAdvanced) {
             return false;
+        }
+        
+        // Handle conditional field visibility based on dependsOn and showWhen
+        if (field.dependsOn && field.showWhen !== undefined) {
+            const dependentFieldValue = formData[field.dependsOn];
+            // Compare the current value of the dependent field with the required value
+            if (dependentFieldValue !== field.showWhen) {
+                return false;
+            }
         }
         
         // Add other visibility conditions as needed
@@ -357,7 +368,6 @@ const ModelForm = ({
                                     error={t[`${field.name}Error`]}
                                     theme={theme}
                                     disabled={field.disabled}
-                                    descriptionText={field.description ? t[field.description] : undefined}
                                 />
                             ) : field.type === 'toggle' ? (
                                 <ToggleField
@@ -504,23 +514,19 @@ const ModelForm = ({
     // Modify validation logic to respect validateVisibleFieldsOnly
     const validateForm = useCallback(() => {
         const errors: Record<string, string> = {};
-        
         fields.forEach(field => {
             // Skip validation for fields that aren't supposed to be validated yet
             if (validateVisibleFieldsOnly && field.required && !isFieldVisible(field)) {
                 return;
             }
-            
             // Standard validation logic for required fields
-            if (field.required && (!formValues[field.name] || formValues[field.name].trim() === '')) {
+            if (field.required && (!formData[field.name] || formData[field.name].trim() === '')) {
                 errors[field.name] = locale === 'zh' ? '此字段是必需的' : 'This field is required';
             }
-
             // ...existing validation logic...
         });
-        
         return errors;
-    }, [fields, formValues, locale, validateVisibleFieldsOnly]);
+    }, [fields, formData, locale, validateVisibleFieldsOnly]);
 
     // In the component's render function, add this debugging code
     return (
