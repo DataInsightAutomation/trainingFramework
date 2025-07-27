@@ -37,7 +37,7 @@ const advancedFieldSections = {
         description: 'finetuningTypeDescription',  // Changed to translation key
         defaultValue: 'lora'
       },
-      // Add lora_rank back to advanced settings
+      // Add lora_rank to advanced settings
       { name: 'lora_rank', type: 'number', min: 1, max: 64, step: 1, defaultValue: '8', description: 'loraRankDescription' },  // Changed to translation key
       { name: 'lora_target', type: 'text', defaultValue: 'all', description: 'loraTargetDescription' },  // Changed to translation key
       {
@@ -52,6 +52,67 @@ const advancedFieldSections = {
   datasetConfig: {
     title: 'datasetConfigSection',
     fields: [
+      // Custom column mapping toggle
+      {
+        name: 'custom_column_mapping',
+        type: 'toggle',
+        defaultValue: 'false',
+        description: 'custom_column_mappingDescription',
+        required: false
+      },
+      // SFT columns (shown when custom_column_mapping is true)
+      {
+        name: 'prompt_column',
+        type: 'text',
+        defaultValue: 'instruction',
+        description: 'prompt_columnDescription',
+        placeholder: 'prompt_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'query_column',
+        type: 'text',
+        defaultValue: 'input',
+        description: 'query_columnDescription',
+        placeholder: 'query_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      // RLHF columns (shown when custom_column_mapping is true)
+      {
+        name: 'chosen_column',
+        type: 'text',
+        defaultValue: 'chosen',
+        description: 'chosen_columnDescription',
+        placeholder: 'chosen_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'rejected_column',
+        type: 'text',
+        defaultValue: 'rejected',
+        description: 'rejected_columnDescription',
+        placeholder: 'rejected_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      {
+        name: 'response_column',
+        type: 'text',
+        defaultValue: 'output',
+        description: 'response_columnDescription',
+        placeholder: 'response_columnPlaceholder',
+        required: false,
+        dependsOn: 'custom_column_mapping',
+        showWhen: 'true'
+      },
+      // ...existing dataset fields...
       { name: 'cutoff_len', type: 'number', min: 128, max: 8192, step: 32 },
       {
         name: 'max_samples',
@@ -60,7 +121,7 @@ const advancedFieldSections = {
         max: 100000,
         step: 100,
         defaultValue: 1000,
-        required: false // Explicitly mark as not required
+        required: false
       },
       { name: 'overwrite_cache', type: 'toggle', defaultValue: 'false' },
       { name: 'preprocessing_num_workers', type: 'number', min: 1, max: 32, step: 1 },
@@ -92,6 +153,72 @@ const advancedFieldSections = {
       { name: 'save_steps', type: 'number', min: 10, max: 10000, step: 10 },
       { name: 'plot_loss', type: 'toggle', defaultValue: 'true' },
       { name: 'overwrite_output_dir', type: 'toggle', defaultValue: 'true' },
+    ]
+  },
+  rlhfConfig: {
+    title: 'rlhfConfigSection',
+    fields: [
+      {
+        name: 'beta_value',
+        type: 'range',
+        defaultValue: '0.1',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        description: 'betaValueDescription',
+        required: false
+      },
+      {
+        name: 'ftx_gamma',
+        type: 'range',
+        defaultValue: '0',
+        min: 0,
+        max: 10,
+        step: 0.1,
+        description: 'ftxGammaDescription',
+        required: false
+      },
+      {
+        name: 'loss_type',
+        type: 'select',
+        options: [
+          { value: 'sigmoid', directLabel: 'Sigmoid' },
+          { value: 'hinge', directLabel: 'Hinge' },
+          { value: 'ipo', directLabel: 'IPO' },
+          { value: 'kto_pair', directLabel: 'KTO Pair' },
+          { value: 'orpo', directLabel: 'ORPO' },
+          { value: 'simpo', directLabel: 'SIMPO' }
+        ],
+        description: 'lossTypeDescription',
+        required: false
+      },
+      // Remove direct use of formData here, set options dynamically in the component below
+      {
+        name: 'reward_model',
+        type: 'searchableSelect',
+        options: [], // Will be set dynamically in the component
+        creatable: true,
+        createMessage: 'addCustomModel',
+        createPlaceholder: 'enterCustomModelName',
+        customOptionPrefix: 'custom',
+        description: 'rewardModelDescription',
+        required: false,
+        defaultValue: '' // Will be set dynamically in the component
+      },
+      {
+        name: 'score_norm',
+        type: 'toggle',
+        defaultValue: 'false',
+        description: 'scoreNormDescription',
+        required: false
+      },
+      {
+        name: 'whiten_rewards',
+        type: 'toggle',
+        defaultValue: 'false',
+        description: 'whitenRewardsDescription',
+        required: false
+      }
     ]
   },
 };
