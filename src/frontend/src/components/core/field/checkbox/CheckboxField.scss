@@ -1,3 +1,5 @@
+@use '../../../theme' as *;
+
 .checkbox-field-container {
   margin-bottom: 1rem;
   
@@ -20,8 +22,7 @@
   &.light-theme {
     .checkbox-input {
       &:checked {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
+        @include themed-styles((background-color, accent), (border-color, accent));
       }
       
       &:focus {
@@ -30,18 +31,16 @@
     }
     
     .checkbox-label {
-      color: #212529;
+      @include themed-styles((color, label));
     }
   }
   
   &.dark-theme {
     .checkbox-input {
-      background-color: #2b3035;
-      border-color: #6c757d;
+      @include themed-styles((background-color, input-bg), (border-color, input-border));
       
       &:checked {
-        background-color: #6ea8fe;
-        border-color: #6ea8fe;
+        @include themed-styles((background-color, accent-light), (border-color, accent-light));
       }
       
       &:focus {
@@ -50,7 +49,7 @@
     }
     
     .checkbox-label {
-      color: #e9ecef;
+      @include themed-styles((color, label));
     }
   }
 }

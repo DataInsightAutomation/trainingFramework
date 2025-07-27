@@ -48,36 +48,10 @@ interface AppState {
 }
 
 // Initialize the theme from localStorage if available
+import { getTheme } from "../themes/theme";
 const getInitialTheme = (): Theme => {
   const savedTheme = localStorage.getItem('preferredTheme');
-  if (savedTheme === 'dark') {
-    return {
-      name: 'dark',
-      colors: {
-        primary: '#212529',
-        secondary: '#343a40',
-        text: '#f8f9fa',
-        background: '#181a1b',
-        cardBg: '#23272b',
-        border: '#343a40',
-        // add other color values as needed
-      }
-    };
-  }
-  
-  // Default to light theme
-  return {
-    name: 'light',
-    colors: {
-      primary: '#0071c5', // Intel blue
-      secondary: '#f8f9fa',
-      text: '#212529',
-      background: '#ffffff',
-      cardBg: '#f8f9fa',
-      border: '#dee2e6',
-      // add other color values as needed
-    }
-  };
+  return getTheme(savedTheme === 'dark' ? 'dark' : 'light');
 };
 
 export const useAppStore = create(
@@ -159,9 +133,9 @@ export const useAppStore = create(
             // Store theme preference in localStorage
             localStorage.setItem('preferredTheme', newThemeName);
 
-            // Use the imported full theme objects
+            // Always use getTheme for consistency
             return {
-                currentTheme: newThemeName === 'dark' ? darkTheme : lightTheme
+                currentTheme: getTheme(newThemeName)
             };
         }),
 

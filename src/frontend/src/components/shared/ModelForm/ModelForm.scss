@@ -1,94 +1,63 @@
+@use '../../theme.scss' as *;
+
 .model-form-container {
   padding: 1rem;
-  
-  &.light-theme {
-    background-color: #f8f9fa;
-  }
-  
-  &.dark-theme {
-    background-color: #343a40;
-  }
-  
-  // Card styling
+  @include themed-styles((background-color, background));
+
   .model-form-card {
-    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
-    
-    &.light-theme {
-      background-color: #ffffff;
-      color: #212529;
-      border-color: #dee2e6;
+    box-shadow: 0 4px 32px 0 rgba(124, 58, 237, 0.10), 0 1.5px 8px 0 rgba(124, 58, 237, 0.08);
+    @include themed-styles((background-color, surface), (color, color), (border-color, border));
+    border-radius: 1.25rem;
+    backdrop-filter: blur(8px) saturate(1.1);
+    position: relative;
+    overflow: hidden;
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, rgba(124,58,237,0.10) 0%, rgba(168,139,250,0.08) 100%);
+      opacity: 0.95;
+      transition: background 0.6s;
     }
-    
-    &.dark-theme {
-      background-color: #495057;
-      color: #e9ecef;
-      border-color: #6c757d;
+    > * {
+      position: relative;
+      z-index: 1;
     }
   }
-  
-  // Header styling
+
   .model-form-header {
-    &.light-theme {
-      background-color: #0d6efd;
-      color: #ffffff;
-    }
-    
-    &.dark-theme {
-      background-color: #2b3a63; // Darker blue that fits better with dark theme
-      color: #ffffff;
-      border-bottom: 1px solid #1e2b4a; // Even darker blue border
-    }
+    @include themed-styles((background-color, accent-dark), (color, accent-bg), (border-bottom, accent));
   }
-  
-  // Fix for nested dark theme header to ensure consistent styling
-  .model-form-card.dark-theme .model-form-header {
-    background-color: #2b3a63; // Match the direct class styling
-    color: #ffffff;
-    border-bottom: 1px solid #1e2b4a;
-  }
-  
-  // Form controls - base styles for all input types
+
+
   .form-control, 
   .form-select, 
   input[type="number"],
   input[type="text"],
   input[type="select"],
   input[type="range"] {
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    
-    &.light-theme, .light-theme & {
-      background-color: #ffffff;
-      color: #212529;
-      border-color: #ced4da;
-      
-      &:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-      }
-      
-      &::placeholder {
-        color: #6c757d;
-      }
+    @include themed-styles((background-color, input-bg), (color, color), (border-color, input-border));
+    border-radius: 0.7rem;
+    box-shadow: 0 2px 12px 0 rgba(124, 58, 237, 0.07);
+    transition: box-shadow 0.22s, border-color 0.22s, background 0.22s;
+    &:focus {
+      @include themed-styles((border-color, input-focus));
+      box-shadow: 0 0 0 0.22rem rgba(124, 58, 237, 0.22), 0 2px 16px 0 rgba(124, 58, 237, 0.10);
+      background: rgba(124,58,237,0.07);
     }
-    
-    &.dark-theme, .dark-theme & {
-      background-color: #2b3035;
-      color: #e9ecef;
-      // border-color: #6c757d; // Lighter border color for better contrast
-      border-width: 1px;
-      border-style: solid;
-      &:focus {
-        border-color: #6ea8fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-      }
-      
-      &::placeholder {
-        color: #adb5bd; // Lighter placeholder color for better visibility
-      }
+    &::placeholder {
+      @include themed-styles((color, input-placeholder));
+      opacity: 0.92;
+      text-shadow: 0 1px 2px rgba(124,58,237,0.08);
     }
   }
-  
-  // Number input specific styling
+  input::placeholder {
+    opacity: 0.92;
+    text-shadow: 0 1px 2px rgba(124,58,237,0.08);
+  }
+
   input[type="number"] {
     &.light-theme, .light-theme & {
       &::-webkit-inner-spin-button, 
@@ -97,12 +66,10 @@
         background-color: #f8f9fa;
       }
     }
-    
     &.dark-theme, .dark-theme & {
       background-color: #2b3035;
       color: #e9ecef;
-      border-color: #6c757d; // Consistent with other inputs
-      
+      border-color: #6c757d;
       &::-webkit-inner-spin-button, 
       &::-webkit-outer-spin-button {
         opacity: 1;
@@ -110,71 +77,61 @@
       }
     }
   }
-  
-  // Range input styling
+
   .range-field-container {
     display: flex;
     align-items: center;
     margin-bottom: 1rem;
-    
     input[type="range"] {
       -webkit-appearance: none;
+      appearance: none;
       height: 8px;
       border-radius: 5px;
       outline: none;
       padding: 0;
       flex: 1;
-      
       &.light-theme, .light-theme & {
         background-color: #dee2e6;
-        
         &::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: #0d6efd;
+          background: map-get(map-get($themes, light), accent);
           cursor: pointer;
           border: none;
         }
-        
         &::-moz-range-thumb {
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: #0d6efd;
+          background: map-get(map-get($themes, light), accent);
           cursor: pointer;
           border: none;
         }
-        
         &::-webkit-slider-runnable-track {
           background: #dee2e6;
           height: 8px;
           border-radius: 5px;
         }
-        
         &::-moz-range-track {
           background: #dee2e6;
           height: 8px;
           border-radius: 5px;
         }
-        
         &:focus {
           &::-webkit-slider-runnable-track {
             background: #c9cfd4;
           }
-          
           &::-moz-range-track {
             background: #c9cfd4;
           }
         }
       }
-      
       &.dark-theme, .dark-theme & {
         background-color: #495057;
-        border: 1px solid #6c757d; // Add visible border
-        
+        border: 1px solid #6c757d;
         &::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
@@ -184,9 +141,8 @@
           background: #6ea8fe;
           cursor: pointer;
           border: none;
-          border: 1px solid #dee2e6; // Add white border to thumb
+          border: 1px solid #dee2e6;
         }
-        
         &::-moz-range-thumb {
           width: 18px;
           height: 18px;
@@ -194,33 +150,28 @@
           background: #6ea8fe;
           cursor: pointer;
           border: none;
-          border: 1px solid #dee2e6; // Add white border to thumb
+          border: 1px solid #dee2e6;
         }
-        
         &::-webkit-slider-runnable-track {
           background: #495057;
           height: 8px;
           border-radius: 5px;
         }
-        
         &::-moz-range-track {
           background: #495057;
           height: 8px;
           border-radius: 5px;
         }
-        
         &:focus {
           &::-webkit-slider-runnable-track {
             background: #3d444b;
           }
-          
           &::-moz-range-track {
             background: #3d444b;
           }
         }
       }
     }
-    
     .range-value {
       min-width: 60px;
       text-align: center;
@@ -228,16 +179,14 @@
       padding: 5px 10px;
       border-radius: 5px;
       font-weight: 500;
-      
       &.light-theme, .light-theme & {
         background-color: #f8f9fa;
         border: 1px solid #dee2e6;
         color: #212529;
       }
-      
       &.dark-theme, .dark-theme & {
         background-color: #343a40;
-        border: 1px solid #6c757d; // Consistent border color
+        border: 1px solid #6c757d;
         color: #e9ecef;
       }
     }
@@ -286,6 +235,9 @@
             background-color: #f8f9fa;
           }
           
+          &.active {
+            @include themed-styles((background-color, accent), (color, color));
+          }
           &.selected {
             background-color: #e9ecef;
           }
@@ -296,7 +248,7 @@
     &.dark-theme, .dark-theme & {
       .selected-items {
         background-color: #2b3035;
-        border: 1px solid #6c757d; // Consistent border color
+        border: 1px solid #6c757d;
         border-radius: 0.25rem;
         min-height: 38px;
         padding: 0.2rem;
@@ -334,6 +286,9 @@
             background-color: #495057;
           }
           
+          &.active {
+            @include themed-styles((background-color, accent), (color, color));
+          }
           &.selected {
             background-color: #212529;
           }
@@ -364,8 +319,7 @@
             }
             
             &.active {
-              background-color: #0d6efd;
-              color: #ffffff;
+              @include themed-styles((background-color, accent), (color, color));
             }
           }
           
@@ -381,31 +335,27 @@
     &.dark-theme, .dark-theme & {
       .select-container {
         background-color: #2b3035;
-        border: 1px solid #6c757d; // Add visible border
-        
+        border: 1px solid #6c757d;
         .selected-option {
           color: #e9ecef;
         }
-        
         .dropdown-menu {
           background-color: #343a40;
-          border: 1px solid #6c757d; // Consistent border color
-          
+          border: 1px solid #6c757d;
           .dropdown-item {
             color: #e9ecef;
-            
             &:hover, &:focus {
               background-color: #495057;
             }
-            
             &.active {
-              background-color: #0d6efd;
-              color: #e9ecef;
+              @include themed-styles((background-color, accent), (color, color));
+            }
+            &.selected {
+              background-color: #212529;
             }
           }
-          
           .search-input {
-            border: 1px solid #6c757d; // Consistent border color
+            border: 1px solid #6c757d;
             background-color: #2b3035;
             color: #e9ecef;
           }
@@ -426,39 +376,32 @@
     
     &.light-theme, .light-theme & {
       background-color: #f0f7ff;
-      border-left-color: #0d6efd;
-      
+      border-left-color: map-get(map-get($themes, light), accent);
       h4 {
-        color: #0d6efd;
+        color: map-get(map-get($themes, light), accent);
         margin: 0;
         font-size: 1.1rem;
         font-weight: 500;
       }
-      
       .chevron-icon {
-        color: #0d6efd;
+        color: map-get(map-get($themes, light), accent);
       }
-      
       &:hover {
         background-color: #e6f0ff;
       }
     }
-    
     &.dark-theme, .dark-theme & {
       background-color: #303740;
-      border-left-color: #6ea8fe;
-      
+      border-left-color: map-get(map-get($themes, dark), accent-light);
       h4 {
-        color: #6ea8fe;
+        color: map-get(map-get($themes, dark), accent-light);
         margin: 0;
         font-size: 1.1rem;
         font-weight: 500;
       }
-      
       .chevron-icon {
-        color: #6ea8fe;
+        color: map-get(map-get($themes, dark), accent-light);
       }
-      
       &:hover {
         background-color: #3d444b;
       }
@@ -523,8 +466,8 @@
         
         &.primary {
           &.hovered {
-            background-color: #0b5ed7;
-            border-color: #0a58ca;
+            background-color: map-get(map-get($themes, light), accent);
+            border-color: map-get(map-get($themes, light), accent-dark);
             box-shadow: 0 0 0 0.2rem rgba(49, 132, 253, 0.5);
           }
         }
@@ -572,13 +515,13 @@
         }
         
         &.primary {
-          background-color: #0d6efd;
-          border-color: #0a58ca;
-          color: white;
+          background-color: map-get(map-get($themes, dark), accent);
+          border-color: map-get(map-get($themes, dark), accent-dark);
+          color: map-get(map-get($themes, dark), color);
           
           &.hovered {
-            background-color: #0b5ed7;
-            box-shadow: 0 0 0 0.2rem rgba(49, 132, 253, 0.5);
+            background-color: map-get(map-get($themes, dark), accent-dark);
+            box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.15);
           }
         }
       }
@@ -706,4 +649,55 @@
       }
     }
   }
+  
+  // Override Bootstrap's button colors for LLaMAFactory dark theme
+  .btn-primary {
+    background-color: var(--llama-purple, #7c3aed);
+    border-color: var(--llama-purple-dark, #5b21b6);
+
+    &:hover, &:focus, &:active {
+      background-color: var(--llama-purple-dark, #5b21b6);
+      border-color: var(--llama-purple, #7c3aed);
+      color: #fff;
+    }
+  }
+
+  .btn-outline-primary {
+    color: var(--llama-purple, #7c3aed);
+    border-color: var(--llama-purple, #7c3aed);
+
+    &:hover, &:focus, &:active {
+      background-color: var(--llama-purple, #7c3aed);
+      color: #fff;
+      border-color: var(--llama-purple-dark, #5b21b6);
+    }
+  }
+
+  &.dark-theme {
+    .btn-primary {
+      background-color: var(--llama-purple-dark, #5b21b6);
+      border-color: var(--llama-purple, #7c3aed);
+      color: #fff;
+
+      &:hover, &:focus, &:active {
+        background-color: var(--llama-purple, #7c3aed);
+        border-color: var(--llama-purple-light, #a78bfa);
+        color: #fff;
+      }
+    }
+
+    .btn-outline-primary {
+      color: var(--llama-purple-light, #a78bfa);
+      border-color: var(--llama-purple, #7c3aed);
+
+      &:hover, &:focus, &:active {
+        background-color: var(--llama-purple, #7c3aed);
+        color: #fff;
+        border-color: var(--llama-purple-light, #a78bfa);
+      }
+    }
+  }
 }
+
+// No changes needed for LLaMAFactory theme if you already updated Train.scss for the main color palette and dark theme.
+// This file can remain as is unless you want to further unify the color palette across all forms.

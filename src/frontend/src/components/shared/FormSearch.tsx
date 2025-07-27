@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { InputGroup, Form, Button } from 'react-bootstrap';
+import './FormSearch.scss';
 
 interface FormSearchProps {
   searchQuery: string;

@@ -12,27 +12,29 @@ export interface Theme {
   colors: ThemeColors;
 }
 
+
 export const lightTheme: Theme = {
   name: 'light',
   colors: {
-    primary: '#0d6efd', // Bootstrap primary blue
-    secondary: '#6c757d', // Bootstrap secondary gray
+    primary: '#7c3aed', // LLaMA purple accent
+    secondary: '#a78bfa', // Lighter purple accent
     background: '#f5f6fa',
-    text: '#212529',
+    text: '#232046',
     cardBg: '#ffffff',
     border: '#dee2e6'
   }
 };
 
+
 export const darkTheme: Theme = {
   name: 'dark',
   colors: {
-    primary: '#0a58ca', // Darker blue
-    secondary: '#495057', // Darker gray
-    background: '#212529',
-    text: '#f8f9fa',
-    cardBg: '#343a40',
-    border: '#495057'
+    primary: '#7c3aed', // LLaMA purple accent
+    secondary: '#a78bfa', // Lighter purple accent
+    background: '#18181b',
+    text: '#e0e7ff',
+    cardBg: '#232046',
+    border: '#37304a'
   }
 };
 

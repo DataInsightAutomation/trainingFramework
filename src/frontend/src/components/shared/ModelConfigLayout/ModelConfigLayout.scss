@@ -1,3 +1,5 @@
+@use '../../theme' as *;
+
 .model-config-container {
   width: 100%;
   
@@ -17,15 +19,14 @@
       
       // Solid backgrounds instead of transparent
       &.light-theme {
-        background-color: #ffffff ; // Solid white
-        border-color: #dee2e6 ;
+        @include themed-styles((background-color, surface), (border-color, border));
         box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) ;
       }
       
       &.dark-theme {
-        background-color: #343a40 ; // Solid dark background
-        border-color: #6c757d ;
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3) ;
+        @include themed-styles((background-color, background), (border-color, border));
+        box-shadow: 0 0.25rem 0.5rem rgba(124, 58, 237, 0.18);
+        // Optionally, update text/icon color if needed
       }
     }
   }
@@ -36,11 +37,11 @@
 
 // Add global overrides for these specific classes to ensure they have proper backgrounds
 .options-toggle-section.mb-4.p-3.border.rounded.light-theme {
-  background-color: #ffffff ;
+  @include themed-styles((background-color, surface));
 }
 
 .options-toggle-section.mb-4.p-3.border.rounded.dark-theme {
-  background-color: #343a40 ;
+  @include themed-styles((background-color, surface-alt));
 }
 
 /* Enhance the advanced toggle button visibility */

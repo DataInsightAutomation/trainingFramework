@@ -1,12 +1,16 @@
 .train-container {
-  // Intel color palette
-  --intel-blue: #0071c5;
-  --intel-blue-light: #00a3e0;
-  --intel-blue-dark: #1b365d;
-  --intel-blue-hover: #00578f;
-  --intel-highlight: #80c3e6;
-  --intel-accent: #00aeef;
-  
+  // LLaMAFactory-inspired color palette
+  --llama-purple: #7c3aed;
+  --llama-purple-dark: #5b21b6;
+  --llama-purple-light: #a78bfa;
+  --llama-accent: #fbbf24;
+  --llama-bg-light: #f3f4f6;
+  --llama-bg-dark: #18181b;
+  --llama-surface-dark: #232336;
+  --llama-surface-light: #fff;
+  --llama-border-dark: #37304a;
+  --llama-border-light: #e5e7eb;
+
   // Button hover colors
   --btn-outline-primary-hover-bg: var(--intel-blue);
   --btn-outline-primary-hover-color: white;
@@ -27,13 +31,14 @@
     margin-bottom: 1rem ;
     
     &.light-theme {
-      background-color: rgba(248, 249, 250, 0.98);
-      backdrop-filter: blur(8px);
+      background-color: var(--llama-bg-light);
+      border-color: var(--llama-border-light);
+      box-shadow: 0 0.25rem 0.5rem rgba(124, 58, 237, 0.06);
     }
-    
     &.dark-theme {
-      background-color: rgba(33, 37, 41, 0.98);
-      backdrop-filter: blur(8px);
+      background-color: var(--llama-bg-dark);
+      border-color: var(--llama-border-dark);
+      box-shadow: 0 0.25rem 0.5rem rgba(124, 58, 237, 0.18);
     }
     
     transition: all 0.3s ease;
@@ -193,6 +198,27 @@
     &.has-matches {
       border-left-color: var(--intel-accent);
     }
+    
+    &.light-theme, .light-theme & {
+      background-color: var(--llama-bg-light);
+      border-left-color: var(--llama-purple);
+      h4 { color: var(--llama-purple-dark); }
+      .chevron-icon { color: var(--llama-purple); }
+      &:hover {
+        background-color: var(--llama-purple-light);
+        border-left-color: var(--llama-accent);
+      }
+    }
+    &.dark-theme, .dark-theme & {
+      background-color: var(--llama-surface-dark);
+      border-left-color: var(--llama-purple-light);
+      h4 { color: var(--llama-purple-light); }
+      .chevron-icon { color: var(--llama-accent); }
+      &:hover {
+        background-color: #232336;
+        border-left-color: var(--llama-accent);
+      }
+    }
   }
   
   // Dark theme styling for form fields
@@ -204,61 +230,62 @@
     .dropdown-toggle,
     .custom-select,
     .react-select__control {
-      background-color: #2b3035 ;
-      color: #e9ecef ;
-      border-color: #495057 ;
+      background-color: var(--llama-surface-dark);
+      color: #e0e7ff;
+      border-color: var(--llama-border-dark);
       
       &:focus {
-        background-color: #2b3035 ;
-        color: #e9ecef ;
-        border-color: var(--intel-blue-light) ;
-        box-shadow: 0 0 0 0.25rem rgba(0, 113, 197, 0.25) ;
+        background-color: var(--llama-surface-dark);
+        color: #e0e7ff;
+        border-color: var(--llama-purple-light);
+        box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.25);
       }
       
       &::placeholder {
-        color: #6c757d ;
+        color: #a1a1aa;
       }
     }
     
     // Style dropdown menus in dark theme
     .dropdown-menu,
     .react-select__menu {
-      background-color: #2b3035 ;
-      border-color: #495057 ;
+      background-color: var(--llama-bg-dark);
+      border-color: var(--llama-border-dark);
       
       .dropdown-item,
       .react-select__option {
-        color: #e9ecef ;
+        color: #e0e7ff;
         
         &:hover, &:focus, &.active {
-          background-color: #343a40 ;
+          background-color: var(--llama-purple-dark);
         }
       }
     }
     
     // Form label styling
     .form-label {
-      color: #e9ecef ;
+      color: #e0e7ff;
     }
     
     // Searched values in multiselect
     .multi-select-selected-value {
-      background-color: #343a40 ;
-      color: #e9ecef ;
-      border-color: #495057 ;
+      background-color: var(--llama-purple-dark);
+      color: #e0e7ff;
+      border-color: var(--llama-border-dark);
     }
     
     // Input group styling
     .input-group-text {
-      background-color: #343a40 ;
-      color: #e9ecef ;
-      border-color: #495057 ;
+      background-color: var(--llama-surface-dark);
+      color: #e0e7ff;
+      border-color: var(--llama-border-dark);
     }
   }
   
   // Highlight style for search matches 
   .search-highlight {
-    background-color: var(--intel-highlight);
+    background-color: var(--llama-accent);
+    color: #232336;
     font-weight: bold;
     padding: 0 2px;
     border-radius: 2px;
@@ -276,7 +303,11 @@
       background-color: var(--intel-blue);
     }
   }
-  
+  .dark-theme .search-highlight {
+    background-color: var(--llama-purple);
+    color: #fff;
+  }
+
   // Override Bootstrap's button colors
   .btn-primary {
     background-color: var(--intel-blue);

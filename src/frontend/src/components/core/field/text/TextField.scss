@@ -1,30 +1,43 @@
+@use '../../../theme' as *;
+
 .text-field {
   margin-bottom: 1rem;
   
   // Placeholder styling for light theme
   &.text-field-light-theme {
     .themed-input::placeholder {
-      color: #6c757d; // Bootstrap's default, good contrast on light background
-      opacity: 0.7;
+      @include themed-styles((color, input-placeholder));
+      opacity: 0.8;
+      text-shadow: 0 1px 2px rgba(124,58,237,0.08);
+      transition: color 0.2s;
     }
   }
   
   // Placeholder styling for dark theme - improve contrast
   &.text-field-dark-theme {
     .themed-input::placeholder {
-      color: #adb5bd; // Lighter color for better contrast on dark background
-      opacity: 0.9;
+      @include themed-styles((color, input-placeholder));
+      opacity: 0.95;
+      text-shadow: 0 1px 2px rgba(124,58,237,0.12);
+      transition: color 0.2s;
     }
-    
     // Input focus styles for dark theme
     .themed-input:focus {
-      box-shadow: 0 0 0 0.25rem rgba(66, 153, 225, 0.4);
-      border-color: #3182ce;
+      box-shadow: 0 0 0 0.22rem rgba(124, 58, 237, 0.22), 0 2px 16px 0 rgba(124, 58, 237, 0.10);
+      @include themed-styles((border-color, accent-light));
+      background: rgba(124,58,237,0.07);
     }
   }
   
   // Cross-browser placeholder styling
   .themed-input {
+    border-radius: 0.7rem;
+    box-shadow: 0 2px 12px 0 rgba(124, 58, 237, 0.07);
+    transition: box-shadow 0.22s, border-color 0.22s, background 0.22s;
+    &:focus {
+      box-shadow: 0 0 0 0.22rem rgba(124, 58, 237, 0.22), 0 2px 16px 0 rgba(124, 58, 237, 0.10);
+      background: rgba(124,58,237,0.07);
+    }
     &::-webkit-input-placeholder { /* Chrome/Opera/Safari */
       @extend ::placeholder;
     }

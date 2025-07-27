@@ -1,0 +1,63 @@
+// Centralized theme map and mixin for consistent theming
+$themes: (
+  light: (
+    background: #f8f9fa,
+    color: #212529,
+    border: #dee2e6,
+    surface: #fff,
+    surface-alt: #e9ecef,
+    accent: #a78bfa,
+    accent-light: #a78bfa,
+    accent-dark: #5b21b6,
+    accent-bg: #e0e7ff,
+    scrollbar-thumb: rgba(0, 0, 0, 0.2),
+    input-bg: #fff,
+    input-border: #ced4da,
+    input-focus: #a78bfa,
+    input-placeholder: #6c757d,
+    label: #212529,
+    success: #28a745,
+    warning: #ffc107,
+    error: #dc3545,
+    resize-handle-bar: #dee2e6
+  ),
+  dark: (
+    background: var(--llama-bg-dark, #18181b),
+    color: #e0e7ff,
+    border: var(--llama-border-dark, #37304a),
+    surface: var(--llama-surface-dark, #2b3035),
+    surface-alt: #343a40,
+    accent: var(--llama-purple, #7c3aed),
+    accent-light: #6ea8fe,
+    accent-dark: var(--llama-purple-dark, #5b21b6),
+    accent-bg: #2b3a63,
+    scrollbar-thumb: rgba(255, 255, 255, 0.2),
+    input-bg: #2b3035,
+    input-border: #6c757d,
+    input-focus: #6ea8fe,
+    input-placeholder: #adb5bd,
+    label: #e9ecef,
+    success: #28a745,
+    warning: #ffc107,
+    error: #dc3545,
+    resize-handle-bar: #495057
+  )
+);
+
+@mixin themed($property, $key) {
+  @each $theme, $values in $themes {
+    &.#{$theme}-theme {
+      #{$property}: map-get($values, $key);
+    }
+  }
+}
+
+@mixin themed-styles($map-keys...) {
+  @each $theme, $values in $themes {
+    &.#{$theme}-theme {
+      @each $property, $key in $map-keys {
+        #{$property}: map-get($values, $key);
+      }
+    }
+  }
+}

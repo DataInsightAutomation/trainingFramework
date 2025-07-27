@@ -1,3 +1,5 @@
+@use '../../../theme' as *;
+
 .toggle-field-container {
   margin-bottom: 1rem;
   
@@ -27,7 +29,9 @@
       right: 0;
       bottom: 0;
       border-radius: 12px;
-      transition: background-color 0.2s ease;
+      background: linear-gradient(90deg, rgba(124,58,237,0.13) 0%, rgba(168,139,250,0.10) 100%);
+      box-shadow: 0 2px 8px 0 rgba(124, 58, 237, 0.08);
+      transition: background 0.22s, box-shadow 0.22s;
     }
     
     .toggle-indicator {
@@ -37,12 +41,20 @@
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      transition: transform 0.2s ease, background-color 0.2s ease;
+      background: #fff;
+      box-shadow: 0 2px 8px 0 rgba(124, 58, 237, 0.10);
+      transition: transform 0.22s, background 0.22s, box-shadow 0.22s;
     }
     
     &.active {
       .toggle-indicator {
         transform: translateX(20px);
+        background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+        box-shadow: 0 0 8px 2px rgba(124, 58, 237, 0.18), 0 2px 8px 0 rgba(124, 58, 237, 0.10);
+      }
+      .toggle-track {
+        background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
+        box-shadow: 0 0 12px 2px rgba(124, 58, 237, 0.18), 0 2px 8px 0 rgba(124, 58, 237, 0.10);
       }
     }
     
@@ -67,42 +79,40 @@
   &.light-theme {
     .toggle-switch {
       .toggle-track {
-        background-color: #e9ecef;
-        border: 1px solid #ced4da;
+        @include themed-styles((background-color, surface-alt), (border-color, input-border));
       }
       
       .toggle-indicator {
-        background-color: #adb5bd;
+        @include themed-styles((background-color, input-placeholder));
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
       
       &.active {
         .toggle-track {
-          background-color: #cfe2ff;
-          border-color: #0d6efd;
+          @include themed-styles((background-color, accent-bg), (border-color, accent));
         }
         
         .toggle-indicator {
-          background-color: #0d6efd;
+          @include themed-styles((background-color, accent));
         }
       }
       
       &:hover:not(:disabled) {
         .toggle-track {
-          border-color: #b9c1c8;
+          @include themed-styles((border-color, border));
         }
         
         &.active .toggle-track {
-          border-color: #0b5ed7;
+          @include themed-styles((border-color, accent));
         }
       }
     }
     
     .toggle-label {
-      color: #212529;
+      @include themed-styles((color, label));
       
       &:hover {
-        color: #0d6efd;
+        @include themed-styles((color, accent));
       }
     }
   }
@@ -110,42 +120,40 @@
   &.dark-theme {
     .toggle-switch {
       .toggle-track {
-        background-color: #343a40;
-        border: 1px solid #6c757d;
+        @include themed-styles((background-color, surface-alt), (border-color, input-border));
       }
       
       .toggle-indicator {
-        background-color: #adb5bd;
+        @include themed-styles((background-color, input-placeholder));
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
       
       &.active {
         .toggle-track {
-          background-color: #1c4a80; // Darker blue background for better contrast
-          border-color: #6ea8fe;
+          @include themed-styles((background-color, accent-dark), (border-color, accent-light));
         }
         
         .toggle-indicator {
-          background-color: #6ea8fe; // Brighter blue for the indicator
+          @include themed-styles((background-color, accent-light));
         }
       }
       
       &:hover:not(:disabled) {
         .toggle-track {
-          border-color: #ced4da;
+          @include themed-styles((border-color, input-border));
         }
         
         &.active .toggle-track {
-          border-color: #a6c8ff;
+          @include themed-styles((border-color, accent-light));
         }
       }
     }
     
     .toggle-label {
-      color: #e9ecef; // Brighter text for better contrast
+      @include themed-styles((color, label));
       
       &:hover {
-        color: #6ea8fe;
+        @include themed-styles((color, accent-light));
       }
     }
   }
