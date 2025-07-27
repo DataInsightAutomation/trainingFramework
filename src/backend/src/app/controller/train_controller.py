@@ -228,7 +228,7 @@ async def train_model(request: TrainRequest, background_tasks: BackgroundTasks):
                 "finetuning_type", "token",
                 # Custom dataset configuration fields (used by process_datasets but not LLaMA-Factory)
                 "custom_column_mapping", "prompt_column", "query_column", 
-                "chosen_column", "rejected_column", "response_column"
+                "chosen_column", "rejected_column", "response_column", "train_method"
             ]
             advanced_params = {k: v for k, v in request_dict.items() 
                             if k not in excluded_fields}
