@@ -1,33 +1,16 @@
+@import '../../theme.scss';
+
 .evaluate-container {
-  // Intel color palette - match the Train.scss variables
-  --intel-blue: #0071c5;
-  --intel-blue-light: #00a3e0;
-  --intel-blue-dark: #1b365d;
-  --intel-blue-hover: #00578f;
-  --intel-highlight: #80c3e6;
-  --intel-accent: #00aeef;
-  
-  // Button hover colors
-  --btn-outline-primary-hover-bg: var(--intel-blue);
-  --btn-outline-primary-hover-color: white;
-  --btn-outline-secondary-hover-bg: #6c757d;
-  --btn-outline-secondary-hover-color: white;
-  --btn-outline-success-hover-bg: #198754;
-  --btn-outline-success-hover-color: white;
-  --btn-outline-info-hover-bg: #0dcaf0;
-  --btn-outline-info-hover-color: white;
-  
-  // Copy other relevant styles from Train.scss
-  
+  // Theme variables are now imported from theme.scss
+
   // Search highlight style
   .search-highlight {
-    background-color: var(--intel-highlight);
+    background-color: var(--intel-highlight, #80c3e6);
     font-weight: bold;
     padding: 0 2px;
     border-radius: 2px;
     position: relative;
     display: inline-block;
-    
     &::after {
       content: '';
       position: absolute;
@@ -50,6 +33,7 @@
   }
 }
 
+
 .evaluate-tab {
   padding: 10px 20px;
   cursor: pointer;
@@ -57,28 +41,28 @@
   font-weight: 500;
 
   &.active {
-    color: #0078d4;
-    border-bottom: 2px solid #0078d4;
+    color: var(--evaluate-tab-active);
+    border-bottom: 2px solid var(--evaluate-tab-active);
   }
 
   &.inactive {
-    color: #666;
+    color: var(--evaluate-tab-inactive);
     &:hover {
-      color: #0078d4;
-      background-color: rgba(0, 120, 212, 0.05);
+      color: var(--evaluate-tab-active);
+      background-color: var(--evaluate-tab-hover-bg);
     }
   }
 
   .dark-theme &.active {
-    color: #4cc2ff;
-    border-bottom: 2px solid #4cc2ff;
+    color: var(--evaluate-tab-active-dark);
+    border-bottom: 2px solid var(--evaluate-tab-active-dark);
   }
 
   .dark-theme &.inactive {
-    color: #aaa;
+    color: var(--evaluate-tab-inactive-dark);
     &:hover {
-      color: #4cc2ff;
-      background-color: rgba(76, 194, 255, 0.1);
+      color: var(--evaluate-tab-active-dark);
+      background-color: var(--evaluate-tab-hover-bg-dark);
     }
   }
 }

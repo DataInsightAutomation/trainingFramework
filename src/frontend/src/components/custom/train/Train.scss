@@ -1,27 +1,8 @@
-.train-container {
-  // LLaMAFactory-inspired color palette
-  --llama-purple: #7c3aed;
-  --llama-purple-dark: #5b21b6;
-  --llama-purple-light: #a78bfa;
-  --llama-accent: #fbbf24;
-  --llama-bg-light: #f3f4f6;
-  --llama-bg-dark: #18181b;
-  --llama-surface-dark: #232336;
-  --llama-surface-light: #fff;
-  --llama-border-dark: #37304a;
-  --llama-border-light: #e5e7eb;
+@import '../../theme.scss';
 
-  // Button hover colors
-  --btn-outline-primary-hover-bg: var(--intel-blue);
-  --btn-outline-primary-hover-color: white;
-  --btn-outline-secondary-hover-bg: #6c757d;
-  --btn-outline-secondary-hover-color: white;
-  --btn-outline-success-hover-bg: #198754;
-  --btn-outline-success-hover-color: white;
-  --btn-outline-info-hover-bg: #0dcaf0;
-  --btn-outline-info-hover-color: white;
-  
-  // Theme-aware colors for the options toggle section
+.train-container {
+  // Theme variables are now imported from theme.scss
+  // ...existing code...
   .options-toggle-section {
     position: sticky;
     top: 0;
@@ -40,80 +21,80 @@
       border-color: var(--llama-border-dark);
       box-shadow: 0 0.25rem 0.5rem rgba(124, 58, 237, 0.18);
     }
-    
+
     transition: all 0.3s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    
+
     // Light theme (default)
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    
+    background-color: var(--llama-bg-light);
+    border-color: var(--llama-border-light);
+
     .fw-medium {
-      color: #6c757d;
+      color: var(--llama-border-dark);
     }
-    
+
     .toggle-divider {
-      color: #6c757d;
+      color: var(--llama-border-dark);
       font-weight: 300;
     }
-    
+
     // Dark theme overrides
     .dark-theme &, &.dark-theme {
-      background-color: #2b3035;
-      border-color: #495057;
-      
+      background-color: var(--llama-bg-dark);
+      border-color: var(--llama-border-dark);
+
       .fw-medium {
-        color: #adb5bd;
+        color: var(--llama-purple-light);
       }
-      
+
       .toggle-divider {
-        color: #6c757d;
+        color: var(--llama-purple-light);
       }
     }
-    
+
     &:hover {
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     // Style the button with Intel colors
     button {
       min-width: 160px;
       transition: all 0.2s ease;
-      
+
       &:hover {
         transform: translateY(-1px);
       }
-      
+
       &.btn-primary {
         background-color: var(--intel-blue);
         border-color: var(--intel-blue);
-        
+
         &:hover, &:focus {
           background-color: var(--intel-blue-hover);
           border-color: var(--intel-blue-hover);
         }
       }
-      
+
       &.btn-outline-primary {
         color: var(--intel-blue);
         border-color: var(--intel-blue);
-        
+
         &:hover, &:focus {
           color: white;
           background-color: var(--intel-blue);
         }
       }
     }
-    
+
     // Search input styling with Intel colors
     .search-container {
       min-width: 250px;
       max-width: 350px;
-      
+
       .input-group {
         .form-control:focus {
-          border-color: var(--intel-blue-light);
-          box-shadow: 0 0 0 0.25rem rgba(0, 113, 197, 0.25);
+          border-color: var(--llama-purple-light);
+          box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.15);
         }
       }
     }

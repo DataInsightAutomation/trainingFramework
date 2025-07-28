@@ -1,23 +1,49 @@
-@use '../../theme.scss' as *;
 
+@use '../../theme.scss' as *;
+// Ensure robust horizontal layout for button groups
+.model-form-buttons {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  width: 100%;
+  margin-top: 1.5rem;
+
+  > .left-buttons,
+  > .right-buttons {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1 1 0;
+  }
+}
+// Improve .text-muted visibility in dark theme
+.dark-theme {
+  .text-muted {
+    color: map-get(map-get($themes, dark), accent-light) !important;
+  }
+}
 .model-form-container {
   padding: 1rem;
   @include themed-styles((background-color, background));
 
   .model-form-card {
-    box-shadow: 0 4px 32px 0 rgba(124, 58, 237, 0.10), 0 1.5px 8px 0 rgba(124, 58, 237, 0.08);
+    // Shopee-style orange shadow and background
+    box-shadow: 0 4px 32px 0 rgba(255, 122, 0, 0.13), 0 1.5px 8px 0 rgba(255, 122, 0, 0.09);
     @include themed-styles((background-color, surface), (color, color), (border-color, border));
     border-radius: 1.25rem;
     backdrop-filter: blur(8px) saturate(1.1);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     &::before {
       content: '';
       position: absolute;
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      background: linear-gradient(120deg, rgba(124,58,237,0.10) 0%, rgba(168,139,250,0.08) 100%);
+      // Shopee-style orange-pink gradient overlay
+      background: linear-gradient(120deg, rgba(255,122,0,0.10) 0%, rgba(255,179,71,0.08) 100%);
       opacity: 0.95;
       transition: background 0.6s;
     }
@@ -40,22 +66,22 @@
   input[type="range"] {
     @include themed-styles((background-color, input-bg), (color, color), (border-color, input-border));
     border-radius: 0.7rem;
-    box-shadow: 0 2px 12px 0 rgba(124, 58, 237, 0.07);
+    box-shadow: 0 2px 12px 0 rgba(255, 122, 0, 0.07);
     transition: box-shadow 0.22s, border-color 0.22s, background 0.22s;
     &:focus {
       @include themed-styles((border-color, input-focus));
-      box-shadow: 0 0 0 0.22rem rgba(124, 58, 237, 0.22), 0 2px 16px 0 rgba(124, 58, 237, 0.10);
-      background: rgba(124,58,237,0.07);
+      box-shadow: 0 0 0 0.22rem rgba(255, 122, 0, 0.22), 0 2px 16px 0 rgba(255, 122, 0, 0.10);
+      background: rgba(255,122,0,0.07);
     }
     &::placeholder {
       @include themed-styles((color, input-placeholder));
-      opacity: 0.92;
-      text-shadow: 0 1px 2px rgba(124,58,237,0.08);
+      opacity: 0.98;
+      text-shadow: 0 1px 2px rgba(255,122,0,0.10);
     }
   }
   input::placeholder {
-    opacity: 0.92;
-    text-shadow: 0 1px 2px rgba(124,58,237,0.08);
+    opacity: 0.98;
+    text-shadow: 0 1px 2px rgba(255,122,0,0.10);
   }
 
   input[type="number"] {
@@ -196,50 +222,47 @@
   .multi-select-container {
     &.light-theme, .light-theme & {
       .selected-items {
-        background-color: #ffffff;
-        border: 1px solid #ced4da;
+        @include themed-styles((background-color, surface), (border-color, border));
         border-radius: 0.25rem;
         min-height: 38px;
         padding: 0.2rem;
-        
         .selected-item {
-          background-color: #e9ecef;
-          color: #212529;
-          border: 1px solid #ced4da;
+          @include themed-styles((background-color, surface-alt), (color, color), (border-color, border));
           border-radius: 0.25rem;
           margin: 0.2rem;
           padding: 0.1rem 0.4rem;
-          
           .remove-icon {
-            color: #495057;
+            @include themed-styles((color, input-placeholder));
             margin-left: 0.5rem;
             cursor: pointer;
-            
             &:hover {
-              color: #dc3545;
+              @include themed-styles((color, error));
             }
           }
         }
       }
-      
       .dropdown-menu {
-        background-color: #ffffff;
-        border: 1px solid #ced4da;
+        @include themed-styles((background-color, surface), (border-color, border));
         max-height: 200px;
         overflow-y: auto;
-        
         .dropdown-item {
-          color: #212529;
-          
-          &:hover, &:focus {
-            background-color: #f8f9fa;
+          @include themed-styles((color, color));
+          background: transparent;
+          border: none;
+          transition: background 0.18s, color 0.18s;
+          &.active,
+          &.active:focus,
+          &.active:hover,
+          &.selected,
+          &.selected:focus,
+          &.selected:hover {
+            background: linear-gradient(90deg, #ffb347 0%, #ff7a00 100%);
+            color: map-get(map-get($themes, light), on-accent);
+            box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.18) !important;
           }
-          
-          &.active {
-            @include themed-styles((background-color, accent), (color, color));
-          }
-          &.selected {
-            background-color: #e9ecef;
+          &:hover {
+            background: linear-gradient(90deg, #fff3e0 0%, #ffe0b2 100%);
+            color: map-get(map-get($themes, light), accent);
           }
         }
       }
@@ -247,117 +270,114 @@
     
     &.dark-theme, .dark-theme & {
       .selected-items {
-        background-color: #2b3035;
-        border: 1px solid #6c757d;
+        @include themed-styles((background-color, surface-alt), (border-color, border));
         border-radius: 0.25rem;
         min-height: 38px;
         padding: 0.2rem;
-        
         .selected-item {
-          background-color: #495057;
-          color: #e9ecef;
-          border: 1px solid #6c757d;
+          @include themed-styles((background-color, border), (color, color), (border-color, border));
           border-radius: 0.25rem;
           margin: 0.2rem;
           padding: 0.1rem 0.4rem;
-          
           .remove-icon {
-            color: #ced4da;
+            @include themed-styles((color, input-placeholder));
             margin-left: 0.5rem;
             cursor: pointer;
-            
             &:hover {
-              color: #f8f9fa;
+              @include themed-styles((color, surface));
             }
           }
         }
       }
-      
       .dropdown-menu {
-        background-color: #343a40;
-        border: 1px solid #6c757d;
+        @include themed-styles((background-color, surface-alt), (border-color, border));
         max-height: 200px;
         overflow-y: auto;
-        
         .dropdown-item {
-          color: #e9ecef;
-          
-          &:hover, &:focus {
-            background-color: #495057;
+          @include themed-styles((color, color));
+          background: transparent;
+          border: none;
+          transition: background 0.18s, color 0.18s;
+          &.active,
+          &.active:focus,
+          &.active:hover,
+          &.selected,
+          &.selected:focus,
+          &.selected:hover {
+            background: linear-gradient(90deg, #ffb347 0%, #ff7a00 100%);
+            color: map-get(map-get($themes, dark), on-accent);
+            box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.18) !important;
           }
-          
-          &.active {
-            @include themed-styles((background-color, accent), (color, color));
-          }
-          &.selected {
-            background-color: #212529;
+          &:hover {
+            background: linear-gradient(90deg, #3a2c1a 0%, #4d2e00 100%);
+            color: map-get(map-get($themes, dark), accent);
           }
         }
       }
-    }
   }
   
   // Searchable select styling
   .searchable-select {
     &.light-theme, .light-theme & {
       .select-container {
-        background-color: #ffffff;
-        
+        @include themed-styles((background-color, surface), (border-color, border));
         .selected-option {
-          color: #212529;
+          @include themed-styles((color, color));
         }
-        
         .dropdown-menu {
-          background-color: #ffffff;
-          border: 1px solid #ced4da;
-          
+          @include themed-styles((background-color, surface), (border-color, border));
           .dropdown-item {
-            color: #212529;
-            
-            &:hover, &:focus {
-              background-color: #f8f9fa;
+            @include themed-styles((color, color));
+            background: transparent;
+            border: none;
+            transition: background 0.18s, color 0.18s;
+            &.active,
+            &.active:focus,
+            &.active:hover,
+            &.selected,
+            &.selected:focus,
+            &.selected:hover {
+              @include themed-styles((background-color, accent), (color, on-accent));
+              box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.18) !important;
             }
-            
-            &.active {
-              @include themed-styles((background-color, accent), (color, color));
+            &:hover {
+              @include themed-styles((background-color, accent-bg), (color, accent));
             }
           }
-          
           .search-input {
-            border: 1px solid #ced4da;
-            background-color: #ffffff;
-            color: #212529;
+            @include themed-styles((border-color, border), (background-color, input-bg), (color, color));
           }
         }
       }
     }
-    
     &.dark-theme, .dark-theme & {
       .select-container {
-        background-color: #2b3035;
-        border: 1px solid #6c757d;
+        @include themed-styles((background-color, surface-alt), (border-color, border));
         .selected-option {
-          color: #e9ecef;
+          @include themed-styles((color, color));
         }
         .dropdown-menu {
-          background-color: #343a40;
-          border: 1px solid #6c757d;
+          @include themed-styles((background-color, surface-alt), (border-color, border));
           .dropdown-item {
-            color: #e9ecef;
-            &:hover, &:focus {
-              background-color: #495057;
+            @include themed-styles((color, color));
+            background: transparent;
+            border: none;
+            transition: background 0.18s, color 0.18s;
+            &.active,
+            &.active:focus,
+            &.active:hover,
+            &.selected,
+            &.selected:focus,
+            &.selected:hover {
+              @include themed-styles((background-color, accent), (color, on-accent));
+              box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.18) !important;
             }
-            &.active {
-              @include themed-styles((background-color, accent), (color, color));
-            }
-            &.selected {
-              background-color: #212529;
+            &:hover {
+              @include themed-styles((background-color, accent-bg), (color, accent));
             }
           }
           .search-input {
-            border: 1px solid #6c757d;
-            background-color: #2b3035;
-            color: #e9ecef;
+            @include themed-styles((border-color, border), (background-color, input-bg), (color, color));
           }
         }
       }
@@ -543,6 +563,60 @@
     font-size: calc(1em + 3px);
   }
   
+
+  
+  // Override Bootstrap's button colors for LLaMAFactory dark theme
+  .btn-primary {
+    background: linear-gradient(90deg, #ffb347 0%, #ff7a00 60%, #ff6f91 100%);
+    border-color: #ff7a00;
+    color: #fff;
+    box-shadow: 0 2px 8px 0 rgba(255, 122, 0, 0.10);
+    &:hover, &:focus, &:active {
+      background: linear-gradient(90deg, #ff7a00 0%, #ffb347 100%);
+      border-color: #ffb347;
+      color: #fff;
+      box-shadow: 0 4px 16px 0 rgba(255, 179, 71, 0.18);
+    }
+  }
+
+  .btn-outline-primary {
+    color: #ff7a00;
+    border-color: #ff7a00;
+    background: transparent;
+    &:hover, &:focus, &:active {
+      background: linear-gradient(90deg, #ffb347 0%, #ff7a00 100%);
+      color: #fff;
+      border-color: #ffb347;
+      box-shadow: 0 4px 16px 0 rgba(255, 179, 71, 0.18);
+    }
+  }
+
+  &.dark-theme {
+    .btn-primary {
+      background: linear-gradient(90deg, #ff7a00 0%, #ffb347 100%);
+      border-color: #ffb347;
+      color: #fff;
+      box-shadow: 0 2px 8px 0 rgba(255, 179, 71, 0.10);
+      &:hover, &:focus, &:active {
+        background: linear-gradient(90deg, #ffb347 0%, #ff7a00 100%);
+        border-color: #ff7a00;
+        color: #fff;
+        box-shadow: 0 4px 16px 0 rgba(255, 122, 0, 0.18);
+      }
+    }
+    .btn-outline-primary {
+      color: #ffb347;
+      border-color: #ffb347;
+      background: transparent;
+      &:hover, &:focus, &:active {
+        background: linear-gradient(90deg, #ff7a00 0%, #ffb347 100%);
+        color: #fff;
+        border-color: #ff7a00;
+        box-shadow: 0 4px 16px 0 rgba(255, 122, 0, 0.18);
+      }
+    }
+  }
+}
   .dark-theme .search-highlight {
     background-color: #ffc107;
     color: #212529;
@@ -550,68 +624,103 @@
   
   // Refined tooltip styles
   .description-tooltip {
-    display: inline-block;
-    
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    vertical-align: middle;
+    .tooltip-icon {
+      font-style: normal;
+      font-size: 1.1em;
+      color: map-get(map-get($themes, light), accent);
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0 0.2em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5em;
+      height: 1.5em;
+      border-radius: 50%;
+      box-shadow: 0 1px 4px 0 rgba(255, 122, 0, 0.10);
+      transition: box-shadow 0.18s, background 0.18s;
+      outline: none;
+      &:hover, &:focus {
+        background: linear-gradient(120deg, #fff3e0 0%, #ffe0b2 100%);
+        box-shadow: 0 2px 8px 0 rgba(255, 122, 0, 0.18);
+      }
+    }
     .tooltip-content {
-      display: none;
-      position: absolute;
-      top: -5px;
-      left: 20px;
-      transform: translateY(-100%);
-      background-color: #333;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      width: 250px;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      transition: opacity 0.15s ease-in-out;
+      display: block;
+      visibility: hidden;
       opacity: 0;
-      
+      pointer-events: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) scale(0.98);
+      min-width: 220px;
+      max-width: 320px;
+      background: linear-gradient(120deg, #fff3e0 0%, #ffe0b2 100%);
+      color: map-get(map-get($themes, light), accent);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      z-index: 1000;
+      box-shadow: 0 6px 24px 0 rgba(255, 122, 0, 0.18), 0 1.5px 8px 0 rgba(255, 122, 0, 0.10);
+      white-space: normal;
+      margin-top: 0.3em;
+      border: 1.5px solid map-get(map-get($themes, light), accent-light, #ffb347);
+      font-weight: 500;
+      transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+      filter: drop-shadow(0 2px 8px rgba(255, 122, 0, 0.10));
       &:after {
         content: "";
         position: absolute;
-        top: 100%;
-        left: 10px;
-        border-width: 5px;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 0 10px 10px 10px;
         border-style: solid;
-        border-color: #333 transparent transparent transparent;
+        border-color: transparent transparent #ffe0b2 transparent;
+        filter: drop-shadow(0 2px 2px rgba(255, 122, 0, 0.10));
       }
-      
       .tooltip-warning {
         margin-bottom: 8px;
         padding: 4px 8px;
-        background-color: rgba(220, 53, 69, 0.2);
+        background-color: rgba(220, 53, 69, 0.13); // fallback red
         border-left: 3px solid #dc3545;
-        color: #fff;
-        font-weight: 500;
+        color: #dc3545;
+        font-weight: 600;
+        border-radius: 4px;
       }
-      
       .missing-translation {
         padding: 4px 8px;
-        background-color: rgba(255, 193, 7, 0.2);
+        background-color: rgba(255, 193, 7, 0.13); // fallback yellow
         border-left: 3px solid #ffc107;
         font-style: italic;
         margin-top: 5px;
-        
+        border-radius: 4px;
         .text-warning {
-          color: #ffc107;
+          color: map-get(map-get($themes, light), accent);
           font-weight: bold;
         }
       }
     }
-    
-    &:hover .tooltip-content {
-      display: block;
+    // Only show tooltip on hover/focus/required-missing
+    &:hover .tooltip-content,
+    &:focus-within .tooltip-content,
+    .tooltip-icon:focus + .tooltip-content
+     {
+      visibility: visible;
       opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) scale(1);
     }
-    
-    // Required field with missing value
-    &.required-missing {
-      i {
-        animation: pulse-red 2s infinite;
-      }
+    // Remove all display: block overrides, rely on visibility/opacity only
+    &.required-missing .tooltip-icon {
+      animation: pulse-red 2s infinite;
     }
   }
   
@@ -634,70 +743,28 @@
   .dark-theme {
     .description-tooltip {
       .tooltip-content {
-        background-color: #1a1a1a;
-        color: #f8f9fa;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-        
+        background: linear-gradient(120deg, #2b1a00 0%, #4d2e00 100%);
+        color: map-get(map-get($themes, dark), accent-light);
+        box-shadow: 0 6px 24px 0 rgba(255, 179, 71, 0.18), 0 1.5px 8px 0 rgba(255, 179, 71, 0.10);
+        border: 1.5px solid #ff7a00;
+        opacity: 0.98;
+        filter: drop-shadow(0 2px 8px rgba(255, 179, 71, 0.10));
         &:after {
-          border-color: #1a1a1a transparent transparent transparent;
+          border-width: 0 10px 10px 10px;
+          border-style: solid;
+          border-color: transparent transparent #2b1a00 transparent;
+          filter: drop-shadow(0 2px 2px rgba(255, 179, 71, 0.10));
         }
-        
         .tooltip-warning {
-          background-color: rgba(220, 53, 69, 0.2);
-          color: #f8f9fa;
+          background-color: rgba(220, 53, 69, 0.13);
+          color: #ffb347;
         }
       }
-    }
-  }
-  
-  // Override Bootstrap's button colors for LLaMAFactory dark theme
-  .btn-primary {
-    background-color: var(--llama-purple, #7c3aed);
-    border-color: var(--llama-purple-dark, #5b21b6);
-
-    &:hover, &:focus, &:active {
-      background-color: var(--llama-purple-dark, #5b21b6);
-      border-color: var(--llama-purple, #7c3aed);
-      color: #fff;
-    }
-  }
-
-  .btn-outline-primary {
-    color: var(--llama-purple, #7c3aed);
-    border-color: var(--llama-purple, #7c3aed);
-
-    &:hover, &:focus, &:active {
-      background-color: var(--llama-purple, #7c3aed);
-      color: #fff;
-      border-color: var(--llama-purple-dark, #5b21b6);
-    }
-  }
-
-  &.dark-theme {
-    .btn-primary {
-      background-color: var(--llama-purple-dark, #5b21b6);
-      border-color: var(--llama-purple, #7c3aed);
-      color: #fff;
-
-      &:hover, &:focus, &:active {
-        background-color: var(--llama-purple, #7c3aed);
-        border-color: var(--llama-purple-light, #a78bfa);
-        color: #fff;
-      }
-    }
-
-    .btn-outline-primary {
-      color: var(--llama-purple-light, #a78bfa);
-      border-color: var(--llama-purple, #7c3aed);
-
-      &:hover, &:focus, &:active {
-        background-color: var(--llama-purple, #7c3aed);
-        color: #fff;
-        border-color: var(--llama-purple-light, #a78bfa);
+      .tooltip-icon {
+        color: map-get(map-get($themes, dark), accent-light);
       }
     }
   }
-}
-
 // No changes needed for LLaMAFactory theme if you already updated Train.scss for the main color palette and dark theme.
 // This file can remain as is unless you want to further unify the color palette across all forms.
+}

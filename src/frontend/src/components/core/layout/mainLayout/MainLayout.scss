@@ -10,8 +10,8 @@
 
   // Fancy dark theme gradient background
   .dark-theme & {
-    background: linear-gradient(135deg, #18181b 0%, #232046 60%, #7c3aed 100%) fixed;
-    box-shadow: 0 0 80px 0 rgba(124, 58, 237, 0.10) inset;
+    background: linear-gradient(135deg, #18181b 0%, #ff7a00 60%, #ffb347 100%) fixed;
+    box-shadow: 0 0 80px 0 rgba(255, 122, 0, 0.10) inset;
   }
 
   // Optional: subtle animated gradient (uncomment for animation)
@@ -44,7 +44,7 @@
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      background: linear-gradient(120deg, rgba(124,58,237,0.10) 0%, rgba(168,139,250,0.08) 100%);
+      background: linear-gradient(120deg, rgba(255,179,71,0.10) 0%, rgba(255,122,0,0.08) 100%);
       opacity: 0.95;
       transition: background 0.6s;
     }
@@ -55,9 +55,9 @@
     // Fancy dark theme card effect
     .dark-theme & {
       background: rgba(24, 24, 27, 0.85);
-      box-shadow: 0 4px 32px 0 rgba(124, 58, 237, 0.10);
+      box-shadow: 0 4px 32px 0 rgba(255, 122, 0, 0.10);
       border-radius: 1.5rem;
-      border: 1px solid rgba(124, 58, 237, 0.08);
+      border: 1px solid rgba(255, 122, 0, 0.08);
       backdrop-filter: blur(8px) saturate(1.1);
     }
   }

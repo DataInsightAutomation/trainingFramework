@@ -3,7 +3,6 @@ import Header from '../../components/core/layout/header/Header';
 import Footer from '../../components/core/layout/footer/Footer';
 import LeftPanel from '../../components/core/layout/leftPanel/LeftPanel';
 import Content from '../../components/custom/content/Content';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { Col } from 'react-bootstrap';
 
 import { Context,defaultState } from "../../utils/context";

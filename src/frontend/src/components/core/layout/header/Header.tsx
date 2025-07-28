@@ -46,26 +46,59 @@ const Header = () => {
   };
 
   return (
-    <header className="text-white p-2 shadow-sm" style={{ backgroundColor: currentTheme.colors.primary }}>
+    <header
+      className="text-white p-2 shadow-sm"
+      style={{
+        background: currentTheme.name === 'light'
+          ? 'linear-gradient(90deg, #ffb347 0%, #ff7a00 40%, #ff6f91 100%)'
+          : 'linear-gradient(90deg, #232046 0%, #ff7a00 60%, #ffb347 100%)',
+        boxShadow: currentTheme.name === 'light'
+          ? '0 2px 16px 0 rgba(255, 122, 0, 0.10)'
+          : '0 2px 16px 0 rgba(255, 179, 71, 0.10)'
+      }}
+    >
       <Container fluid className="d-flex justify-content-between align-items-center">
-        <div className="fw-bold fs-5">{t.title}</div>
-        
+        <div
+          className="fw-bold fs-5"
+          style={
+            currentTheme.name === 'light'
+              ? {
+                  color: '#7a3a00', // solid readable color for light theme
+                  fontWeight: 800
+                }
+              : {
+                  background: 'linear-gradient(90deg, #ffb347 0%, #ff7a00 60%, #ff6f91 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontWeight: 800
+                }
+          }
+        >
+          {t.title}
+        </div>
         <Nav className="d-flex align-items-center">
           <Nav.Link href="/" className="text-white px-3">{t.home}</Nav.Link>
           {/* <Nav.Link href="/webui" className="text-white px-3">{t.train}</Nav.Link> */}
           {/* <Nav.Link href="/evaluate" className="text-white px-3">{t.evaluate}</Nav.Link> */}
-          
           {/* Theme Toggle Button */}
           <Button 
             variant={currentTheme.name === 'light' ? 'outline-light' : 'light'} 
             size="sm" 
             className="ms-2 d-flex align-items-center"
             onClick={handleToggleTheme}
+            style={{
+              background: currentTheme.name === 'light'
+                ? 'linear-gradient(90deg, #ffb347 0%, #ff7a00 60%, #ff6f91 100%)'
+                : 'linear-gradient(90deg, #ffb347 0%, #ff7a00 60%, #ff6f91 100%)',
+              border: 'none',
+              color: '#fff',
+              boxShadow: '0 2px 8px 0 rgba(255, 122, 0, 0.10)'
+            }}
           >
             <i className={`bi bi-${currentTheme.name === 'light' ? 'moon' : 'sun'} me-1`}></i>
             {currentTheme.name === 'light' ? t.darkTheme : t.lightTheme}
           </Button>
-          
           {/* Language Dropdown */}
           <Dropdown align="end">
             <Dropdown.Toggle variant="outline-light" size="sm" id="dropdown-language" className="ms-2">

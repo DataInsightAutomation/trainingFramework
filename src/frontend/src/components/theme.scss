@@ -1,52 +1,120 @@
+// CSS custom properties for theme colors (for use in component CSS)
+:root {
+  --bs-btn-active-color: white;
+  --bs-btn-active-bg: var(--intel-blue);
+  --bs-btn-active-border-color: var(--intel-blue);
+  --evaluate-tab-active: var(--intel-blue);
+  --evaluate-tab-inactive: var(--llama-border-dark);
+  --evaluate-tab-active-dark: var(--llama-accent);
+  --evaluate-tab-inactive-dark: var(--llama-border-light);
+  --evaluate-tab-hover-bg: rgba(255, 186, 0, 0.08); // based on accent color
+  --evaluate-tab-hover-bg-dark: rgba(255, 186, 0, 0.15); // based on accent color
+  --llama-purple: #7c3aed;
+  --llama-purple-dark: #5b21b6;
+  --llama-purple-light: #a78bfa;
+  --llama-accent: #fbbf24;
+  --intel-blue: #fbbf24;
+  --llama-bg-light: #f3f4f6;
+  --llama-bg-dark: #18181b;
+  --llama-surface-dark: #232336;
+  --llama-surface-light: #fff;
+  --llama-border-dark: #37304a;
+  --llama-border-light: #e5e7eb;
+
+  --btn-outline-primary-hover-bg: var(--intel-blue);
+  --btn-outline-primary-hover-color: white;
+  --btn-outline-secondary-hover-bg: #6c757d;
+  --btn-outline-secondary-hover-color: white;
+  --btn-outline-success-hover-bg: #198754;
+  --btn-outline-success-hover-color: white;
+  --btn-outline-info-hover-bg: #0dcaf0;
+  --btn-outline-info-hover-color: white;
+}
+
+.btn {
+  --bs-btn-active-bg: var(--intel-blue);
+  // ...other overrides
+}
+
+.btn-primary {
+  color: white;
+  background-color: var(--intel-blue);
+  border-color: var(--intel-blue);
+
+  &:hover, &:focus {
+    background-color: var(--intel-blue);
+    border-color: var(--intel-blue);
+    color: white;
+  }
+}
+
+.btn-outline-primary {
+  color: var(--intel-blue);
+  background-color: transparent;
+  border-color: var(--intel-blue);
+
+  &:hover, &:focus {
+    color: white;
+    background-color: var(--intel-blue);
+    border-color: var(--intel-blue);
+  }
+}
+
 // Centralized theme map and mixin for consistent theming
 $themes: (
   light: (
-    background: #f8f9fa,
-    color: #212529,
-    border: #dee2e6,
+    background: #fffbe6,
+    color: #232046,
+    border: #ffd699,
     surface: #fff,
-    surface-alt: #e9ecef,
-    accent: #7c3aed,
-    primary: #7c3aed,
-    accent-light: #a78bfa,
-    accent-dark: #5b21b6,
-    accent-bg: #e0e7ff,
-    tab-link-color: #232046,
-    scrollbar-thumb: rgba(0, 0, 0, 0.2),
+    surface-alt: #ffe0ec,
+    accent: #ff7a00, // Shopee orange
+    primary: #ff7a00,
+    accent-light: #ffb347,
+    accent-dark: #ff6f3c,
+    accent-bg: #fff3e0,
+    tab-link-color: #ff7a00,
+    scrollbar-thumb: rgba(255, 186, 0, 0.2),
     input-bg: #fff,
-    input-border: #ced4da,
-    input-focus: #a78bfa,
-    input-placeholder: #6c757d,
-    label: #212529,
+    input-border: #ffd699,
+    input-focus: #ffb347,
+    input-placeholder: #ffb347,
+    label: #ff7a00,
     success: #28a745,
     warning: #ffc107,
     error: #dc3545,
-    resize-handle-bar: #dee2e6
+    resize-handle-bar: #ffd699,
+    // Fancy gradients for backgrounds and accents
+    accent-gradient: linear-gradient(90deg, #ffb347 0%, #ff7a00 40%, #ff6f91 100%),
+    background-gradient: linear-gradient(120deg, #fffbe6 0%, #ffe0ec 100%),
+    surface-gradient: linear-gradient(120deg, #fffbe6 0%, #ffe0ec 100%),
   ),
   dark: (
-    // Fancier dark theme background for the whole app (set solid color here, use gradient in layout SCSS)
     background: #18181b,
-    color: #e0e7ff,
-    border: var(--llama-border-dark, #37304a),
-    surface: var(--llama-surface-dark, #2b3035),
+    color: #fff3e0,
+    border: #ffb347,
+    surface: #2b3035,
     surface-alt: #343a40,
-    accent: var(--llama-purple, #7c3aed),
-    primary: #232046,
-    accent-light: #a78bfa,
-    accent-dark: var(--llama-purple-dark, #5b21b6),
+    accent: #ff7a00,
+    primary: #ff7a00,
+    accent-light: #ffb347,
+    accent-dark: #ff6f3c,
     accent-bg: #2b3a63,
-    tab-link-color: #e0e7ff,
-    scrollbar-thumb: rgba(255, 255, 255, 0.2),
+    tab-link-color: #ffb347,
+    scrollbar-thumb: rgba(255, 186, 0, 0.2),
     input-bg: #2b3035,
-    input-border: #6c757d,
-    input-focus: #6ea8fe,
-    // Brighter placeholder for better contrast in dark theme
-    input-placeholder: #e0e7ff,
-    label: #e9ecef,
+    input-border: #ffb347,
+    input-focus: #ffb347,
+    input-placeholder: #ffb347,
+    label: #ffb347,
     success: #28a745,
     warning: #ffc107,
     error: #dc3545,
-    resize-handle-bar: #495057
+    resize-handle-bar: #ffb347,
+    // Fancy gradients for backgrounds and accents
+    accent-gradient: linear-gradient(90deg, #ffb347 0%, #ff7a00 40%, #ff6f91 100%),
+    background-gradient: linear-gradient(120deg, #232046 0%, #2b3a63 100%),
+    surface-gradient: linear-gradient(120deg, #232046 0%, #ffb347 100%),
   )
 );
 

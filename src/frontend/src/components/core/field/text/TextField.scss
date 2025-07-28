@@ -8,7 +8,7 @@
     .themed-input::placeholder {
       @include themed-styles((color, input-placeholder));
       opacity: 0.8;
-      text-shadow: 0 1px 2px rgba(124,58,237,0.08);
+      text-shadow: 0 1px 2px rgba(255,122,0,0.08);
       transition: color 0.2s;
     }
   }
@@ -18,25 +18,25 @@
     .themed-input::placeholder {
       @include themed-styles((color, input-placeholder));
       opacity: 0.95;
-      text-shadow: 0 1px 2px rgba(124,58,237,0.12);
+      text-shadow: 0 1px 2px rgba(255,122,0,0.12);
       transition: color 0.2s;
     }
     // Input focus styles for dark theme
     .themed-input:focus {
-      box-shadow: 0 0 0 0.22rem rgba(124, 58, 237, 0.22), 0 2px 16px 0 rgba(124, 58, 237, 0.10);
+      box-shadow: 0 0 0 0.22rem rgba(255, 122, 0, 0.22), 0 2px 16px 0 rgba(255, 179, 71, 0.10);
       @include themed-styles((border-color, accent-light));
-      background: rgba(124,58,237,0.07);
+      background: rgba(255,122,0,0.07);
     }
   }
   
   // Cross-browser placeholder styling
   .themed-input {
     border-radius: 0.7rem;
-    box-shadow: 0 2px 12px 0 rgba(124, 58, 237, 0.07);
+    box-shadow: 0 2px 12px 0 rgba(255, 122, 0, 0.07);
     transition: box-shadow 0.22s, border-color 0.22s, background 0.22s;
     &:focus {
-      box-shadow: 0 0 0 0.22rem rgba(124, 58, 237, 0.22), 0 2px 16px 0 rgba(124, 58, 237, 0.10);
-      background: rgba(124,58,237,0.07);
+      box-shadow: 0 0 0 0.22rem rgba(255, 122, 0, 0.22), 0 2px 16px 0 rgba(255, 179, 71, 0.10);
+      background: rgba(255,122,0,0.07);
     }
     &::-webkit-input-placeholder { /* Chrome/Opera/Safari */
       @extend ::placeholder;
