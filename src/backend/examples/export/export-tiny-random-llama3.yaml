@@ -1,0 +1,7 @@
+model_name_or_path: llamafactory/tiny-random-Llama-3
+# checkpoint_path: 
+adapter_name_or_path: saves/tiny-random-Llama-3/lora/sft
+export_dir: saves/test/export/tiny-random-Llama-3
+export_hub_model_id: teohklun/test-tiny-llama3_with_value_token
+
+# python cli.py ../examples/export/export-tiny-random-llama3.yaml
