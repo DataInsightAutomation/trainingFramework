@@ -14,7 +14,7 @@ test.describe('Evaluate form tests', () => {
   });
 
   test('0031 should be able to evaluate model', async ({ page }) => {
-      await page.goto('http://localhost:1234/');
+      await page.goto(`${config.BACKEND_SERVER}`);
       await page.getByRole('tab', { name: ' Evaluate' }).click();
       await page.getByText('Training Evaluation').click();
       await page.getByRole('button', { name: '' }).click();
@@ -23,7 +23,8 @@ test.describe('Evaluate form tests', () => {
       await page.getByRole('textbox', { name: 'Adapter Path' }).fill('saves/Llama-3.2-1B-Instruct/supervised/lora/sft');
       await page.getByRole('textbox', { name: 'Output Directory' }).click();
       await page.getByRole('textbox', { name: 'Output Directory' }).fill('saves/eval/Llama-3.2-1B-instruct');
-      await page.locator('div').filter({ hasText: /^Dataset \*$/ }).locator('div').nth(1).click();
+      // await page.locator('div').filter({ hasText: /^Dataset \*$/ }).locator('div').nth(1).click();
+      await page.locator("#dataset").click()
       await page.getByRole('textbox', { name: 'Dataset *' }).click();
       await page.getByText('Easydata Alpaca Public').click();
       await page.getByRole('button', { name: 'Start Evaluation' }).click();
