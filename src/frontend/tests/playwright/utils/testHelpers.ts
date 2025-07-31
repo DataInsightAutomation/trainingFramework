@@ -16,6 +16,7 @@ export const config = {
   delays: testConfig.delays,
   timeout: testConfig.timeout,
   BACKEND_SERVER: testConfig.BACKEND_SERVER,
+  HUB_TOKEN: testConfig.HUB_TOKEN,
   networkTimeout: 50000,
 };
 

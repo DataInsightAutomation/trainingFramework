@@ -22,4 +22,5 @@ export const testConfig = {
   
   // Server settings
   BACKEND_SERVER: process.env.BACKEND_SERVER || "http://localhost:1234",
+  HUB_TOKEN: process.env.HUB_TOKEN || "your_hub_token",
 };
