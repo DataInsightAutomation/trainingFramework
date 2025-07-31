@@ -14,6 +14,28 @@ export const trainFormTestData = {
     stage: 'sft'
   },
 
+  basicTrainingRewardModel: {
+    model_name: 'meta-llama/Llama-3.2-1B-Instruct',
+    train_method: 'rlhf',
+    description: 'Basic training with minimal configuration',
+    // Change datasets to array format to support multiSelect
+    datasets: ['Easydata Antropic Public hh-rlhf'],
+    // Add finetuning_type which is also required
+    finetuning_type: 'lora',
+    stage: 'rm'
+  },
+
+  basicTrainingPPO: {
+    model_name: 'meta-llama/Llama-3.2-1B-Instruct',
+    train_method: 'rlhf',
+    description: 'Basic training with minimal configuration',
+    // Change datasets to array format to support multiSelect
+    datasets: ['Easydata Alpaca Public Easydata'],
+    // Add finetuning_type which is also required
+    finetuning_type: 'lora',
+    stage: 'ppo'
+  },
+
   // Advanced training with detailed configuration
   advancedTraining: {
     model_name: 'llamafactory/tiny-random-Llama-3',

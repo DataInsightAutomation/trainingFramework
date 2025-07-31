@@ -13,6 +13,7 @@ export class TrainFormPage extends BaseFormPage {
   private modelNameField: FormField;
   private datasetField: DropdownField;
   private trainMethodField: DropdownField;
+  private stageField: DropdownField;
   private finetuningTypeField: DropdownField;
   private mode: string;
   private path: string;
@@ -67,6 +68,13 @@ export class TrainFormPage extends BaseFormPage {
       page.locator('.train-method-select')
     ]);
 
+    this.stageField = new DropdownField(page, 'training method', [
+      page.getByText('Training Stage', { exact: false }).first(),
+      page.locator('select[name="stage"]'),
+      page.locator('.stage-select'),
+      page.locator('#stage')
+    ]);
+
     this.finetuningTypeField = new DropdownField(page, 'finetuning type', [
       page.getByText('Finetuning Type', { exact: false }).first(),
       page.locator('select[name="finetuning_type"]'),
@@ -76,7 +84,7 @@ export class TrainFormPage extends BaseFormPage {
     // Initialize advanced form field components with better selectors
     // For checkbox (has visible checkbox element)
     this.bf16Field = new FormField(page, 'bf16', [
-      page.getByRole('checkbox', {name: "BF16 *"}),
+      page.getByRole('checkbox', { name: "BF16 *" }),
       page.locator('input#bf16'),
       page.locator('input[name="bf16"]'),
       // More specific selectors for the React Bootstrap component
@@ -256,6 +264,9 @@ export class TrainFormPage extends BaseFormPage {
   async fillModelName(modelName: string): Promise<boolean> {
     return this.modelNameField.fill(modelName);
   }
+  async selectModelNameWithSearch(modelName: string): Promise<boolean> {
+    return this.modelNameField.selectOptionWithSearch(modelName)
+  }
 
   /**
    * Select a dataset
@@ -279,6 +290,10 @@ export class TrainFormPage extends BaseFormPage {
    */
   async selectTrainingMethod(method: string): Promise<boolean> {
     return this.trainMethodField.select(method);
+  }
+
+  async selectStage(stage:string): Promise<boolean>{
+    return this.stageField.select(stage);
   }
 
   /**
@@ -321,15 +336,28 @@ export class TrainFormPage extends BaseFormPage {
       // Take screenshot before submission
       await this.takeScreenshot('pre-submit-debug');
 
-      // Use the enhanced base submitForm method with all parameters
-      const result = await super.submitForm(
-        buttonSelectors,
-        successPatterns,
-        errorPatterns,
-        urlPatterns
-      );
+      // --- Capture the outgoing request payload ---
+      let capturedPayload: any = undefined;
+      const [request, result] = await Promise.all([
+        this.page.waitForRequest(req =>
+          urlPatterns.some(pattern => req.url().includes(pattern)) && req.method() === 'POST'
+        ),
+        // Use the enhanced base submitForm method with all parameters
+        super.submitForm(
+          buttonSelectors,
+          successPatterns,
+          errorPatterns,
+          urlPatterns
+        )
+      ]);
 
-      return result;
+      try {
+        capturedPayload = request.postDataJSON();
+      } catch (e) {
+        capturedPayload = request.postData();
+      }
+
+      return { ...result, payload: capturedPayload };
     } catch (error) {
       logger.error(`Error submitting form: ${error.message}`);
       await this.takeScreenshot('submit-error');
