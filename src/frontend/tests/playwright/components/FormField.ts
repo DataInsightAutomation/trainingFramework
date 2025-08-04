@@ -62,7 +62,7 @@ export class FormField {
     return false;
   }
 
-  async fill(value: string): Promise<boolean> {
+  async fill(value: string, should_enter: boolean = true): Promise<boolean> {
     // Check if this is a range input first, which needs special handling
     if (await this.isRangeInput()) {
       return this.setRangeValue(value);
@@ -93,9 +93,11 @@ export class FormField {
           // Type the new value with human-like timing
           await humanType(this.page, value);
           await this.page.waitForTimeout(300);
+          if (should_enter) {
 
-          // Press Enter to confirm (helps with some form fields)
-          await this.page.keyboard.press('Enter');
+            // Press Enter to confirm (helps with some form fields)
+            await this.page.keyboard.press('Enter');
+          }
 
           // Take screenshot after filling
           // await this.page.screenshot({ path: getScreenshotPath(`after-fill-${this.fieldName}.png`) });

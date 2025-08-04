@@ -6,6 +6,7 @@ export const testConfig = {
   HUMAN_MODE: process.env.HUMAN_MODE === 'true' || false,
   HEADLESS_MODE: process.env.HEADLESS_MODE !== 'false',
   RECORDING_MODE: process.env.RECORDING_MODE === 'true' || false,
+  HUB_TOKEN: process.env.HUB_TOKEN || "",
   networkTimeout: 30000,
   // Timing settings for human-like interactions
   delays: {
@@ -21,6 +22,5 @@ export const testConfig = {
   timeout: process.env.HUMAN_MODE === 'true' ? 1200000 : 70000,
   
   // Server settings
-  BACKEND_SERVER: process.env.BACKEND_SERVER || "http://localhost:1234",
-  HUB_TOKEN: process.env.HUB_TOKEN || "your_hub_token",
+  BACKEND_SERVER: process.env.BACKEND_SERVER || "http://localhost:1235",
 };
