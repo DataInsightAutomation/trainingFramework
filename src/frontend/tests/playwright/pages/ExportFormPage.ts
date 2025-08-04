@@ -55,8 +55,8 @@ export class ExportFormPage extends BaseFormPage {
         await this.modelNameDropdown.select(exportData.modelPath);
         
         // Fill text fields
-        await this.adapterPathField.fill(exportData.adapterPath);
-        await this.exportDirField.fill(exportData.exportDirectory);
+        await this.adapterPathField.fill(exportData.adapterPath, false);
+        await this.exportDirField.fill(exportData.exportDirectory,false);
     }
 
     /**
